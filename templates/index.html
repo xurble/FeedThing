@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+		<ul class="link">
+			{% for l in links %}
+				<li>
+					<a href="{{l.link|escape}}">{{l.title}}</a><br>
+					<span class="date">{{l.created|date:"d F Y - H:m"}}</span><span class="delicious"> [<a href="{{l.guid|escape}}">delicious</a>]</span><br>
+					<div class="description">{{l.description}}</div>
+					<ul class="tags">
+						{% for t in l.taglist %}
+							<li><a href="http://delicious.com/{{l.author|escape}}/{{ t|escape }}">{{t|escape}}</a></li>
+						{% endfor %}
+					</ul>
+				</li>
+			{% endfor %}
+		</ul>
+
+
+{% endblock %}

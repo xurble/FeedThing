@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p>
+	<form method="post" action="/importopml/" enctype="multipart/form-data">
+		<input type="file" name="opml">
+		<input type="submit" value="Upload Subscriptions">
+	</form>
+</p>
+
+<p>
+	<form method="post">
+		<input type="url" name="feed" value="{{feed|escape}}">
+		<input type="submit" value="Add Feed">
+	</form>
+</p>
+
+
+{% endblock %}

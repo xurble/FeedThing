@@ -126,14 +126,14 @@ class Help(webapp.RequestHandler):
 	@page
 	def get(self):
 
-		self.vals = { }
 		render(self,"help.html")
 
 class AddFeed(webapp.RequestHandler):
 
 	@userpage
-	def get(self):
-		pass
+	def get(self):	
+		self.vals["feed"] = self.request.get("feed")
+		render(self,"addfeed.html")
 	
 class ImportOPML(webapp.RequestHandler):
 
@@ -243,6 +243,7 @@ def main():
   										('/refresh/',Reader)
   										,('/help/',Help)
   										,('/feeds/',Feeds)
+  										,('/addfeed/',AddFeed)
   										,('/permissions/',Permissions)
   										,('/importopml/',ImportOPML)
  									,('/robots.txt',Robots)

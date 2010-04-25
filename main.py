@@ -18,6 +18,8 @@
 
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
+from google.appengine.api import users # Since this is a personal aggregator deployed on app engine, I think we can feel safe assuming that the user has a google account
+
 import os
 from google.appengine.ext.webapp import template
 import time
@@ -35,6 +37,41 @@ def render(req,templateFile):
 	path = os.path.join(os.path.dirname(__file__), "templates", templateFile)
 	req.response.out.write(template.render(path, req.vals))
 
+
+def findUser(page):
+	page.vals = {}
+	page.user = users.get_current_user()
+	page.vals["user"] = page.user
+	if page.user:
+		page.vals["logout"] = users.create_logout_url("/")
+	
+def page(func):
+	def _page(*args,**kwargs):
+		
+		findUser(args[0])
+		
+		return func(*args,**kwargs)
+		
+	return _page
+
+
+
+def userpage(func):
+	def _up(*args,**kwargs):
+
+		p = args[0]
+		findUser(p)
+
+		if p.user != None:
+			if users.is_current_user_admin(): #must be admin - everything here is for the personal use of the owner
+				return func(*args,**kwargs)
+			else:
+				p.redirect("/permissions/")				
+		else:
+			p.redirect(users.create_login_url(p.request.uri))
+			return None
+			
+	return _up
 
 	
 class Source(db.Model):
@@ -66,25 +103,41 @@ class Post(db.Model):
 
 
 class MainHandler(webapp.RequestHandler):
+	@page
+	def get(self):
+		render(self,"index.html")
 
-  def get(self):
-  
- 	self.vals = {}	
-  	ss = Source.gql("WHERE unreadCount > 0")
-  	
-  	self.vals["sources"] = ss
-	render(self,"index.html")
+class Permissions(webapp.RequestHandler):
+	@page
+	def get(self):
+		render(self,"permissions.html")
+
+class Feeds(webapp.RequestHandler):
+	@userpage
+	def get(self):
+
+		ss = Source.gql("WHERE unreadCount > 0")
+
+		self.vals["sources"] = ss
+		render(self,"feeds.html")
 
 class Help(webapp.RequestHandler):
 
-  def get(self):
-  
-  	self.vals = { }
-	render(self,"help.html")
-	
+	@page
+	def get(self):
+
+		self.vals = { }
+		render(self,"help.html")
+
+class AddFeed(webapp.RequestHandler):
+
+	@userpage
+	def get(self):
+		pass
 	
 class ImportOPML(webapp.RequestHandler):
 
+	@userpage
 	def post(self):
 		self.response.headers["Content-Type"] = "text/plain"
 
@@ -104,6 +157,7 @@ class ImportOPML(webapp.RequestHandler):
 			ns.name = s.getAttribute("title")
 			ns.put()
 
+		#TODO: Maybe some kind of page or simila :)
 		self.response.out.write("OK");
 
 class Reader(webapp.RequestHandler):
@@ -121,8 +175,9 @@ class Reader(webapp.RequestHandler):
 			s.lastPolled = datetime.datetime.now()
 			s.put()
 		
-			content = fetch(s.feedURL).content  #need all that etag last modified stuff
-			f = feedparser.parse(content)
+			#content = fetch(s.feedURL).content  #need all that etag last modified stuff
+			#f = feedparser.parse(content)
+			f = feedparser.parse(s.feedURL, etag=s.etag)
 		
 			self.response.out.write("\n\n")		
 			for e in f['entries']:
@@ -187,6 +242,8 @@ def main():
   application = webapp.WSGIApplication([('/', MainHandler),
   										('/refresh/',Reader)
   										,('/help/',Help)
+  										,('/feeds/',Feeds)
+  										,('/permissions/',Permissions)
   										,('/importopml/',ImportOPML)
  									,('/robots.txt',Robots)
  

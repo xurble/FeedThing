@@ -123,7 +123,21 @@ a img {
 			<h1>Feed Thing</h1>
 		</div>
 		<div id="subheader">
-			<a href="/">Home</a> | <a href="/help/">Help</a>
+		
+		{% if user %}
+			{{ user.nickname }} | 
+		{% endif %}
+		<a href="/">Home</a> |
+		{% if user %}
+			<a href="/feeds/">Feeds</a>	|
+			<a href="/addfeed/">Add Feed</a>	|
+		{% endif %}
+		<a href="/help/">Help</a> |
+		{% if user %}
+			<a href="{{ logout }}">Log out</a>
+		{% else %}
+			<a href="/feeds/">Log In</a>
+		{% endif %}
 		</div>
 		<div id="content">
 {% block content %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<p>
+	<form method="post" action="/importopml/" enctype="multipart/form-data">
+		<input type="file" name="opml">
+		<input type="submit" value="Upload Subscriptions">
+	</form>
+</p>
+
+		<ul class="link">
+			{% for s in sources %}
+				<li>
+					<a href="#">{{s.name}}</a> ({{s.unreadCount}})
+				</li>
+			{% endfor %}
+		</ul>
+
+
+{% endblock %}

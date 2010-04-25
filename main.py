@@ -26,6 +26,8 @@ import datetime
 import feedparser
 from google.appengine.api.urlfetch import fetch
 
+from xml.dom import minidom
+
 from google.appengine.ext import db
 
 
@@ -67,8 +69,10 @@ class MainHandler(webapp.RequestHandler):
 
   def get(self):
   
- 	self.vals = []	
-  
+ 	self.vals = {}	
+  	ss = Source.gql("WHERE unreadCount > 0")
+  	
+  	self.vals["sources"] = ss
 	render(self,"index.html")
 
 class Help(webapp.RequestHandler):
@@ -77,46 +81,91 @@ class Help(webapp.RequestHandler):
   
   	self.vals = { }
 	render(self,"help.html")
+	
+	
+class ImportOPML(webapp.RequestHandler):
 
+	def post(self):
+		self.response.headers["Content-Type"] = "text/plain"
+
+		theFile = self.request.get("opml")
+
+		
+		dom = minidom.parseString(theFile)
+		
+		sources = dom.getElementsByTagName("outline")
+		for s in sources:
+			self.response.out.write("\n");
+			self.response.out.write(s)		
+
+			ns = Source()
+			ns.siteURL = s.getAttribute("htmlUrl")
+			ns.feedURL = s.getAttribute("xmlUrl")
+			ns.name = s.getAttribute("title")
+			ns.put()
+
+		self.response.out.write("OK");
 
 class Reader(webapp.RequestHandler):
 	def get(self):
 		self.response.headers["Content-Type"] = "text/plain"
 	
 	
-		sources = Source.gql("WHERE duePoll < :1 LIMIT 1")
-		for s in source:
+		sources = Source.gql("WHERE duePoll < :1 ORDER BY duePoll LIMIT 1",datetime.datetime.now())
+		for s in sources:
+		
+			newCount = s.unreadCount
+		
+			td = datetime.timedelta(hours=4)
+			s.duePoll = datetime.datetime.now() + td
+			s.lastPolled = datetime.datetime.now()
+			s.put()
+		
 			content = fetch(s.feedURL).content  #need all that etag last modified stuff
 			f = feedparser.parse(content)
 		
 			self.response.out.write("\n\n")		
 			for e in f['entries']:
 			
+			
 				try:
-					link  = Link.gql("WHERE link = :1",e.link)[0]
+					guid = e.guid
+				except:
+					guid = e.link
+			
+				self.response.out.write(guid + "\n")
+
+				try:
+					p  = Post.gql("WHERE guid = :1",guid)[0]
 				except:	
-					link = Link()
+					p = Post()
+					newCount += 1 # some people like to mark changed items as read, but I don't so this is the only current trigger for unreadness.
 					
-	
+				p.source = s
+				
 				#self.response.out.write(e)
 				self.response.out.write(e.title + "\n")
 				self.response.out.write(e.link + "\n")
 				#self.response.out.write(e.date_parsed + "\n")
-				self.response.out.write(e.guid + "\n")
-				self.response.out.write(e.author + "\n")
+				self.response.out.write(guid + "\n")
 	
-				link.link = e.link
-				link.title = e.title
-				tags = [t["term"] for t in e.tags]
-				link.tags = ",".join(tags)
-				link.created = datetime.datetime.fromtimestamp(time.mktime(e.date_parsed))
-				link.guid = e.guid
-				link.author = e.author
+				p.link = e.link
+				p.title = e.title
+				#tags = [t["term"] for t in e.tags]
+				#link.tags = ",".join(tags)
+				p.created = datetime.datetime.fromtimestamp(time.mktime(e.date_parsed))
+				p.guid = guid
 				try:
-					link.description = e.description
+					p.author = e.author
 				except:
-					link.description = ""
-				link.put()
+					p.author = ""
+				try:
+					p.body = e.content
+				except:
+					p.body = ""
+				p.put()
+			s.unreadCount = newCount
+			s.put()
 
 			
 			self.response.out.write("\n\n")		
@@ -138,6 +187,7 @@ def main():
   application = webapp.WSGIApplication([('/', MainHandler),
   										('/refresh/',Reader)
   										,('/help/',Help)
+  										,('/importopml/',ImportOPML)
  									,('/robots.txt',Robots)
  
   ],

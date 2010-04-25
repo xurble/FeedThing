@@ -2,17 +2,17 @@
 
 {% block content %}
 
+<p>
+	<form method="post" action="/importopml/" enctype="multipart/form-data">
+		<input type="file" name="opml">
+		<input type="submit" value="Upload Subscriptions">
+	</form>
+</p>
+
 		<ul class="link">
-			{% for l in links %}
+			{% for s in sources %}
 				<li>
-					<a href="{{l.link|escape}}">{{l.title}}</a><br>
-					<span class="date">{{l.created|date:"d F Y - H:m"}}</span><span class="delicious"> [<a href="{{l.guid|escape}}">delicious</a>]</span><br>
-					<div class="description">{{l.description}}</div>
-					<ul class="tags">
-						{% for t in l.taglist %}
-							<li><a href="http://delicious.com/{{l.author|escape}}/{{ t|escape }}">{{t|escape}}</a></li>
-						{% endfor %}
-					</ul>
+					<a href="#">{{s.name}}</a> ({{s.unreadCount}})
 				</li>
 			{% endfor %}
 		</ul>

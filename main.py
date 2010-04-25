@@ -32,6 +32,8 @@ from xml.dom import minidom
 
 from google.appengine.ext import db
 
+def o(req,msg):
+	req.response.out.write(msg)
 
 def render(req,templateFile):
 	path = os.path.join(os.path.dirname(__file__), "templates", templateFile)
@@ -81,9 +83,13 @@ class Source(db.Model):
 	feedURL       = db.StringProperty()
 	lastPolled    = db.DateTimeProperty()
 	duePoll       = db.DateTimeProperty(required=True,auto_now_add=True)
-	eTag          = db.StringProperty()
-	lastModified  = db.DateTimeProperty()
+	ETag          = db.StringProperty()
+	lastModified  = db.StringProperty() # just pass this back and forward between server and me , no need to parse
 	unreadCount   = db.IntegerProperty(required=True,default=0)
+	lastResult    = db.StringProperty()
+	interval      = db.IntegerProperty(required=True,default=60)
+	lastSuccess   = db.DateTimeProperty(auto_now_add=True)
+	live          = db.BooleanProperty(required=True,default=True)
 
 
 class Post(db.Model):
@@ -166,64 +172,148 @@ class Reader(webapp.RequestHandler):
 	
 	
 		sources = Source.gql("WHERE duePoll < :1 ORDER BY duePoll LIMIT 1",datetime.datetime.now())
+		o(self,"Update Q: %d\n\n" % sources.count())
 		for s in sources:
 		
+			s.lastPolled = datetime.datetime.now()
 			newCount = s.unreadCount
 		
-			td = datetime.timedelta(hours=4)
-			s.duePoll = datetime.datetime.now() + td
-			s.lastPolled = datetime.datetime.now()
-			s.put()
+			interval = s.interval
+			#td = datetime.timedelta(hours=4)
+			#s.duePoll = datetime.datetime.now() + td
+			#s.put()
 		
-			#content = fetch(s.feedURL).content  #need all that etag last modified stuff
-			#f = feedparser.parse(content)
-			f = feedparser.parse(s.feedURL, etag=s.etag)
-		
-			self.response.out.write("\n\n")		
-			for e in f['entries']:
-			
-			
-				try:
-					guid = e.guid
-				except:
-					guid = e.link
-			
-				self.response.out.write(guid + "\n")
-
-				try:
-					p  = Post.gql("WHERE guid = :1",guid)[0]
-				except:	
-					p = Post()
-					newCount += 1 # some people like to mark changed items as read, but I don't so this is the only current trigger for unreadness.
-					
-				p.source = s
+			headers = { "User-Agent": "FeedThing/2.0" }
+			if s.ETag:
+				headers["ETag"] = s.ETag
+			if s.lastModified:
+				headers["If-Modified-Since"] = s.lastModified
 				
-				#self.response.out.write(e)
-				self.response.out.write(e.title + "\n")
-				self.response.out.write(e.link + "\n")
-				#self.response.out.write(e.date_parsed + "\n")
-				self.response.out.write(guid + "\n")
+			ret = None
+			o(self,"Fetching %s" % s.feedURL)
+			try:
+				ret = fetch(s.feedURL)
+			except:
+				s.lastResult = "Fetch error"
+						
+			
+			if ret == None:
+				pass
+			elif ret.status_code < 200 or ret.status_code >= 500:
+				#errors, impossible return codes
+				interval += 120
+				s.lastResult = "Server error fetching feed (%d)" % ret.status_code
+			elif ret.status_code == 404:
+				#not found
+				interval += 120
+				s.lastResult = "The feed could not be found"
+			elif ret.status_code == 403 or ret.status_code == 410: #Forbidden or gone
+				s.live = False
+				s.lastResult = "Feed is no longer accessible (%d)" % ret.status_code
+			elif ret.status_code >= 400 and ret.status_code < 500:
+				#treat as bad request
+				s.live = False
+				s.lastResult = "Bad request (%d)" % ret.status_code
+			elif ret.status_code == 304:
+				#not modified
+				interval += 1
+				s.lastResult = "Not modified"
+				
+			elif ret.status_code >= 200 and ret.status_code < 400:
+				#great
+				s.lastSuccess = datetime.datetime.now() #in case we start auto unsubscribing long dead feeds
+				
+				if ret.status_code == 301: #permanent redirect
+					try:
+						s.feedURL = s.headers["Location"]  #Hope they never send a relative URL here :)
+					except:
+						pass
+				changed = False	
+				
+				try:
+					s.ETag = ret.headers["ETag"]
+				except:
+					s.ETag = None									
+				try:
+					s.lastModified = ret.headers["Last-Modified"]
+				except:
+					s.lastModified = None									
+				
+				
+				o(self,"\nEtag:%s\nLast Mod:%s\n\n" % (s.ETag,s.lastModified))
+								
+				f = feedparser.parse(ret.content) #need to start checking feed parser errors here
+			
+				for e in f['entries']:
+				
+				
+					try:
+						guid = e.guid
+					except:
+						guid = e.link
+				
+					self.response.out.write(guid + "\n")
 	
-				p.link = e.link
-				p.title = e.title
-				#tags = [t["term"] for t in e.tags]
-				#link.tags = ",".join(tags)
-				p.created = datetime.datetime.fromtimestamp(time.mktime(e.date_parsed))
-				p.guid = guid
-				try:
-					p.author = e.author
-				except:
-					p.author = ""
-				try:
-					p.body = e.content
-				except:
-					p.body = ""
-				p.put()
-			s.unreadCount = newCount
+					try:
+						p  = Post.gql("WHERE guid = :1",guid)[0]
+					except:	
+						p = Post()
+						newCount += 1 # some people like to mark changed items as read, but I don't so this is the only current trigger for unreadness.
+						
+					p.source = s
+					
+					#self.response.out.write(e)
+					self.response.out.write(e.title + "\n")
+					self.response.out.write(e.link + "\n")
+					#self.response.out.write(e.date_parsed + "\n")
+					self.response.out.write(guid + "\n")
+		
+					p.link = e.link
+					p.title = e.title
+					#tags = [t["term"] for t in e.tags]
+					#link.tags = ",".join(tags)
+					try:
+						p.created = datetime.datetime.fromtimestamp(time.mktime(e.date_parsed))
+					except:
+						p.created  = datetime.datetime.now()
+						
+					p.guid = guid
+					try:
+						p.author = e.author
+					except:
+						p.author = ""
+					try:
+						p.body = e.content
+					except:
+						p.body = ""
+					p.put()
+					
+					if changed:
+						interval /= 2
+						s.lastResult = "OK (updated)" #and temporary redirects
+					else:
+						s.lastResult = "OK"
+						interval += 2 # we slow down feeds a little more that don't send headers we can use
+					
+				s.unreadCount = newCount
+			
+
+			else:
+				#should not be able to get here
+				s.lastResult = "Gareth can't program! %d" % ret.status_code
+				
+			
+			if interval < 60:
+				interval = 60 #no less than 1 hour
+			if interval > 60 * 60 * 24:
+				interval = 60 * 60 * 24 #no more than 1 day
+			
+			td = datetime.timedelta(minutes=interval)
+			s.duePoll = datetime.datetime.now() + td
 			s.put()
 
 			
-			self.response.out.write("\n\n")		
+			self.response.out.write("\n%s\n" % s.lastResult)		
 
 
 			

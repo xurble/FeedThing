@@ -10,11 +10,39 @@
 </p>
 
 <p>
-	<form method="post">
-		<input type="url" name="feed" value="{{feed|escape}}">
+	<form method="post" onsubmit="addFeed(); return false;">
+		<input type="url" id="feed" name="feed" value="{{feed|escape}}">
 		<input type="submit" value="Add Feed">
 	</form>
-</p>
+</p><a href="javascript:addFeed()">add feed</a>
+<div id="addresult" style="display:none">
+	
+</div>
+
+
+<script>
+
+function addFeed()
+{
+	var theFeed = $("#feed").val();
+	if (theFeed == '')
+	{
+		return;
+	}
+	
+	$("#addresult").html("Imagine this was a spinner :)").fadeIn();
+	
+	$.post("/addfeed/", { feed:theFeed }, function(data){
+	
+		$("#addresult").fadeOut(function(){
+			$("#addresult").html(data).fadeIn();
+		});
+	
+	},'html');
+	
+}
+
+</script>
 
 
 {% endblock %}

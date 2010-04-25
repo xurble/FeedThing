@@ -175,24 +175,22 @@ class Reader(webapp.RequestHandler):
 		o(self,"Update Q: %d\n\n" % sources.count())
 		for s in sources:
 		
+			
 			s.lastPolled = datetime.datetime.now()
 			newCount = s.unreadCount
 		
 			interval = s.interval
-			#td = datetime.timedelta(hours=4)
-			#s.duePoll = datetime.datetime.now() + td
-			#s.put()
 		
-			headers = { "User-Agent": "FeedThing/2.0" }
+			headers = { "User-Agent": "FeedThing/2.0", "Cache-Control":"no-cache,max-age=0", "Pragma":"no-cache" } #identify ourselves and also stop our requests getting picked up by google's cache
 			if s.ETag:
-				headers["ETag"] = s.ETag
+				headers["If-None-Match"] = s.ETag
 			if s.lastModified:
 				headers["If-Modified-Since"] = s.lastModified
-				
+			o(self,headers)
 			ret = None
-			o(self,"Fetching %s" % s.feedURL)
+			o(self,"\nFetching %s" % s.feedURL)
 			try:
-				ret = fetch(s.feedURL)
+				ret = fetch(s.feedURL,headers=headers)
 			except:
 				s.lastResult = "Fetch error"
 						
@@ -308,10 +306,11 @@ class Reader(webapp.RequestHandler):
 			if interval > 60 * 60 * 24:
 				interval = 60 * 60 * 24 #no more than 1 day
 			
+			s.interval = interval
 			td = datetime.timedelta(minutes=interval)
 			s.duePoll = datetime.datetime.now() + td
 			s.put()
-
+			
 			
 			self.response.out.write("\n%s\n" % s.lastResult)		
 

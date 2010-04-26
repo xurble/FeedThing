@@ -2,14 +2,41 @@
 
 {% block content %}
 
+	
+	<div id="feedlist">
 
-		<ul class="link">
+		<ul>
 			{% for s in sources %}
-				<li>
-					<a href="#">{{s.name}}</a> ({{s.unreadCount}})
+				<li id="s{{s.id}}" class="unread">
+					<a href="javascript:read({{s.id}})">{{s.name}}</a> <span id="uc{{s.id}}" class="unreadcount">({{s.unreadCount}})</span>
 				</li>
 			{% endfor %}
 		</ul>
 
+	</div>
+	<div id="feedpane">
+		<div id="feedholder">
+		
+		</div>
+	</div>
+
+<script>
+
+function read(fid){
+	var fh = $("#feedholder");
+	fh.fadeOut(function(){
+	
+		$.get("/read/" + fid + "/html/all/", function(data){
+		
+			fh.html(data).fadeIn();
+			$("#s" + fid).removeClass("unread").addClass("read");
+			$("#uc" + fid).fadeOut();
+		
+		},'html');
+	
+	});
+}
+
+</script>
 
 {% endblock %}

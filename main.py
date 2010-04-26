@@ -91,6 +91,14 @@ class Source(db.Model):
 	lastSuccess   = db.DateTimeProperty(auto_now_add=True)
 	live          = db.BooleanProperty(required=True,default=True)
 
+	def _id(self):
+		try:
+			return self.key().id()
+		except:
+			return "new"
+			
+	id = property(_id)
+
 
 class Post(db.Model):
 	
@@ -100,12 +108,17 @@ class Post(db.Model):
 	link          = db.StringProperty()
 	found         = db.DateTimeProperty(auto_now_add=True)
 	created       = db.DateTimeProperty()
-	tags          = db.StringProperty()
 	guid          = db.StringProperty()
 	author        = db.StringProperty()
+	read          = db.BooleanProperty(required=True,default=False)
 
-	def taglist(self):
-		return self.tags.split(",")
+	def _id(self):
+		try:
+			return self.key().id()
+		except:
+			return "new"
+			
+	id = property(_id)
 
 
 class MainHandler(webapp.RequestHandler):
@@ -140,6 +153,28 @@ class AddFeed(webapp.RequestHandler):
 	def get(self):	
 		self.vals["feed"] = self.request.get("feed")
 		render(self,"addfeed.html")
+		
+class ReadFeed(webapp.RequestHandler):
+	@userpage
+	def get(self,fid,format,count):
+		
+		#look at us ignoring format and count :)
+		#maybe there should be some upper limit or pagination or something 
+		
+		s = Source.get_by_id(int(fid))
+		posts = Post.gql("WHERE source = :1 and read = :2 ORDER by created",s,False) 
+		pp = []
+		for p in posts: #could really do with doing this on a deferred call
+			p.read = True
+			p.put()
+			pp.append(p)
+		s.unreadCount = 0
+		s.put()
+		
+		self.vals["source"] = s
+		self.vals["posts"] = pp
+		
+		render(self,"feed.html")
 	
 class ImportOPML(webapp.RequestHandler):
 
@@ -254,7 +289,7 @@ class Reader(webapp.RequestHandler):
 					self.response.out.write(guid + "\n")
 	
 					try:
-						p  = Post.gql("WHERE guid = :1",guid)[0]
+						p  = Post.gql("WHERE source = :1 AND guid = :2",s,guid)[0]
 					except:	
 						p = Post()
 						newCount += 1 # some people like to mark changed items as read, but I don't so this is the only current trigger for unreadness.
@@ -285,7 +320,7 @@ class Reader(webapp.RequestHandler):
 					except:
 						p.author = ""
 					try:
-						p.body = e.content
+						p.body = e.content[0].value
 					except:
 						p.body = ""
 					p.put()
@@ -339,6 +374,7 @@ def main():
   										,('/addfeed/',AddFeed)
   										,('/permissions/',Permissions)
   										,('/importopml/',ImportOPML)
+  										,('/read/(.*)/(.*)/(.*)/',ReadFeed)
  									,('/robots.txt',Robots)
  
   ],

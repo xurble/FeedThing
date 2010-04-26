@@ -10,6 +10,12 @@ indexes:
 # automatically uploaded to the admin console when you next deploy
 # your application using appcfg.py.
 
+- kind: Post
+  properties:
+  - name: read
+  - name: source
+  - name: created
+
 - kind: Source
   properties:
   - name: live

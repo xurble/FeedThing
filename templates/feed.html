@@ -1,0 +1,10 @@
+<h2><a href="{{source.siteURL|escape}}">{{source.name|escape}}</a></h2>
+
+{% for p in posts %}
+	<hr>
+	<h3><a href="{{p.link}}">{{p.title|escape}}</a></h3>
+	<div class="postbody">
+		{{p.body}}
+	</div>
+
+{% endfor %}

@@ -245,6 +245,7 @@ class Reader(webapp.RequestHandler):
 				for e in f['entries']:
 				
 				
+				
 					try:
 						guid = e.guid
 					except:
@@ -262,11 +263,14 @@ class Reader(webapp.RequestHandler):
 					
 					#self.response.out.write(e)
 					self.response.out.write(e.title + "\n")
-					self.response.out.write(e.link + "\n")
+					#self.response.out.write(e.link + "\n")
 					#self.response.out.write(e.date_parsed + "\n")
 					self.response.out.write(guid + "\n")
 		
-					p.link = e.link
+					try:
+						p.link = e.link
+					except:
+						p.link = ''
 					p.title = e.title
 					#tags = [t["term"] for t in e.tags]
 					#link.tags = ",".join(tags)

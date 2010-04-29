@@ -2,7 +2,8 @@
 
 {% for p in posts %}
 	<hr>
-	<h3><a href="{{p.link}}">{{p.title|escape}}</a></h3>
+	<h3><a href="{{p.link}}">{{p.title}}</a></h3>
+	<div class="date">{{p.created|timesince}} ago</div>
 	<div class="postbody">
 		{{p.body}}
 	</div>

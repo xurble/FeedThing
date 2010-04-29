@@ -16,6 +16,8 @@
 #
 
 
+import hashlib
+import logging
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import util
 from google.appengine.api import users # Since this is a personal aggregator deployed on app engine, I think we can feel safe assuming that the user has a google account
@@ -89,6 +91,7 @@ class Source(db.Model):
 	lastResult    = db.StringProperty()
 	interval      = db.IntegerProperty(required=True,default=60)
 	lastSuccess   = db.DateTimeProperty(auto_now_add=True)
+	lastChange    = db.DateTimeProperty(auto_now_add=True)
 	live          = db.BooleanProperty(required=True,default=True)
 
 	def _id(self):
@@ -206,7 +209,7 @@ class Reader(webapp.RequestHandler):
 		self.response.headers["Content-Type"] = "text/plain"
 	
 	
-		sources = Source.gql("WHERE duePoll < :1 ORDER BY duePoll LIMIT 1",datetime.datetime.now())
+		sources = Source.gql("WHERE duePoll < :1 ORDER BY duePoll LIMIT 2",datetime.datetime.now())
 		o(self,"Update Q: %d\n\n" % sources.count())
 		for s in sources:
 		
@@ -231,6 +234,7 @@ class Reader(webapp.RequestHandler):
 						
 			
 			if ret == None:
+				interval += 120
 				pass
 			elif ret.status_code < 200 or ret.status_code >= 500:
 				#errors, impossible return codes
@@ -279,13 +283,25 @@ class Reader(webapp.RequestHandler):
 			
 				for e in f['entries']:
 				
+					try:
+						body = e.content[0].value
+					except:
+						try:
+							body = e.description
+						except:
+							body = ""
 				
 				
 					try:
 						guid = e.guid
 					except:
-						guid = e.link
-				
+						try:
+							guid = e.link
+						except:
+							m = hashlib.md5()
+							m.update(body)
+							guid = m.hexdigest()
+									
 					self.response.out.write(guid + "\n")
 	
 					try:
@@ -293,7 +309,7 @@ class Reader(webapp.RequestHandler):
 					except:	
 						p = Post()
 						newCount += 1 # some people like to mark changed items as read, but I don't so this is the only current trigger for unreadness.
-						
+						changed = True
 					p.source = s
 					
 					#self.response.out.write(e)
@@ -319,25 +335,26 @@ class Reader(webapp.RequestHandler):
 						p.author = e.author
 					except:
 						p.author = ""
-					try:
-						p.body = e.content[0].value
-					except:
-						p.body = ""
+
+					p.body = body						
 					p.put()
-					
-					if changed:
-						interval /= 2
-						s.lastResult = "OK (updated)" #and temporary redirects
-					else:
-						s.lastResult = "OK"
-						interval += 2 # we slow down feeds a little more that don't send headers we can use
+					o(self,p.body)
+				if changed:
+					interval /= 2
+					s.lastResult = "OK (updated)" #and temporary redirects
+					s.lastChanged = datetime.datetime.now()
+				else:
+					s.lastResult = "OK"
+					interval += 2 # we slow down feeds a little more that don't send headers we can use
 					
 				s.unreadCount = newCount
 			
 
 			else:
 				#should not be able to get here
-				s.lastResult = "Gareth can't program! %d" % ret.status_code
+				oops = "Gareth can't program! %d" % ret.status_code
+				logging.error(oops)
+				s.lastResult = oops
 				
 			
 			if interval < 60:
@@ -345,6 +362,7 @@ class Reader(webapp.RequestHandler):
 			if interval > 60 * 60 * 24:
 				interval = 60 * 60 * 24 #no more than 1 day
 			
+			o(self,"\nUpdating interval from %d to %d\n" % (s.interval,interval))
 			s.interval = interval
 			td = datetime.timedelta(minutes=interval)
 			s.duePoll = datetime.datetime.now() + td

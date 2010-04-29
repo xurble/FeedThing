@@ -21,6 +21,7 @@ body {
 	padding:0px;
 }
 
+
 #header {
 	background-color:black;
 	margin:0px;
@@ -90,14 +91,6 @@ ul.tags li {
 	font-style:italic;
 }
 
-.delicious, .date {
-	font-size:11px;
-	color:#444;
-}
-
-.date {
-	padding-left:20px;
-}
 
 a {
 	font-weight: bold;
@@ -126,7 +119,7 @@ a img {
 	border:1px solid black;
 	margin:10px;
 	padding:5px;
-
+	overflow-y: scroll;
 }
 
 #feedpane {
@@ -136,8 +129,23 @@ a img {
 	border:1px solid black;
 	margin:10px;
 	padding:5px;
-	
+	overflow-y: scroll;	
 }
+
+#feedpane img {
+	max-width:450px; 
+	max-height:300px;
+	width: expression(this.width > 450 && (this.width/this.height) > (450/300) ? 450 : true);
+	height: expression(this.height > 300 && (this.width/this.height) <= (450/300) ? 300 : true); 
+}	
+
+.date {
+	font-size:11px;
+	text-align: right;
+	color:#444;
+	padding:2px;
+}
+
 		
 		</style>
 	</head>
@@ -170,5 +178,25 @@ a img {
 		<div id="footer">
 			Because nobody really likes Google Reader :)
 		</div>
+		<script>
+		
+function sizeDivs()
+{
+	var h = $(window).height();
+	h-=200;
+	$("#feedlist").height(h);
+	$("#feedpane").height(h);
+}
+
+$(window).resize(function(){
+	sizeDivs();
+});
+
+
+$(document).ready(function(){
+	sizeDivs();
+});
+	
+		</script>
 	</body>
 </html>

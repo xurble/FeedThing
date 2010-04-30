@@ -1,0 +1,26 @@
+<div class="feed-{{source.id}}">
+<div class="toolbar">
+    <h1>{{source.name|escape}}</h1>
+   <a class="back" href="javascript:home()" rel="external">Home</a>
+   <a class="button slide" href="/read/{{source.id}}/mobile/5/">More</a>
+
+</div>
+<div class="posts">
+
+{% for p in posts %}
+	<hr>
+	<h3><a href="{{p.link}}">{{p.title}}</a></h3>
+	<div class="date">{{p.created|timesince}} ago</div>
+	<div class="postbody">
+		{{p.body}}
+	</div>
+
+{% endfor %}
+</div>
+
+<div class="toolbar">
+   <a class="back" href="#">Back</a>
+   <a class="button slide" href="/read/{{source.id}}/mobile/5/">More</a>
+</div>
+
+</div>

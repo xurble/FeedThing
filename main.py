@@ -143,6 +143,16 @@ class Feeds(webapp.RequestHandler):
 		self.vals["sources"] = ss
 		render(self,"feeds.html")
 
+class MobileFeeds(webapp.RequestHandler):
+	@userpage
+	def get(self):
+
+		ss = Source.gql("WHERE unreadCount > 0")
+
+		self.vals["sources"] = ss
+		render(self,"mobile/index.html")
+
+
 class Help(webapp.RequestHandler):
 
 	@page
@@ -161,23 +171,32 @@ class ReadFeed(webapp.RequestHandler):
 	@userpage
 	def get(self,fid,format,count):
 		
-		#look at us ignoring format and count :)
-		#maybe there should be some upper limit or pagination or something 
-		
+		if count == "all":
+			count = "1000"
+	
 		s = Source.get_by_id(int(fid))
-		posts = Post.gql("WHERE source = :1 and read = :2 ORDER by created",s,False) 
+		posts = Post.gql("WHERE source = :1 and read = :2 ORDER by created LIMIT " + count,s,False) 
 		pp = []
 		for p in posts: #could really do with doing this on a deferred call
 			p.read = True
 			p.put()
 			pp.append(p)
-		s.unreadCount = 0
+		if (s.unreadCount - int(count)) < 0:
+			s.unreadCount = 0
+		else:
+			s.unreadCount = s.unreadCount - int(count)
 		s.put()
 		
 		self.vals["source"] = s
 		self.vals["posts"] = pp
 		
-		render(self,"feed.html")
+		
+		
+		if format == "mobile":
+			#self.vals["depth"] = int(self.request.get("depth")) +1
+			render (self,"mobile/feed.html")
+		else:
+			render(self,"feed.html")
 	
 class ImportOPML(webapp.RequestHandler):
 
@@ -393,6 +412,7 @@ def main():
   										,('/permissions/',Permissions)
   										,('/importopml/',ImportOPML)
   										,('/read/(.*)/(.*)/(.*)/',ReadFeed)
+  										,('/m/',MobileFeeds)
  									,('/robots.txt',Robots)
  
   ],

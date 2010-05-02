@@ -206,7 +206,7 @@ class ImportOPML(webapp.RequestHandler):
 
 		theFile = self.request.get("opml")
 
-		
+		count = 0
 		dom = minidom.parseString(theFile)
 		
 		sources = dom.getElementsByTagName("outline")
@@ -219,9 +219,11 @@ class ImportOPML(webapp.RequestHandler):
 			ns.feedURL = s.getAttribute("xmlUrl")
 			ns.name = s.getAttribute("title")
 			ns.put()
+			count += 1
+			
+		self.vals["count"] = count	
+		render(self,"importopml.html")
 
-		#TODO: Maybe some kind of page or simila :)
-		self.response.out.write("OK");
 
 class Reader(webapp.RequestHandler):
 	def get(self):

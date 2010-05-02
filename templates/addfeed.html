@@ -2,19 +2,20 @@
 
 {% block content %}
 
-<p>
+<div id="opml">
 	<form method="post" action="/importopml/" enctype="multipart/form-data">
 		<input type="file" name="opml">
 		<input type="submit" value="Upload Subscriptions">
 	</form>
-</p>
+</div>
 
-<p>
+<div id="feeds">
 	<form method="post" onsubmit="addFeed(); return false;">
 		<input type="url" id="feed" name="feed" value="{{feed|escape}}">
 		<input type="submit" value="Add Feed">
 	</form>
-</p><a href="javascript:addFeed()">add feed</a>
+</div>
+
 <div id="addresult" style="display:none">
 	
 </div>

@@ -138,10 +138,23 @@ class Feeds(webapp.RequestHandler):
 	@userpage
 	def get(self):
 
+		render(self,"feeds.html")
+
+class FeedPane(webapp.RequestHandler):
+	@userpage
+	def get(self):
+
+		render(self,"feedpane.html")
+
+
+class FeedList(webapp.RequestHandler):
+	@userpage
+	def get(self):
+
 		ss = Source.gql("WHERE unreadCount > 0")
 
 		self.vals["sources"] = ss
-		render(self,"feeds.html")
+		render(self,"feedlist.html")
 
 class MobileFeeds(webapp.RequestHandler):
 	@userpage
@@ -390,6 +403,30 @@ class Reader(webapp.RequestHandler):
 			
 			self.response.out.write("\n%s\n" % s.lastResult)		
 
+class Manifest(webapp.RequestHandler):
+	def get(self):
+		self.response.headers["Content-Type"] = "text/cache-manifest"
+		self.response.headers.add_header("Expires", "Sun, 01 Jan 2012 16:00:00 GMT")
+		self.response.out.write("""CACHE MANIFEST
+# THIS MANISFEST SHOULD CACHE THE FILES REQUIRED FOR THE 
+# MOBILE VERSION LOCALLY SO THAT IT ALL WORKS A BIT FASTER
+/static/jqt/jquery.1.4.2.js
+/static/jqt/jqtouch.js
+/static/jqt/jqtouch.css
+/static/jqt/themes/jqt/theme.css
+/static/jqt/themes/jqt/img/back_button_clicked.png
+/static/jqt/themes/jqt/img/button_clicked.png
+/static/jqt/themes/jqt/img/toolbar.png		
+/static/jqt/themes/jqt/img/button.png
+/static/jqt/themes/jqt/img/blueButton.png
+/static/jqt/themes/jqt/img/back_button.png
+/static/jqt/themes/jqt/img/whiteButton.png
+/static/jqt/themes/jqt/img/grayButton.png
+/static/jqt/themes/jqt/img/on_off.png
+/static/jqt/themes/jqt/img/chevron.png	
+/static/jqt/themes/jqt/img/chevron_circle.png
+/static/jqt/themes/jqt/img/loading.gif
+""")
 
 			
 class Robots(webapp.RequestHandler):
@@ -404,20 +441,23 @@ Disallow: /
 
 
 def main():
-  application = webapp.WSGIApplication([('/', MainHandler),
-  										('/refresh/',Reader)
-  										,('/help/',Help)
-  										,('/feeds/',Feeds)
-  										,('/addfeed/',AddFeed)
-  										,('/permissions/',Permissions)
-  										,('/importopml/',ImportOPML)
-  										,('/read/(.*)/(.*)/(.*)/',ReadFeed)
-  										,('/m/',MobileFeeds)
- 									,('/robots.txt',Robots)
- 
-  ],
-                                       debug=True)
-  util.run_wsgi_app(application)
+	application = webapp.WSGIApplication([('/', MainHandler),
+											('/refresh/',Reader)
+											,('/help/',Help)
+											,('/feeds/',Feeds)
+											,('/feedlist/',FeedList)
+											,('/feedpane/',FeedPane)
+											,('/addfeed/',AddFeed)
+											,('/permissions/',Permissions)
+											,('/importopml/',ImportOPML)
+											,('/read/(.*)/(.*)/(.*)/',ReadFeed)
+											,('/m/',MobileFeeds)
+											,('/m/manifest/',Manifest)
+											,('/robots.txt',Robots)
+
+										],
+										debug=True)
+	util.run_wsgi_app(application)
 
 
 if __name__ == '__main__':

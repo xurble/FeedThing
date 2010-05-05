@@ -241,8 +241,12 @@ class AddFeed(webapp.RequestHandler):
 			ff = feedparser.parse(ret.content) #need to start checking feed parser errors here
 			ns = Source()
 		
-			ns.name = ff.feed.title
-			ns.htmlUrl = ff.feed.link
+			ns.name = f
+			try:
+				ns.htmlUrl = ff.feed.link
+				ns.name = ff.feed.title
+			except:
+				pass
 			ns.feedURL = f
 			ns.put()
 			#you see really, I could parse out the items here and insert them rather than wait for them to come back round in the refresh cycle
@@ -387,10 +391,12 @@ class Reader(webapp.RequestHandler):
 				o(self,"\nEtag:%s\nLast Mod:%s\n\n" % (s.ETag,s.lastModified))
 								
 				f = feedparser.parse(ret.content) #need to start checking feed parser errors here
-			
-				s.name = f.feed.title
-				s.siteURL = f.feed.link
 
+				try:
+					s.siteURL = f.feed.link
+					s.name = f.feed.title
+				except:
+					pass
 
 				for e in f['entries']:
 				

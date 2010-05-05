@@ -34,6 +34,8 @@ from xml.dom import minidom
 
 from google.appengine.ext import db
 
+from BeautifulSoup import BeautifulSoup
+
 def o(req,msg):
 	req.response.out.write(msg)
 
@@ -177,8 +179,32 @@ class AddFeed(webapp.RequestHandler):
 
 	@userpage
 	def get(self):	
-		self.vals["feed"] = self.request.get("feed")
-		render(self,"addfeed.html")
+		f = self.request.get("feed")
+		self.vals["feed"] = f
+		ret = fetch(f)
+		#can I be bothered to check return codes here?  I think not on balance
+		
+		soup = BeautifulSoup(ret.content)
+		#are we actually RSS
+		rss = soup.findAll(text='rss')
+		isFeed = False
+		if len(rss) == 1:
+			#this is an rss file
+			isFeed = True
+			o(self,"RSS")
+		else:
+			rss = soup.findAll(text='feed')
+			if len(rss) == 1:
+				#this is an atom file
+				isFeed = True
+				o(self,"ATOM")
+		if not isFeed:
+			for l in soup.findAll(text='link'):
+				if l['rel'] = "alternate":
+					o(self,l['type'])
+		
+		
+		#render(self,"addfeed.html")
 		
 class ReadFeed(webapp.RequestHandler):
 	@userpage

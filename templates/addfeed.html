@@ -10,8 +10,8 @@
 </div>
 
 <div id="feeds">
-	<form method="post" onsubmit="addFeed(); return false;">
-		<input type="url" id="feed" name="feed" value="{{feed|escape}}">
+	<form method="post" onsubmit="addFeed(0); return false;">
+		<input type="url" id="feed-0" name="feed" value="{{feed|escape}}">
 		<input type="submit" value="Add Feed">
 	</form>
 </div>
@@ -23,9 +23,9 @@
 
 <script>
 
-function addFeed()
+function addFeed(fid)
 {
-	var theFeed = $("#feed").val();
+	var theFeed = $("#feed-" + fid).val();
 	if (theFeed == '')
 	{
 		return;

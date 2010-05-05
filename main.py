@@ -35,6 +35,7 @@ from xml.dom import minidom
 from google.appengine.ext import db
 
 from BeautifulSoup import BeautifulSoup
+from urlparse import urljoin
 
 def o(req,msg):
 	req.response.out.write(msg)
@@ -178,7 +179,13 @@ class Help(webapp.RequestHandler):
 class AddFeed(webapp.RequestHandler):
 
 	@userpage
-	def get(self):	
+	def get(self):
+		f = self.request.get("feed")
+		self.vals["feed"] = f
+		render(self,"addfeed.html")
+		
+	@userpage
+	def post(self):	
 		f = self.request.get("feed")
 		self.vals["feed"] = f
 		ret = fetch(f)
@@ -186,25 +193,63 @@ class AddFeed(webapp.RequestHandler):
 		
 		soup = BeautifulSoup(ret.content)
 		#are we actually RSS
-		rss = soup.findAll(text='rss')
+		rss = soup.findAll(name='rss')
 		isFeed = False
 		if len(rss) == 1:
 			#this is an rss file
 			isFeed = True
-			o(self,"RSS")
+			
 		else:
-			rss = soup.findAll(text='feed')
+			rss = soup.findAll(name='feed')
 			if len(rss) == 1:
 				#this is an atom file
 				isFeed = True
-				o(self,"ATOM")
+
 		if not isFeed:
-			for l in soup.findAll(text='link'):
-				if l['rel'] = "alternate":
-					o(self,l['type'])
+			feedcount = 0
+			rethtml = ""
+			for l in soup.findAll(name='link'):
+				if l['rel'] == "alternate" and (l['type'] == 'application/atom+xml' or l['type'] == 'application/rss+xml'):
+					feedcount += 1
+					try:
+						name = l['title']
+					except:
+						name = "Feed %d" % feedcount
+					rethtml += '<form method="post" onsubmit="addFeed(%d); return false;"><input type="hidden" name="feed" id="feed-%d" value="%s">%s <input type="submit" value="Subscribe"></form>' % (feedcount,feedcount,urljoin(f,l['href']),name)
+					f = urljoin(f,l['href']) # store this in case there is only one feed and we wind up importing it
+					#TODO: need to accout for relative URLs here
+			if feedcount == 1:
+				#just 1 feed found, let's import it now
+				
+				ret = fetch(f)
+				isFeed = True
+			elif feedcount == 0:
+				o(self,"No feeds found")
+			else:
+				o(self,rethtml)
+				
+		if isFeed:
+
+			#TODO: need to check for dupe feed urls!
+			
+			s = Source.gql("WHERE feedURL = :1", f)
+			#o(self,"s: %d/%s" % (s.count(),f))
+			if s.count() > 0:
+				o(self,"<div>Already subscribed to this feed </div>")
+				return
+
+			ff = feedparser.parse(ret.content) #need to start checking feed parser errors here
+			ns = Source()
 		
+			ns.name = ff.feed.title
+			ns.htmlUrl = ff.feed.link
+			ns.feedURL = f
+			ns.put()
+			#you see really, I could parse out the items here and insert them rather than wait for them to come back round in the refresh cycle
+
+			o(self,"<div>Imported feed %s</div>" % ns.name)
+
 		
-		#render(self,"addfeed.html")
 		
 class ReadFeed(webapp.RequestHandler):
 	@userpage
@@ -320,6 +365,8 @@ class Reader(webapp.RequestHandler):
 				#great
 				s.lastSuccess = datetime.datetime.now() #in case we start auto unsubscribing long dead feeds
 				
+
+				
 				if ret.status_code == 301: #permanent redirect
 					try:
 						s.feedURL = s.headers["Location"]  #Hope they never send a relative URL here :)
@@ -341,6 +388,10 @@ class Reader(webapp.RequestHandler):
 								
 				f = feedparser.parse(ret.content) #need to start checking feed parser errors here
 			
+				s.name = f.feed.title
+				s.siteURL = f.feed.link
+
+
 				for e in f['entries']:
 				
 					try:

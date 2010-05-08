@@ -9,16 +9,17 @@
 	</head>
 	<body>
 		<div id="header">
-			<h1>Feed Thing</h1>
+			<h1><a href="/"><img src="/static/FeedThing.gif" alt="FeedThing"></a></h1>
 		</div>
 		<div id="subheader">
-		
+			<ul>
+
+		<li><a href="/">Home</a></li>
 		{% if user %}
-			{{ user.nickname }} | 
+			<li>{{ user.nickname|escape }}</li> 
 		{% endif %}
-		<a href="/">Home</a> |
 		{% if user %}
-			<a href="/feeds/">Feeds</a>	|
+			<li><a href="/feeds/">Feeds</a></li>
 			<a href="/addfeed/">Add Feed</a>	|
 		{% endif %}
 		<a href="/help/">Help</a> |
@@ -27,6 +28,7 @@
 		{% else %}
 			<a href="/feeds/">Log In</a>
 		{% endif %}
+			</ul>
 		</div>
 		<div id="content">
 {% block content %}

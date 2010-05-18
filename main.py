@@ -218,12 +218,12 @@ class AddFeed(webapp.RequestHandler):
 					rethtml += '<form method="post" onsubmit="addFeed(%d); return false;"><input type="hidden" name="feed" id="feed-%d" value="%s">%s <input type="submit" value="Subscribe"></form>' % (feedcount,feedcount,urljoin(f,l['href']),name)
 					f = urljoin(f,l['href']) # store this in case there is only one feed and we wind up importing it
 					#TODO: need to accout for relative URLs here
-			if feedcount == 1:
+			#if feedcount == 1:
 				#just 1 feed found, let's import it now
 				
-				ret = fetch(f)
-				isFeed = True
-			elif feedcount == 0:
+			#	ret = fetch(f)
+			#	isFeed = True
+			if feedcount == 0:
 				o(self,"No feeds found")
 			else:
 				o(self,rethtml)

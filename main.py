@@ -247,7 +247,7 @@ class ReadFeed(webapp.RequestHandler):
 		s.put()
 		
 		self.vals["source"] = s
-		self.vals["posts"] = posts
+		self.vals["posts"] = pp
 		
 		#t = TaskThing()
 		#deferred.defer(t.MarkRead,pp)

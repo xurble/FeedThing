@@ -7,5 +7,13 @@
 	
 	{{ count }} feeds added.
 	
+	<table>
+		{% for s in imported %}
+			
+			<tr><td><a href="{{s.siteURL|escape}}">{{s.name|escape}}</a></td><td><a href="{{s.feedURL|escape}}">{{s.feedURL|escape}}</a></td></tr>
+			
+		{% endfor %}
+	</table>
+	
 
 {% endblock %}

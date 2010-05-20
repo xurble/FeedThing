@@ -3,6 +3,9 @@
 {% block content %}
 
 <div id="opml">
+	<h3>Batch Import</h3>
+	<p>You can add a batch of feeds in one go by supplying an OPML file.</p>
+	<p>Your current feed reader should be able to export your current subscriptions as OPML.</p>
 	<form method="post" action="/importopml/" enctype="multipart/form-data">
 		<input type="file" name="opml">
 		<input type="submit" value="Upload Subscriptions">
@@ -10,6 +13,8 @@
 </div>
 
 <div id="feeds">
+	<h2>Add Feed</h2>
+	<p>Enter the URL of the feed you wish to import.  If you don't know the feed URL, you can just enter the address of the site you want to subscribe to, Feed Thing will try and find a feed for you.</p>
 	<form method="post" onsubmit="addFeed(0); return false;">
 		<input type="url" id="feed-0" name="feed" value="{{feed|escape}}">
 		<input type="submit" value="Add Feed">
@@ -18,6 +23,14 @@
 
 <div id="addresult" style="display:none">
 	
+</div>
+
+<div>
+
+Bookmarklet:
+
+<a href="javascript:document.location.href='http://feedthingapp.appspot.com/addfeed/?feed=' + encodeURIComponent(document.location.href);">Subscribe with FeedThing</a>
+
 </div>
 
 
@@ -31,7 +44,7 @@ function addFeed(fid)
 		return;
 	}
 	
-	$("#addresult").html("Imagine this was a spinner :)").fadeIn();
+	$("#addresult").html("<img src='/static/loader.gif' alt='Loading'>").fadeIn();
 	
 	$.post("/addfeed/", { feed:theFeed }, function(data){
 	

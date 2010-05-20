@@ -11,10 +11,11 @@
 		</div>
 		<div id="subheader">&nbsp;</div>
 		<div id="framecontent">
+			<div id="unsub"><a href="javascript:unsub()">Unsubscribe</a></div>
 			<h2><a href="{{source.siteURL|escape}}">{{source.name|escape}}</a></h2>
 
 			{% for p in posts %}
-				<hr>
+				<hr style="clear:both;">
 				<h3><a href="{{p.link}}">{{p.title}}</a></h3>
 				<div class="date">{{p.created|timesince}} ago</div>
 				<div class="postbody">
@@ -23,6 +24,29 @@
 
 			{% endfor %}		
 		</div>
+		
+		<script>
+
+function unsub()
+{
+	if (confirm("Sure?"))
+	{
+		$("#unsub").html('<div id="loader"><img src="/static/loader.gif" alt="Working"></div>');
+		$.post("/feed/{{source.id}}/unsubscribe/",function(data){
+		
+			$("#loader").fadeOut(function(){
+				$("#loader").html(data);
+				$("#loader").fadeIn();
+			});
+		
+		},'html');
+	}
+	
+}
+		
+		
+		</script>
+		
 	</body>
 </html>
 

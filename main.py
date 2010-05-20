@@ -24,18 +24,25 @@ from google.appengine.api import users # Since this is a personal aggregator dep
 
 import os
 from google.appengine.ext.webapp import template
-import time
-import datetime
 
 import feedparser
 from google.appengine.api.urlfetch import fetch
 
 from xml.dom import minidom
 
+from model import *
+
+import time
+import datetime
 from google.appengine.ext import db
 
 from BeautifulSoup import BeautifulSoup
 from urlparse import urljoin
+
+from google.appengine.ext import deferred
+
+from tasks import TaskThing
+
 
 def o(req,msg):
 	req.response.out.write(msg)
@@ -81,50 +88,6 @@ def userpage(func):
 	return _up
 
 	
-class Source(db.Model):
-	
-	name          = db.StringProperty()
-	siteURL       = db.StringProperty()
-	feedURL       = db.StringProperty()
-	lastPolled    = db.DateTimeProperty()
-	duePoll       = db.DateTimeProperty(required=True,auto_now_add=True)
-	ETag          = db.StringProperty()
-	lastModified  = db.StringProperty() # just pass this back and forward between server and me , no need to parse
-	unreadCount   = db.IntegerProperty(required=True,default=0)
-	lastResult    = db.StringProperty()
-	interval      = db.IntegerProperty(required=True,default=60)
-	lastSuccess   = db.DateTimeProperty(auto_now_add=True)
-	lastChange    = db.DateTimeProperty(auto_now_add=True)
-	live          = db.BooleanProperty(required=True,default=True)
-
-	def _id(self):
-		try:
-			return self.key().id()
-		except:
-			return "new"
-			
-	id = property(_id)
-
-
-class Post(db.Model):
-	
-	source        = db.ReferenceProperty(Source)
-	title         = db.StringProperty()
-	body          = db.TextProperty()
-	link          = db.StringProperty()
-	found         = db.DateTimeProperty(auto_now_add=True)
-	created       = db.DateTimeProperty()
-	guid          = db.StringProperty()
-	author        = db.StringProperty()
-	read          = db.BooleanProperty(required=True,default=False)
-
-	def _id(self):
-		try:
-			return self.key().id()
-		except:
-			return "new"
-			
-	id = property(_id)
 
 
 class MainHandler(webapp.RequestHandler):
@@ -253,7 +216,15 @@ class AddFeed(webapp.RequestHandler):
 
 			o(self,"<div>Imported feed %s</div>" % ns.name)
 
-		
+class Unsubscribe(webapp.RequestHandler):
+	@userpage
+	def post(self,fid):
+
+		t = TaskThing()
+		deferred.defer(t.DeleteFeed,fid)
+
+
+		o(self,"Unsubscribed")		
 		
 class ReadFeed(webapp.RequestHandler):
 	@userpage
@@ -276,8 +247,10 @@ class ReadFeed(webapp.RequestHandler):
 		s.put()
 		
 		self.vals["source"] = s
-		self.vals["posts"] = pp
+		self.vals["posts"] = posts
 		
+		#t = TaskThing()
+		#deferred.defer(t.MarkRead,pp)
 		
 		
 		if format == "mobile":
@@ -288,27 +261,29 @@ class ReadFeed(webapp.RequestHandler):
 	
 class ImportOPML(webapp.RequestHandler):
 
+	# TODO: I don't think that this is the most robust import ever :)
 	@userpage
 	def post(self):
-		self.response.headers["Content-Type"] = "text/plain"
 
 		theFile = self.request.get("opml")
 
 		count = 0
 		dom = minidom.parseString(theFile)
+		imported  = []
 		
 		sources = dom.getElementsByTagName("outline")
 		for s in sources:
-			self.response.out.write("\n");
-			self.response.out.write(s)		
 
 			ns = Source()
 			ns.siteURL = s.getAttribute("htmlUrl")
-			ns.feedURL = s.getAttribute("xmlUrl")
+			ns.feedURL = s.getAttribute("xmlUrl") #probably best to see that there isn't a match here :)
 			ns.name = s.getAttribute("title")
 			ns.put()
 			count += 1
 			
+			imported.append(ns)
+		
+		self.vals["imported"] = imported	
 		self.vals["count"] = count	
 		render(self,"importopml.html")
 
@@ -536,6 +511,7 @@ def main():
 											,('/permissions/',Permissions)
 											,('/importopml/',ImportOPML)
 											,('/read/(.*)/(.*)/(.*)/',ReadFeed)
+											,('/feed/(.*)/unsubscribe/',Unsubscribe)
 											,('/m/',MobileFeeds)
 											,('/m/manifest/',Manifest)
 											,('/robots.txt',Robots)

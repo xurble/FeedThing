@@ -141,3 +141,29 @@ a img {
 	color:#444;
 	padding:2px;
 }
+
+#opml {
+	float:right;
+	background-color: #DCE8C4;
+	margin:10px;
+	width:200px;
+}
+#opml h3 {
+	background-color: #7EA02D;
+	color: white;
+	padding:3px;
+	text-align: center;
+	margin: 0px;
+	font-family: Tahoma;
+	letter-spacing: 1pt;
+}
+
+#opml p, #opml form {
+	padding:5px;
+}
+
+#unsub {
+	display: block;
+	float:right;
+	padding:20px;
+}

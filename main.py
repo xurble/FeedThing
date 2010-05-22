@@ -1,19 +1,8 @@
 #!/usr/bin/env python
 #
-# Copyright 2007 Google Inc.
+# Copyright 2010 Gareth Simpson (g@xurble.org)
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
+# License?  Yes, quite.  Something open source-ish
 
 
 import hashlib
@@ -226,6 +215,12 @@ class Unsubscribe(webapp.RequestHandler):
 
 		o(self,"Unsubscribed")		
 		
+class FeedGarden(webapp.RequestHandler):
+	@userpage
+	def get(self):
+		self.vals["feeds"] = Source.gql("ORDER BY lastChange DESC")
+		render(self,"feedgarden.html")
+		
 class ReadFeed(webapp.RequestHandler):
 	@userpage
 	def get(self,fid,format,count):
@@ -339,6 +334,7 @@ class Reader(webapp.RequestHandler):
 				#not modified
 				interval += 1
 				s.lastResult = "Not modified"
+				s.lastSuccess = datetime.datetime.now() #in case we start auto unsubscribing long dead feeds
 				
 			elif ret.status_code >= 200 and ret.status_code < 400:
 				#great
@@ -434,7 +430,7 @@ class Reader(webapp.RequestHandler):
 				if changed:
 					interval /= 2
 					s.lastResult = "OK (updated)" #and temporary redirects
-					s.lastChanged = datetime.datetime.now()
+					s.lastChange = datetime.datetime.now()
 				else:
 					s.lastResult = "OK"
 					interval += 2 # we slow down feeds a little more that don't send headers we can use
@@ -451,8 +447,8 @@ class Reader(webapp.RequestHandler):
 			
 			if interval < 60:
 				interval = 60 #no less than 1 hour
-			if interval > 60 * 60 * 24:
-				interval = 60 * 60 * 24 #no more than 1 day
+			if interval > 60 * 60 * 24 * 3:
+				interval = 60 * 60 * 24 * 3 #no more than 3 days
 			
 			o(self,"\nUpdating interval from %d to %d\n" % (s.interval,interval))
 			s.interval = interval
@@ -508,6 +504,7 @@ def main():
 											,('/feedlist/',FeedList)
 											,('/feedpane/',FeedPane)
 											,('/addfeed/',AddFeed)
+											,('/feedgarden/',FeedGarden)
 											,('/permissions/',Permissions)
 											,('/importopml/',ImportOPML)
 											,('/read/(.*)/(.*)/(.*)/',ReadFeed)

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h2>Feed Garden</h2>
+<p>FeedThing will take care of your feeds for you.  There is absolutely no need to use this page.  Disused feeds will be automatically polled less frequently and erroring feeds will be automatically unsubscribed</p>
+<p>However, feel free to feed your inner pendant and cultivate the feed list by hand.</p>
+
+<table id="gardentable">
+	<tr>
+		<th>Feed</th>
+		<th>Interval</th>
+		<th>Last Successful Read</th>
+		<th>Last Result</th>
+		<th>Last Change</th>
+		<th>Die!</th>
+	</tr>
+	{% for f in feeds %}
+		<tr style="{{f.gardenStyle}}">
+			<td><a href="{{f.bestLink}}">{{f.displayName|escape}}</a></td>
+			<td>{{f.interval}}</td>
+			<td>{{f.lastSuccess|timesince}} ago</td>
+			<td>{{f.lastResult}}</td>
+			<td>{{f.lastChange|timesince}} ago</td>
+			<td id="f{{f.id}}"><a href="javascript:unsubscribe({{f.id}})">Unsubscribe</a></td>
+		</tr>
+	{% endfor %}
+
+</table>
+
+
+		<script>
+
+function unsubscribe(fid)
+{
+	if (confirm("Sure?"))
+	{
+		$("#f" + fid).html('<div id="loader' + fid +'"><img src="/static/loader.gif" alt="Working"></div>');
+		$.post("/feed/" + fid + "/unsubscribe/",function(data){
+		
+			$("#loader" + fid).fadeOut(function(){
+				$("#loader" + fid).html(data);
+				$("#loader" + fid).fadeIn();
+			});
+		
+		},'html');
+	}
+	
+}
+		
+		
+		</script>
+
+
+{% endblock %}

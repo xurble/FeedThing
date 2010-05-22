@@ -21,13 +21,14 @@
 		{% endif %}
 		{% if user %}
 			<li><a href="/feeds/">Feeds</a></li>
-			<a href="/addfeed/">Add Feed</a>	|
+			<li><a href="/addfeed/">Add Feed</a></li>
+			<li><a href="/feedgarden/">Maintain Feeds</a></li>
 		{% endif %}
-		<a href="/help/">Help</a> |
+		<a href="/help/">Help</a>
 		{% if user %}
-			<a href="{{ logout }}">Log out</a>
+			<li><a href="{{ logout }}">Log out</a></li>
 		{% else %}
-			<a href="/feeds/">Log In</a>
+			<li><a href="/feeds/">Log In</a></li>
 		{% endif %}
 			</ul>
 		</div>

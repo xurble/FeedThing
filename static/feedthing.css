@@ -167,3 +167,10 @@ a img {
 	float:right;
 	padding:20px;
 }
+
+#gardentable, #gardentable td,#gardentable th {
+	border:1px solid #CCC;
+	border-collapse: collapse;
+}
+
+

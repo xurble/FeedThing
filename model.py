@@ -35,16 +35,20 @@ class Source(db.Model):
 			
 	def gardenStyle(self):
 		
-		dd = datetime.datetime.now() - self.lastChange
 		
-		days = int (dd.days/2)
-		
-		col = 255 - days
-		if col < 0: col = 0
-		
-		css = "background-color:#ff%02x%02x" % (col,col)
-		if col < 128:
-			css += ";color:white"
+		if not self.live:
+			css="background-color:#ccc;"
+		else:
+			dd = datetime.datetime.now() - self.lastChange
+			
+			days = int (dd.days/2)
+			
+			col = 255 - days
+			if col < 0: col = 0
+			
+			css = "background-color:#ff%02x%02x" % (col,col)
+			if col < 128:
+				css += ";color:white"
 			
 		return css
 			

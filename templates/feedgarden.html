@@ -17,7 +17,7 @@
 	</tr>
 	{% for f in feeds %}
 		<tr style="{{f.gardenStyle}}">
-			<td><a href="{{f.bestLink}}">{{f.displayName|escape}}</a></td>
+			<td><a href="{{f.bestLink|escape}}">{{f.displayName|escape}}</a> (<a href="{{f.feedURL|escape}}">feed</a>)</td>
 			<td>{{f.interval}}</td>
 			<td>{{f.lastSuccess|timesince}} ago</td>
 			<td>{{f.lastResult}}</td>

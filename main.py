@@ -288,7 +288,7 @@ class Reader(webapp.RequestHandler):
 		self.response.headers["Content-Type"] = "text/plain"
 	
 	
-		sources = Source.gql("WHERE duePoll < :1 ORDER BY duePoll LIMIT 2",datetime.datetime.now())
+		sources = Source.gql("WHERE duePoll < :1 and live = :2 ORDER BY duePoll LIMIT 2",datetime.datetime.now(),True)
 		o(self,"Update Q: %d\n\n" % sources.count())
 		for s in sources:
 		
@@ -307,9 +307,11 @@ class Reader(webapp.RequestHandler):
 			ret = None
 			o(self,"\nFetching %s" % s.feedURL)
 			try:
-				ret = fetch(s.feedURL,headers=headers)
+				ret = fetch(s.feedURL,headers=headers,follow_redirects=False)
 			except:
 				s.lastResult = "Fetch error"
+
+			o(self,"\nResult: %d" % ret.status_code)
 						
 			
 			if ret == None:
@@ -335,18 +337,19 @@ class Reader(webapp.RequestHandler):
 				interval += 1
 				s.lastResult = "Not modified"
 				s.lastSuccess = datetime.datetime.now() #in case we start auto unsubscribing long dead feeds
-				
-			elif ret.status_code >= 200 and ret.status_code < 400:
+			elif ret.status_code == 301: #permenant redirect
+				try:
+					s.feedURL = ret.headers["Location"]  #Hope they never send a relative URL here :)
+					s.lastResult = "Moved"
+				except:
+					o(self,"error redirecting")
+					pass			
+			elif ret.status_code >= 200 and ret.status_code < 400: #now we are not following redirects 302,303 and so forth are going to fail here, but what the hell :)
 				#great
 				s.lastSuccess = datetime.datetime.now() #in case we start auto unsubscribing long dead feeds
 				
 
 				
-				if ret.status_code == 301: #permanent redirect
-					try:
-						s.feedURL = s.headers["Location"]  #Hope they never send a relative URL here :)
-					except:
-						pass
 				changed = False	
 				
 				try:

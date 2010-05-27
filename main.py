@@ -310,8 +310,9 @@ class Reader(webapp.RequestHandler):
 				ret = fetch(s.feedURL,headers=headers,follow_redirects=False)
 			except:
 				s.lastResult = "Fetch error"
-
-			o(self,"\nResult: %d" % ret.status_code)
+			
+			if ret:
+				o(self,"\nResult: %d" % ret.status_code)
 						
 			
 			if ret == None:
@@ -334,7 +335,7 @@ class Reader(webapp.RequestHandler):
 				s.lastResult = "Bad request (%d)" % ret.status_code
 			elif ret.status_code == 304:
 				#not modified
-				interval += 1
+				interval += 5
 				s.lastResult = "Not modified"
 				s.lastSuccess = datetime.datetime.now() #in case we start auto unsubscribing long dead feeds
 			elif ret.status_code == 301: #permenant redirect
@@ -436,7 +437,7 @@ class Reader(webapp.RequestHandler):
 					s.lastChange = datetime.datetime.now()
 				else:
 					s.lastResult = "OK"
-					interval += 2 # we slow down feeds a little more that don't send headers we can use
+					interval += 10 # we slow down feeds a little more that don't send headers we can use
 					
 				s.unreadCount = newCount
 			

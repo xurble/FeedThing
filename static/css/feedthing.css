@@ -35,6 +35,7 @@ body {
 }
 #subheader li {
 	display: inline-block;
+	margin-right:10px;
 }
 
 h1 {
@@ -140,6 +141,10 @@ a img {
 	text-align: right;
 	color:#444;
 	padding:2px;
+}
+
+.buttons {
+	float: right;
 }
 
 #opml {

@@ -4,32 +4,12 @@
 		<title>{{ title }}</title>
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">		
  		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
-		<link href="/static/feedthing.css" rel="stylesheet"	type="text/css">
+		<link href="/static/css/feedthing.css" rel="stylesheet"	type="text/css">
 	</head>
 	<body>
 		<div id="frameheader">
 		</div>
-		<div id="subheader">
-			<ul>
-
-		<li><a href="/" target="_top">Home</a></li>
-		{% if user %}
-			<li>{{ user.nickname|escape }}</li> 
-		{% endif %}
-		{% if user %}
-			<li><a href="/feeds/" target="_top">Feeds</a></li>
-			<li><a href="/addfeed/" target="_top">Add Feed</a></li>
-			<li><a href="/feedgarden/" target="_top">Maintain Feeds</a></li>
-		{% endif %}
-		<a href="/help/" target="_top">Help</a>
-		{% if user %}
-			<li><a href="{{ logout }}" target="_top">Log out</a></li>
-		{% else %}
-			<li><a href="/feeds/" target="_top">Log In</a></li>
-		{% endif %}
-			</ul>
-		</div>
-
+{% include "subheader.html" %}
 
 		<div id="framecontent">
 			<p>This is where the feeds are at</p>

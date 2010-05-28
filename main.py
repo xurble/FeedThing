@@ -335,7 +335,7 @@ class Reader(webapp.RequestHandler):
 				s.lastResult = "Bad request (%d)" % ret.status_code
 			elif ret.status_code == 304:
 				#not modified
-				interval += 5
+				interval += 2
 				s.lastResult = "Not modified"
 				s.lastSuccess = datetime.datetime.now() #in case we start auto unsubscribing long dead feeds
 			elif ret.status_code == 301: #permenant redirect
@@ -347,7 +347,6 @@ class Reader(webapp.RequestHandler):
 					pass			
 			elif ret.status_code >= 200 and ret.status_code < 400: #now we are not following redirects 302,303 and so forth are going to fail here, but what the hell :)
 				#great
-				s.lastSuccess = datetime.datetime.now() #in case we start auto unsubscribing long dead feeds
 				
 
 				
@@ -365,7 +364,16 @@ class Reader(webapp.RequestHandler):
 				
 				o(self,"\nEtag:%s\nLast Mod:%s\n\n" % (s.ETag,s.lastModified))
 								
-				f = feedparser.parse(ret.content) #need to start checking feed parser errors here
+				try:
+					f = feedparser.parse(ret.content) #need to start checking feed parser errors here
+					entries = f['entries']
+					s.lastSuccess = datetime.datetime.now() #in case we start auto unsubscribing long dead feeds
+
+				except:
+					s.lastResult = "Feed Parse Error"
+					entries = []
+					interval += 120
+					
 
 				try:
 					s.siteURL = f.feed.link
@@ -373,7 +381,7 @@ class Reader(webapp.RequestHandler):
 				except:
 					pass
 
-				for e in f['entries']:
+				for e in entries:
 				
 					try:
 						body = e.content[0].value
@@ -437,7 +445,7 @@ class Reader(webapp.RequestHandler):
 					s.lastChange = datetime.datetime.now()
 				else:
 					s.lastResult = "OK"
-					interval += 10 # we slow down feeds a little more that don't send headers we can use
+					interval += 5 # we slow down feeds a little more that don't send headers we can use
 					
 				s.unreadCount = newCount
 			

@@ -21,17 +21,8 @@
 	</form>
 </div>
 
-<div id="addresult" style="display:none">
-	
-</div>
+<div id="addresult" style="display:none"> </div>
 
-<div>
-
-Bookmarklet:
-
-<a href="javascript:document.location.href='http://feedthingapp.appspot.com/addfeed/?feed=' + encodeURIComponent(document.location.href);">Subscribe with FeedThing</a>
-
-</div>
 
 
 <script>
@@ -44,7 +35,7 @@ function addFeed(fid)
 		return;
 	}
 	
-	$("#addresult").html("<img src='/static/loader.gif' alt='Loading'>").fadeIn();
+	$("#addresult").html("<img src='/static/images/loader.gif' alt='Loading'>").fadeIn();
 	
 	$.post("/addfeed/", { feed:theFeed }, function(data){
 	

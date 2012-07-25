@@ -38,7 +38,7 @@ else:
             'ENGINE': 'django.db.backends.mysql', # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
             'NAME': 'cruisem1_feedthing',                      # Or path to database file if using sqlite3.
             'USER': 'cruisem1_ft',                      # Not used with sqlite3.
-            'PASSWORD': '1q2w3e4r5t6y7u8i9o',                  # Not used with sqlite3.
+            'PASSWORD': '',                  # Not used with sqlite3.
             'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
             'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
         }

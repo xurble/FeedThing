@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+
+{% block content %}
+    <div class="ftcontent">
+    	<h2>Login</h2>
+    	
+    	<div class="error">{{msg}}</div>   
+    	
+    	<form method="POST">
+    	    {% csrf_token %}
+            <label for="username">Username:</label><br>
+            <input type="text" name="username" id="username" value="{{username}}">
+            <br>
+            <label for="password">Password:</label><br>
+            <input type="password" name="password" id="password">
+            <br>
+            <br>
+            <input type="submit" value="Log In" class="button">
+        </form>
+    </div>
+{% endblock %}  

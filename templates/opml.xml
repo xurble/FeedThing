@@ -1,0 +1,17 @@
+<opml version="1.0">
+    <head>
+        <title>FeedThing Export</title>
+    </head>
+    <body>
+	{% for f in feeds %}
+
+
+        <outline text="{{f.displayName|escape}}"
+            title="{{f.displayName|escape}}" type="rss"
+            xmlUrl="{{f.feedURL|escape}}" htmlUrl="{{f.bestLink|escape}}"/>
+
+
+	{% endfor %}
+
+    </body>
+</opml>

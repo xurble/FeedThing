@@ -7,40 +7,53 @@
  		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
 		<link href="/static/css/feedthing.css" rel="stylesheet"	type="text/css">
 		<link rel="shortcut icon" href="/static/images/feedthingsmall.png">
+        <meta name="viewport" content="initial-scale=1.0">
+        <meta name="viewport" content="user-scalable=false">
 	</head>
 	<body>
-		<div id="header">
-			<h1><a href="/"><img src="/static/images/FeedThing.gif" alt="FeedThing"></a></h1>
-		</div>
-{% include "subheader.html" %}
+        <div id="header">
+            <div class="content">
+                <h1 id="ftlogo"><a href="/"><span class="feed">Feed</span><span class="thing">Thing</span></a></a></h1>
+                
+                <ul class="navigation">
+    
+                    <li><a href="/" target="_top">Home</a></li>
+                {% if user.is_authenticated %}
+                    <li><a href="/feeds/" target="_top">Feeds</a></li>
+                    <li><a href="/addfeed/" target="_top">Add Feed</a></li>
+                    <li><a href="/feedgarden/" target="_top">Maintain Feeds</a></li>
+                {% endif %}
+                    <li><a href="/help/" target="_top">Help</a></li>
+                {% if user.is_authenticated %}
+                    <li><a href="{{ logout }}" target="_top">Log out</a></li>
+                {% else %}
+                    <li><a href="/feeds/" target="_top">Log In</a></li>
+                {% endif %}
+                </ul>
+                <div class="clearfix"></div>
+            </div>
+        </div>
 
-		<div id="content">
+        <div class="content" style="padding-bottom:25px">
+            
 {% block content %}
 
 {% endblock %}
-		</div>	
-		<div id="footer">
-			Because nobody really likes Google Reader :)
-		</div>
-		<script>
-		
-function sizeDivs()
-{
-	var h = $(window).height();
-	h-=200;
-	$("#feedlist").height(h);
-	$("#feedpane").height(h);
-}
-
-$(window).resize(function(){
-	sizeDivs();
-});
+        </div>	
+        <script>
+        
 
 
-$(document).ready(function(){
-	sizeDivs();
-});
-	
-		</script>
+    $.ajaxSetup({
+        beforeSend: function(xhr, settings) {
+            if (!(/^http:.*/.test(settings.url) || /^https:.*/.test(settings.url))) {
+                // Only send the token to relative URLs i.e. locally.
+                xhr.setRequestHeader("X-CSRFToken",
+                                     $("input[name='csrfmiddlewaretoken']")[0].value);
+            }
+        }
+    });
+
+        </script>
 	</body>
 </html>

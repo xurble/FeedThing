@@ -1,64 +1,38 @@
-<!doctype html>
-<html>
-	<head>
-		<title>{{ title }}</title>
-		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">		
- 		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
-		<link href="/static/css/feedthing.css" rel="stylesheet"	type="text/css">
-	</head>
-	<body>
-		<div id="frameheader">
-		</div>
-{% include "subheader.html" %}
-		<div id="framecontent">
-			<div id="unsub"><a href="javascript:unsub()">Unsubscribe</a></div>
-			<h2><a href="{{source.siteURL|escape}}">{{source.name|escape}}</a></h2>
 
+            <a class="button backbutton" href="javascript:unRead()">Back</a>
+            <h2 class="ftheader">{{source.name}}</h2>
+            <div class="posts">
 			{% for p in posts %}
 				<hr style="clear:both;">
 
 				<div class="buttons">
 					<a href="http://delicious.com/save" onclick="window.open('http://delicious.com/save?v=5&noui&jump=close&url='+encodeURIComponent('{{p.link|escape}}')+'&title='+encodeURIComponent('{{p.title	}}'), 'delicious','toolbar=no,width=550,height=550'); return false;"><img src="/static/images/delicious.png" alt="Delicious" ></a>				
-					<a href="javascript:function iprl5(){var d=document,z=d.createElement('scr'+'ipt'),b=d.body;try{if(!b)throw(0);d.title='(Saving...) {{p.title}}';z.setAttribute('src','http://www.instapaper.com/j/ZNjId4jtD17u?u='+encodeURIComponent('{{p.link|escape}}')+'&t='+(new Date().getTime()));b.appendChild(z);}catch(e){alert('Please wait until the page has loaded.');}}iprl5();void(0)"><img src="/static/images/instapaper.png" alt="Read Later"></a>
+<br>				
+<!--
+<iframe border="0" scrolling="no" width="78" height="17" allowtransparency="true" frameborder="0"
+ style="margin-bottom: -3px; z-index: 1338; border: 0px; background-color: transparent; overflow: hidden;"
+ src="http://www.instapaper.com/e2?url={{p.link|urlencode}}&title={{p.titleURLEncoded}}"></iframe>
+	-->			
+				
+				
 				</div>
 
-				<h3><a href="{{p.link|escape}}">{{p.title}}</a></h3>
-				<div class="date">{{p.created|timesince}} ago</div>
+                {% if not source %}
+                <h2 class="ftheader">{{p.source.name}}</h2>
+                {% endif %}
+				<h3 class="posttitle"><a href="{{p.link|escape}}" target="new">{{p.title|safe}}</a></h3>
+
+    				<div class="date">{{p.created }} - {{p.created|timesince}} ago</div>
 				<div class="postbody">
-					{{p.body}}
+					{{p.body|safe}}
 				</div>
 
 			{% endfor %}		
-		</div>
-		
-		<script>
 
-function unsub()
-{
-	if (confirm("Sure?"))
-	{
-		$("#unsub").html('<div id="loader"><img src="/static/loader.gif" alt="Working"></div>');
-		$.post("/feed/{{source.id}}/unsubscribe/",function(data){
-		
-			$("#loader").fadeOut(function(){
-				$("#loader").html(data);
-				$("#loader").fadeIn();
-			});
-		
-		},'html');
-	}
-	
-}
-		
-		
-		</script>
-		
-	</body>
-</html>
-
-
-
-
+            </div>
+            <div class="clearfix"></div>
+            <a class="button backbutton" href="javascript:unRead()">Back</a>
+            <div class="clearfix"></div>
 
 
 

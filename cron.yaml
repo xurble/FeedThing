@@ -1,4 +1,0 @@
-cron:
-- description: pull feeds
-  url: /refresh/
-  schedule: every 1 minutes

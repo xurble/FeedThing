@@ -1,65 +1,253 @@
+
 html {
 	margin:0px;
 	padding:0px;
 }
 
 body {
-	font-family:Verdana,Helvetica,Arial;
+	font-family:Helvetica,Arial;
 	font-size:13px;
-	background-color:#FFFFFF;
 	margin:0px;
 	padding:0px;
+	//background-color: red;
 }
 
-
-#header,#frameheader {
+#header {
 	margin:0px;
-	border-bottom:1px solid #CCC;
-	height: 50px;
-	
+}
+
+.clearfix {
+    clear:both;
+}
+
+h1 span.feed {
+    text-transform: uppercase;
+	font-family: Futura-CondensedMedium, Helvetica, Arial , sans-serif;
+    letter-spacing: 6pt;
+    font-weight: normal;
+}
+
+h1 a span.thing {
+    text-transform: uppercase;
+	font-family: HelveticaNeue-Light,Helvetica, Arial , sans-serif;
+	font-weight: lighter;
+    letter-spacing: 6pt;
+    color:#beaf48;
+    -webkit-transform:  matrix(0.6, 0, 0, 1, -25, 0);
+    -moz-transform:  matrix(0.6, 0, 0, 1, -25, 0);
+    transform:  matrix(0.6, 0, 0, 1, -25, 0);
+    display: inline-block;
+}
+
+h3 {
+    font-size: 21px;
+}
+
+@media only screen and (max-width: 600px)
+{
+
+    ul.navigation {
+        display:none;
+    }
+    
+    .content {
+        padding-left:5px;
+        padding-right:5px;
+    }
+    
+    #feedlist {
+    
+    }
+    
+    #feedpane {
+        overflow-x:hidden;
+    }
+    
+    a.backbutton {
+        float:right;
+        margin-bottom: 6px !important;
+    }
+    
+    .postbody img {
+        max-width: 300px;
+        display: block;
+    }
+    
+    #opml {
+        display: none;
+    }
+    
+    #footer {
+        display: none;
+    }
+    
+    input[type=url] {
+        width:99%;
+    }
+
+}
+
+@media only screen and (min-width: 601px)
+{
+
+    body {
+    	overflow-y:scroll;
+    }
+    
+    .content {
+        margin-left:auto;
+        margin-right: auto;
+        width:960px;
+    }
+    
+    
+    ul.navigation {
+    	display: inline-block;
+    	padding:0px;
+    	margin: 0px;
+    	margin-top: 6px;
+    	float:right;
+    }
+    ul.navigation li {
+    	display: inline-block;
+    	margin-right:10px;
+    }
+    
+    #feedlist, #feedlistplaceholder {
+        float:left;
+        width:350px;
+        padding-bottom:20px;
+    }
+    #feedlistplaceholder {
+        display:none;
+    }
+    
+    #feedpane {
+        overflow-x:hidden;
+    	float: left;
+    	width: 595px;
+    	padding-left:15px;
+    }
+    
+    a.backbutton {
+        display: none !important;
+    }
+
+
+    .postbody img {
+        max-width: 590px;
+        display: block;
+    }
+
+    #opml {
+    	float:right;
+    	background-color: #DCE8C4;
+    	margin:10px;
+    	width:200px;
+    }
+
+
+    #footer{
+    	clear: both;
+    	margin-top:50px;
+    	padding:20px;
+    	text-align:right;
+    	font-size:10px;
+    	border-top: 1px solid #CCC;
+    
+    }
+    
+    input[type=url] {
+        width:500px;
+    }
+
 }
 
 
-#subheader {
-	text-align: right;
-	background-color: #DCE8C4;
-	padding-right:150px;
-	height:22px;
+#feedpane {
+    padding-bottom:24px;
+}
+.error {
+    color:red;
+    font-weight: bold;
+    padding:15px;
 }
 
-#subheader ul {
-	display: inline-block;
-	padding:0px;
-	margin: 0px;
-	margin-top: 2px;
+label {
+    font-weight: bold;
+    padding-top: 5px;
 }
-#subheader li {
-	display: inline-block;
-	margin-right:10px;
+
+input[type=text],input[type=password],input[type=url] {
+    padding:4px;
+    border: 1px solid #ccc;
+    padding-bottom: 8px;
+    border-radius: 3px;
+    font-size: 16px;
+}
+
+hr {
+    border: none;
+    border-top:1px solid #ccc;
 }
 
 h1 {
 	margin: 0px;
-
+    float:left;
 }
 
-#header h1,
-#frameheader h1{
-	padding:10px;
-}
-#header h1{
-	margin-left:150px;
-
-}
-
-
-#content {
-	margin-left: 150px;
+img.paneplant {
+    display: block;
+    opacity: 0.1;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 150px;
 }
 
-#content h2{
 
-	font-family: Verdana, Arial, Helvetica, sans-serif;
+ul#feeds {
+    margin:0px;
+    padding:0px;
+    margin-top: 5px;
+}
+ul#feeds li, ul#addfeedlist li {
+    list-style-type: none;
+}
+ul#feeds li a, .button {
+    display:block;
+    padding:8px;
+    text-decoration:none;
+    border:1px solid #ccc;
+    margin-bottom:2px;
+    color:black;
+    font-weight:bold;
+    background-color: #dedede;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+
+.button {
+    display: inline-block;
+    border-radius: 3px;
+    padding: 5px;
+    padding-bottom:7px;
+}
+
+ul#feeds li a:hover, .button:hover {
+    background-color:#DCE8C4;
+}
+
+ul#feeds li a.read {
+    background-color: #7EA02D;
+}
+
+.unreadcount {
+    float:right;
+    font-weight:normal;
+    font-size:80%;
+}
+
+.ftcontent h2, h2.ftheader, .feedname {
+	font-family: Futura, Helvetica, Arial , sans-serif;
 	font-size: 10pt;
 	/*font-weight: bold;*/
 	padding: 8px 8px 2px 0px;
@@ -68,73 +256,41 @@ h1 {
 	font-weight: normal;
 	text-transform: uppercase;
 	letter-spacing: 5pt;
-	text-decoration: none;	/* this must be within this class to work */}
-
-#framecontent {
-	padding:10px;
+	text-decoration: none;	/* this must be within this class to work */
 }
 
-#footer{
-	clear: both;
-	margin-top:50px;
-	padding:20px;
-	text-align:right;
-	font-size:10px;
-	border-top: 1px solid #CCC;
-
-}
-
-
-ul.link li {
-	margin-top: 25px;
-}
-
-ul.tags {
-	padding:0px;
-	margin:0px;
-}
-
-ul.tags li {
-	display:inline;
-	font-size:11px;
-}
-
-.description {
-	padding: 4px;
-	font-style:italic;
+h2.ftheader {
+    text-align: center;
 }
 
 
 a {
-	color: #06C;
+	color: #7EA02D;
+	text-decoration: none;
+	font-weight: bold;
 }
-
 
 
 a img {
 	border:none;	
 }
 
-#feedlist {
-	clear:both;
+img {
+    margin:3px;
 }
 
-#feedpane {
-
-	float: left;
-	width: 600px;
-	border:1px solid black;
-	margin:10px;
-	padding:5px;
-	overflow-y: scroll;	
+img#littlelogo {
+    margin-left: auto;
+    margin-right: auto;
+	display:block;
+    max-width:75px;
+    padding-top: 15px;
 }
 
-#feedpane img {
-	max-width:450px; 
-	max-height:300px;
-	width: expression(this.width > 450 && (this.width/this.height) > (450/300) ? 450 : true);
-	height: expression(this.height > 300 && (this.width/this.height) <= (450/300) ? 300 : true); 
-}	
+
+ ul#addfeedlist li {
+    padding-bottom: 6px;
+ }
 
 .date {
 	font-size:11px;
@@ -147,19 +303,13 @@ a img {
 	float: right;
 }
 
-#opml {
-	float:right;
-	background-color: #DCE8C4;
-	margin:10px;
-	width:200px;
-}
+
 #opml h3 {
 	background-color: #7EA02D;
 	color: white;
 	padding:3px;
 	text-align: center;
 	margin: 0px;
-	font-family: Tahoma;
 	letter-spacing: 1pt;
 }
 
@@ -178,4 +328,13 @@ a img {
 	border-collapse: collapse;
 }
 
+.posts h3.posttitle {
+    font-family: Helvetica,Arial;
+}
+
+.posts {
+    line-height: 1.4;
+    font-family: Georgia,serif;
+    font-size: 18px;
+}
 

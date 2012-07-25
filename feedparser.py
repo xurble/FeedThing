@@ -1614,6 +1614,10 @@ class _HTMLSanitizer(_BaseHTMLProcessor):
       'rel', 'rev', 'rows', 'rowspan', 'rules', 'scope', 'selected', 'shape', 'size',
       'span', 'src', 'start', 'summary', 'tabindex', 'target', 'title', 'type',
       'usemap', 'valign', 'value', 'vspace', 'width']
+      
+    acceptable_attributes.remove("height")
+    acceptable_attributes.remove("width")
+    
 
     unacceptable_elements_with_end_tag = ['script', 'applet']
 

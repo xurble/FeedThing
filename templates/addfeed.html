@@ -2,27 +2,35 @@
 
 {% block content %}
 
-<div id="opml">
-	<h3>Batch Import</h3>
-	<p>You can add a batch of feeds in one go by supplying an OPML file.</p>
-	<p>Your current feed reader should be able to export your current subscriptions as OPML.</p>
-	<form method="post" action="/importopml/" enctype="multipart/form-data">
-		<input type="file" name="opml">
-		<input type="submit" value="Upload Subscriptions">
-	</form>
-</div>
+<div id="feeds" class="ftcontent">
 
-<div id="feeds">
+    <div id="opml">
+    	<h3>Batch Import</h3>
+    	<p>You can add a batch of feeds in one go by supplying an OPML file.</p>
+    	<p>Your current feed reader should be able to export your current subscriptions as OPML.</p>
+    	<form method="post" action="/importopml/" enctype="multipart/form-data">
+    		<input type="file" name="opml">
+    		<input type="submit" value="Upload Subscriptions">
+    		{% csrf_token %}
+    	</form>
+    </div>
+
 	<h2>Add Feed</h2>
 	<p>Enter the URL of the feed you wish to import.  If you don't know the feed URL, you can just enter the address of the site you want to subscribe to, Feed Thing will try and find a feed for you.</p>
-	<form method="post" onsubmit="addFeed(0); return false;">
-		<input type="url" id="feed-0" name="feed" value="{{feed|escape}}">
-		<input type="submit" value="Add Feed">
+	<form method="post" onsubmit="addFeed(0); return false;" name="addfeed">
+		<input type="url" id="feed-0" name="feed" value="{{feed|escape}}" ><br><br>
+		<input type="checkbox" id="river" name="river" value="yes"><label for="river">High traffic feed for "River of News"</label><br>
+		<br><input class="button" type="submit" value="Add Feed">
+		{% csrf_token %}
 	</form>
+
+    <div id="addresult" style="display:none"> 
+        <h2>Feeds</h2>
+        <ul id="addfeedlist">
+        </ul>
+    </div>
+
 </div>
-
-<div id="addresult" style="display:none"> </div>
-
 
 
 <script>
@@ -35,12 +43,14 @@ function addFeed(fid)
 		return;
 	}
 	
-	$("#addresult").html("<img src='/static/images/loader.gif' alt='Loading'>").fadeIn();
+	$("#addfeedlist").html("<li><img src='/static/images/loader.gif' alt='Loading'></li>");
+	$("#addresult").fadeIn();
 	
-	$.post("/addfeed/", { feed:theFeed }, function(data){
 	
-		$("#addresult").fadeOut(function(){
-			$("#addresult").html(data).fadeIn();
+	$.post("/addfeed/", { feed:theFeed,river: (document.addfeed.river.checked ? "yes" : "no") }, function(data){
+	
+		$("#addfeedlist").fadeOut(function(){
+			$("#addfeedlist").html(data).fadeIn();
 		});
 	
 	},'html');

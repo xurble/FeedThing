@@ -1,12 +1,192 @@
-<!doctype html>
-<html>
-<head>
-		<title>Feed Thing</title>
-		<link rel="shortcut icon" href="/static/feedthingsmall.png">
-</head>
-<body>
-<frameset cols="25%,*">
-  <frame src="/feedlist/"  frameborder="1"><frame src="/feedpane/" name="feedpane" frameborder="0" style="border:none;">
-</frameset>
-</body>
-</html>
+{% extends "base.html" %}
+
+{% block content %}
+
+        <div id="feedlistplaceholder"></div>
+		<div id="feedlist">
+		    <h2 class="ftheader">Feeds</h2>
+			<ul id="feeds">
+					<li>
+						<a onclick="read('river')" href="#">River</a> 
+					</li>
+
+
+				{% for s in sources %}
+					<li id="s{{s.id}}">
+						<a id="sa{{s.id}}" onclick="read({{s.id}})" href="#">{{s.name}}<span id="uc{{s.id}}" class="unreadcount">({{s.unreadCount}})</span></a> 
+					</li>
+				{% endfor %}
+			</ul>
+		</div>
+            		
+            <div id="feedpane">
+                <img src="/static/images/FeedThing.png" class="paneplant">
+            </div>
+            		
+        {% csrf_token %}
+
+<script>
+
+var PHONE_WIDTH = 600;
+
+var lastRead = null;
+
+function read(fid){
+
+
+    if (lastRead == fid && fid != "river") {
+        return;
+    }
+
+    if (lastRead != null) {
+        $("#s" + lastRead).fadeOut();    
+    }
+
+    lastRead = fid;
+    
+    $("#sa" + lastRead).addClass("read");  
+    
+    $("#feedpane").html('<img src="/static/images/FeedThing.png" class="paneplant">');
+
+    var qty = "/all/";
+    if (fid == "river") {
+        qty = "/25/";
+    }
+
+    //console.log("replacestate");
+    //history.replaceState({"feed":fid}, "FEED" , "/feeds/" + fid + qty);
+
+	$.get("/read/" + fid + qty,function(data){
+	   $("#feedpane").html(data);
+	   
+	});
+
+
+    if($(window).width() > PHONE_WIDTH) {
+    
+	    $(window).scrollTop(0);
+	    positionFeedList();
+    }
+    else {
+        $("#feedlist").fadeOut(function(){
+            $("#feedpane").show()        
+        });
+
+
+
+
+    }
+    
+    return false;
+}
+
+function unRead() {
+    //window.history.back();
+
+    if(event.state) {
+        $("#feedpane").fadeOut(function(){
+        
+            $("#feedlist").fadeIn(function(){
+                $("#s" + lastRead).fadeOut();
+            });
+            
+        });    
+    
+    }
+
+}
+
+window.onpopstate = function (event) {
+    
+    console.log(event.state);
+
+
+
+}
+
+
+
+
+function unsub()
+{
+	if (confirm("Sure?"))
+	{
+		$("#unsub").html('<div id="loader"><img src="/static/loader.gif" alt="Working"></div>');
+		$.post("/feed/{{source.id}}/unsubscribe/",function(data){
+		
+			$("#loader").fadeOut(function(){
+				$("#loader").html(data);
+				$("#loader").fadeIn();
+			});
+		
+		},'html');
+	}
+	
+}
+
+
+function positionFeedList() {
+
+    if($(window).width() > PHONE_WIDTH) {
+
+        var fl = $("#feedlist").height();
+        var wh = $(window).height();
+        var st = $(window).scrollTop();
+        var fp = $("#feedpane").height();
+        
+        $("#feedlistplaceholder").height(fl);
+        
+        if( wh < fl + 37 && st > 0) {
+            $("#feedlist").css("top",  ((37-st) < wh-fl-20 ? wh-fl-20 : (37-st))   + "px");   
+        }
+        else {
+            $("#feedlist").css("top","37px");
+
+        }
+    }
+
+}
+
+$(window).scroll(function(){
+    positionFeedList();
+}); 
+
+$("html").bind("touchmove",function(e){
+    positionFeedList();
+});
+
+$(window).resize(function(){
+    console.log("resize");
+
+    if($(window).width() > PHONE_WIDTH) {
+        $("#feedlist").css("position","fixed").css("left",$("#ftlogo").offset().left + "px").show();
+        $("#feedlistplaceholder").show();
+        $("#feedpane").show();
+        positionFeedList();
+    }
+    else {
+        $("#feedlist").css("position","relative").css("top","0px").css("left","0px");
+        $("#feedlistplaceholder").hide();
+        //$("#feedpane").hide();
+    }
+}); 
+
+
+$(document).ready(function(){
+    if($(window).width() > PHONE_WIDTH) {
+        $("#feedlist").css("position","fixed").css("top","37px").css("left",$("#ftlogo").offset().left + "px");
+        $("#feedlistplaceholder").show();
+        positionFeedList();
+    }
+    else {
+        $("#feedpane").hide();
+    }
+});
+
+</script>
+
+
+
+{% endblock %}
+
+

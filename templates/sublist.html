@@ -1,0 +1,5 @@
+				{% for s in subscriptions %}
+					<div id="s{{s.id}}" class="feedbutton makedroppable{% if not s.source %} group{% else %} makedraggable{% endif %}" style="padding:8px">
+						<a id="sa{{s.id}}" onclick="details({{s.id}})" href="#">{{s.name}}</a> 
+					</div>
+				{% endfor %}

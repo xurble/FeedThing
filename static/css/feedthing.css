@@ -8,26 +8,40 @@ body {
 	font-family:Helvetica,Arial;
 	font-size:13px;
 	margin:0px;
-	padding:0px;
-	//background-color: red;
+	padding-left:5px;
+	padding-right:5px;
 }
 
 #header {
 	margin:0px;
+    position:fixed;
+    top:0px;
+    background-color:white;
+    width:100%;
 }
 
 .clearfix {
     clear:both;
 }
 
-h1 span.feed {
+h1,h2,h2,h4 {
+    margin:3px;
+}
+
+h1#ftlogo {
+	margin: 0px;
+    float:left;
+}
+
+
+h1#ftlogo span.feed {
     text-transform: uppercase;
 	font-family: Futura-CondensedMedium, Helvetica, Arial , sans-serif;
     letter-spacing: 6pt;
     font-weight: normal;
 }
 
-h1 a span.thing {
+h1#ftlogo a span.thing {
     text-transform: uppercase;
 	font-family: HelveticaNeue-Light,Helvetica, Arial , sans-serif;
 	font-weight: lighter;
@@ -39,40 +53,30 @@ h1 a span.thing {
     display: inline-block;
 }
 
-h3 {
-    font-size: 21px;
+a {
+	color: #7EA02D;
+	text-decoration: none;
+	font-weight: bold;
+}
+
+#content {
+	padding-top: 40px;
 }
 
 @media only screen and (max-width: 600px)
 {
-
+  /* phone */
     ul.navigation {
         display:none;
     }
-    
-    .content {
-        padding-left:5px;
-        padding-right:5px;
-    }
-    
-    #feedlist {
-    
-    }
-    
-    #feedpane {
-        overflow-x:hidden;
-    }
-    
+
     a.backbutton {
         float:right;
-        margin-bottom: 6px !important;
+        margin-bottom: 3px !important;
+        margin-top: 6px !important;
+        display: none;
     }
-    
-    .postbody img {
-        max-width: 300px;
-        display: block;
-    }
-    
+
     #opml {
         display: none;
     }
@@ -84,23 +88,36 @@ h3 {
     input[type=url] {
         width:99%;
     }
+    
+    body { min-height: 480px; }
+
+    #feedpane {
+        overflow-x:hidden;
+    }
+    
+    .postbody img {
+        max-width: 300px;
+        display: block;
+    }
+    
+    #content {
+    	padding-left:5px;
+    	padding-right: 5px;
+    }
+
+	#xfeedlist {
+        position:fixed;
+        overflow-y: scroll;
+        width:100%;
+	}
 
 }
 
+
 @media only screen and (min-width: 601px)
 {
+  /* desktop / tablet */
 
-    body {
-    	overflow-y:scroll;
-    }
-    
-    .content {
-        margin-left:auto;
-        margin-right: auto;
-        width:960px;
-    }
-    
-    
     ul.navigation {
     	display: inline-block;
     	padding:0px;
@@ -112,31 +129,33 @@ h3 {
     	display: inline-block;
     	margin-right:10px;
     }
-    
-    #feedlist, #feedlistplaceholder {
+  
+    .center {
+    	margin-left:auto;
+    	margin-right:auto;
+    	width: 960px;
+    }
+
+    a.backbutton {
+        display: none !important;
+    }
+
+    #feedlist {
         float:left;
-        width:350px;
+        width:340px;
         padding-bottom:20px;
+        overflow-y: scroll;
+        padding-right:10px;
+        overflow-x: hidden;
+        position:fixed;
     }
-    #feedlistplaceholder {
-        display:none;
-    }
-    
+
     #feedpane {
         overflow-x:hidden;
     	float: left;
     	width: 595px;
     	padding-left:15px;
-    }
-    
-    a.backbutton {
-        display: none !important;
-    }
-
-
-    .postbody img {
-        max-width: 590px;
-        display: block;
+    	margin-left:360px;
     }
 
     #opml {
@@ -160,13 +179,74 @@ h3 {
     input[type=url] {
         width:500px;
     }
+    .postbody img {
+        max-width: 590px;
+        display: block;
+    }
 
+
+  
+}
+
+h3 {
+    font-size: 21px;
 }
 
 
-#feedpane {
+#feedpane,#feedlist {
     padding-bottom:24px;
 }
+
+
+img.paneplant {
+    display: block;
+    opacity: 0.1;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 150px;
+}
+
+
+
+div.feedbutton, .button {
+    text-decoration:none;
+    border:1px solid #ccc;
+    margin-bottom:2px;
+    color:black;
+    font-weight:bold;
+    background-color: #dedede;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+}
+
+/* TODO:
+div.ui-draggable {
+    cursor: xxxx;
+}
+*/
+
+div.feedbutton a {
+    color:black;
+}
+
+div#feeds div.group {
+   background-color: #999;
+}
+
+.button {
+    display: inline-block;
+    border-radius: 3px;
+    padding:8px;
+    padding-bottom:7px;
+    font-size:13px;
+}
+
+
+a.feedbutton {
+    padding:8px;
+    display:block;
+}
+
+
 .error {
     color:red;
     font-weight: bold;
@@ -191,53 +271,18 @@ hr {
     border-top:1px solid #ccc;
 }
 
-h1 {
-	margin: 0px;
-    float:left;
+div.feedbutton:hover , .button:hover {
+    background-color:#DCE8C4 !important;
 }
 
-img.paneplant {
-    display: block;
-    opacity: 0.1;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 150px;
+div.feedbutton a:hover {
+    text-decoration: underline;
 }
 
 
-ul#feeds {
-    margin:0px;
-    padding:0px;
-    margin-top: 5px;
-}
-ul#feeds li, ul#addfeedlist li {
-    list-style-type: none;
-}
-ul#feeds li a, .button {
-    display:block;
-    padding:8px;
-    text-decoration:none;
-    border:1px solid #ccc;
-    margin-bottom:2px;
-    color:black;
-    font-weight:bold;
-    background-color: #dedede;
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-}
-
-.button {
-    display: inline-block;
-    border-radius: 3px;
-    padding: 5px;
-    padding-bottom:7px;
-}
-
-ul#feeds li a:hover, .button:hover {
-    background-color:#DCE8C4;
-}
-
-ul#feeds li a.read {
-    background-color: #7EA02D;
+div.droptarget {
+    background-color:green !important;
+    color:white !important;
 }
 
 .unreadcount {
@@ -264,10 +309,40 @@ h2.ftheader {
 }
 
 
-a {
-	color: #7EA02D;
-	text-decoration: none;
-	font-weight: bold;
+#opml h3 {
+	background-color: #7EA02D;
+	color: white;
+	padding:3px;
+	text-align: center;
+	margin: 0px;
+	letter-spacing: 1pt;
+}
+
+#opml p, #opml form {
+	padding:5px;
+}
+
+#unsub {
+	float:right;
+}
+
+.meta {
+    float:left;
+}
+
+#gardentable, #gardentable td,#gardentable th {
+	border:1px solid #CCC;
+	border-collapse: collapse;
+}
+
+.posts h3.posttitle {
+    font-family: Helvetica,Arial;
+}
+
+.posts {
+    line-height: 1.4;
+    font-family: Georgia,serif;
+    font-size: 18px;
 }
 
 
@@ -303,38 +378,13 @@ img#littlelogo {
 	float: right;
 }
 
-
-#opml h3 {
-	background-color: #7EA02D;
-	color: white;
-	padding:3px;
-	text-align: center;
-	margin: 0px;
-	letter-spacing: 1pt;
+div.read {
+    background-color: #7EA02D;
 }
 
-#opml p, #opml form {
-	padding:5px;
-}
-
-#unsub {
-	display: block;
-	float:right;
-	padding:20px;
-}
-
-#gardentable, #gardentable td,#gardentable th {
-	border:1px solid #CCC;
-	border-collapse: collapse;
-}
-
-.posts h3.posttitle {
-    font-family: Helvetica,Arial;
-}
-
-.posts {
-    line-height: 1.4;
-    font-family: Georgia,serif;
-    font-size: 18px;
+div.location {
+    color:#666;
+    font-style: italic;
+    margin-bottom: 12px;
 }
 

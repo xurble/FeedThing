@@ -4,45 +4,54 @@
 		<title>FeedThing</title>
 		
 		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">		
- 		<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+ 		<script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+ 		<!--<script type="text/javascript" src="/static/js/jquery-1.6.2.min.js"></script>-->
+
+
 		<link href="/static/css/feedthing.css" rel="stylesheet"	type="text/css">
 		<link rel="shortcut icon" href="/static/images/feedthingsmall.png">
         <meta name="viewport" content="initial-scale=1.0">
         <meta name="viewport" content="user-scalable=false">
+        {% block head %}
+        {% endblock %}
 	</head>
 	<body>
         <div id="header">
-            <div class="content">
-                <h1 id="ftlogo"><a href="/"><span class="feed">Feed</span><span class="thing">Thing</span></a></a></h1>
-                
-                <ul class="navigation">
-    
-                    <li><a href="/" target="_top">Home</a></li>
-                {% if user.is_authenticated %}
-                    <li><a href="/feeds/" target="_top">Feeds</a></li>
-                    <li><a href="/addfeed/" target="_top">Add Feed</a></li>
-                    <li><a href="/feedgarden/" target="_top">Maintain Feeds</a></li>
-                {% endif %}
-                    <li><a href="/help/" target="_top">Help</a></li>
-                {% if user.is_authenticated %}
-                    <li><a href="{{ logout }}" target="_top">Log out</a></li>
-                {% else %}
-                    <li><a href="/feeds/" target="_top">Log In</a></li>
-                {% endif %}
-                </ul>
-                <div class="clearfix"></div>
-            </div>
+        	<div class="center">
+	            <h1 id="ftlogo"><a href="/"><span class="feed">Feed</span><span class="thing">Thing</span></a></h1>
+	            
+	            <ul class="navigation">
+	
+	                <li><a href="/" target="_top">Home</a></li>
+	            {% if user.is_authenticated %}
+	                <li><a href="/feeds/" target="_top">Feeds</a></li>
+	                <li><a href="/addfeed/" target="_top">Add Feed</a></li>
+	                <li><a href="/manage/" target="_top">Manage Feeds</a></li>
+	                {% if user.is_superuser %}
+	                    <li><a href="/feedgarden/" target="_top">Queue</a></li>
+	                {% endif %}
+	            {% endif %}
+	                <li><a href="/help/" target="_top">Help</a></li>
+	            {% if user.is_authenticated %}
+	                <li><a href="{{ logout }}" target="_top">Log out</a></li>
+	            {% else %}
+	                <li><a href="/feeds/" target="_top">Log In</a></li>
+	            {% endif %}
+	            </ul>
+	
+	            <a class="button backbutton" href="javascript:unRead()">Back</a>
+	
+	            <div class="clearfix"></div>
+			</div>
         </div>
 
-        <div class="content" style="padding-bottom:25px">
+        <div id="content" class="center">
             
 {% block content %}
 
 {% endblock %}
         </div>	
         <script>
-        
-
 
     $.ajaxSetup({
         beforeSend: function(xhr, settings) {

@@ -8,16 +8,20 @@ from urllib import urlencode
 import logging
 import sys
 
+
+from django.contrib.auth.models import User
+
+
 class Source(models.Model):
-    
+    # This is an actual feed that we poll
     name          = models.CharField(max_length=255,blank=True,null=True)
     siteURL       = models.CharField(max_length=255,blank=True,null=True)
-    feedURL       = models.CharField(max_length=255,blank=True,null=True)
+    feedURL       = models.CharField(max_length=255)
     lastPolled    = models.DateTimeField(max_length=255,blank=True,null=True)
     duePoll       = models.DateTimeField(default=datetime.datetime.now)
     ETag          = models.CharField(max_length=255,blank=True,null=True)
     lastModified  = models.CharField(max_length=255,blank=True,null=True) # just pass this back and forward between server and me , no need to parse
-    unreadCount   = models.PositiveIntegerField(default=0)
+    
     lastResult    = models.CharField(max_length=255,blank=True,null=True)
     interval      = models.PositiveIntegerField(default=400)
     lastSuccess   = models.DateTimeField(null=True)
@@ -26,7 +30,9 @@ class Source(models.Model):
     status_code   = models.PositiveIntegerField(default=0)
     last302url    = models.CharField(max_length=255,default = " ")
     last302start  = models.DateTimeField(default=datetime.datetime.now)
-    inRiver       = models.BooleanField(default=False)
+    
+    maxIndex      = models.IntegerField(default=0)
+    
     
     def __unicode__(self):
         return self.displayName()
@@ -67,24 +73,40 @@ class Source(models.Model):
         return css
             
 
+# A user subscription
+class Subscription(models.Model):
+    user = models.ForeignKey(User)
+    source = models.ForeignKey(Source,blank=True,null=True) # null source means we are a folder
+    parent = models.ForeignKey('self',blank=True,null=True)
+    lastRead = models.IntegerField(default=0)
+    isRiver  = models.BooleanField(default=False)
+    name     = models.CharField(max_length=255)
+    
+    def __unicode__(self):
+        return u"'%s' for user %s" % (self.name, self.user.username)
 
-
+    def unreadCount(self):
+        if self.source:
+            return self.source.maxIndex - self.lastRead
+        else:
+            try:
+                return self._unreadCount 
+            except:
+                return -666
+                
 class Post(models.Model):
     
-    source        = models.ForeignKey(Source)
+    source        = models.ForeignKey(Source,db_index=True)
     title         = models.TextField()
     body          = models.TextField()
     link          = models.CharField(max_length=255,blank=True,null=True)
     found         = models.DateTimeField(default=datetime.datetime.now)
-    created       = models.DateTimeField(default=datetime.datetime.now)
+    created       = models.DateTimeField(default=datetime.datetime.now,db_index=True)
     guid          = models.CharField(max_length=255,blank=True,null=True)
     author        = models.CharField(max_length=255,blank=True,null=True)
-    read          = models.BooleanField(default=False)
-    keep          = models.BooleanField(default=False)
+    index         = models.IntegerField(db_index=True)
 
     def _titleURLEncoded(self):
-        logging.info("ENCODING:")
-        logging.info(self.title)
         try:
             ret = urlencode({"X":self.title})
             if len(ret) > 2: ret = ret[2:]
@@ -95,4 +117,6 @@ class Post(models.Model):
         return ret
         
     titleURLEncoded = property(_titleURLEncoded)
-
+    
+    def __unicode__(self):
+        return "%s: post %d, %s" % (self.source.displayName(),self.index,self.title)

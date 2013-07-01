@@ -1,0 +1,82 @@
+{% load ft_tags %}
+
+            <a class="button backbutton" href="javascript:unRead()">Back</a>
+
+            <h2 class="ftheader">{{subscription.name}}</h2>
+            {% if subscription.source %}
+                <div id="unsub"><a href="javascript:unsub({{subscription.id}})" class="button">Unsubscribe</a></div>
+            
+                <div class="meta">{% if subscription.source.lastSuccess %}Last read {{subscription.source.lastSuccess|timesince}} ago.{% else %}Feed has not been read.{% endif %}</div>
+            {% endif %}
+            <br style="clear:both">
+
+            <hr style="clear:both">
+
+
+            <form method="POST" id="subform" onsubmit="saveSubscription({{subscription.id}}); return false;">
+            <label for="subname">Name:</label><br>
+            <input type="text" name="subname" id="subname" value="{{subscription.name}}" style="width:90%">
+            <br><br>
+            <input type="checkbox" name="isriver" id="isriver" value="True" {% if subscription.isRiver %}checked="checked"{% endif %}> <label for="isriver">Is River</label>            
+            <br><br>
+            <button type="submit" class="button">Save</button>
+            {% csrf_token %}
+            </form>
+            <hr style="clear:both">
+            {% if subscription.source %}
+                <h2>Source Details</h2>
+            
+                <table>
+                    <tr>
+                        <th>Name:</th>
+                        <td>{{subscription.source.displayName}}</td>
+                    </tr>
+                    <tr>
+                        <th>Link:</th>
+                        <td><a href="{{subscription.source.bestLink}}">{{subscription.source.bestLink}}</a></td>
+                    </tr>                
+                    <tr>
+                        <th>Feed:</th>
+                        <td><a href="{{subscription.source.feedURL}}">{{subscription.source.feedURL}}</a></td>
+                    </tr>
+                    <tr>
+                        <th>Interval:</th>
+                        <td>{{subscription.source.interval|hoursmins}}</td>
+                    </tr>
+                    <tr>
+                        <th>Last Successful Read:</th>
+                        <td>{% if subscription.source.lastSuccess %}{{subscription.source.lastSuccess|timesince}} ago{% else %}Never{% endif %}</td>
+                    </tr>
+                    <tr>
+                        <th>Next Read:</th>
+                        <td>{{subscription.source.duePoll|timeuntil}}</td>
+                    </tr>
+                    <tr>
+                        <th>Last Updated:</th>
+                        <td>{% if subscription.source.lastChange %}{{subscription.source.lastChange|timesince}} ago{% else %}Never{% endif %}</td>
+                    </tr>
+
+                </table>
+                
+                <hr>
+                
+                <h2 style="margin-bottom:3px">Move To Folder</h2>
+                {% if subscription.parent %}
+                <div class="location">Currently in “{{subscription.parent.name}}”</div>
+                {% endif %}
+                
+                <a class="button" style="margin-right:8px" href="javascript:addToGroup({{subscription.id}},0)">New Folder</a>
+                
+                {% for g in groups %}
+                    <a class="button" style="margin-right:8px" href="javascript:addToGroup({{subscription.id}},{{g.id}})">{{g.name}}</a>
+                {% endfor %}
+                
+                
+            {% else %}
+                <h2>Sources</h2>
+                {% for s in sources %}
+                    <div id="sub{{s.id}}"><a href="javascript:removeFromGroup({{s.id}})" class="button">X</a> <a href="#" onclick="details({{s.id}})">{{s}}</a></div>
+                {% endfor %}
+            
+            {% endif %}
+            

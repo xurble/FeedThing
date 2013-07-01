@@ -2,26 +2,31 @@
 
 {% block content %}
 
-        <div id="feedlistplaceholder"></div>
 		<div id="feedlist">
 		    <h2 class="ftheader">Feeds</h2>
-			<ul id="feeds">
-					<li>
-						<a onclick="read('river')" href="#">River</a> 
-					</li>
-
+			<div id="feeds">
+			
+			    {% if all %}
+					<div class="feedbutton">
+						<a href="/feeds/" class="feedbutton">Unread Feeds</a> 
+					</div>
+				{% else %}
+					<div class="feedbutton">
+						<a href="/allfeeds/" class="feedbutton">All Feeds</a> 
+					</div>
+                {% endif %}
 
 				{% for s in sources %}
-					<li id="s{{s.id}}">
-						<a id="sa{{s.id}}" onclick="read({{s.id}})" href="#">{{s.name}}<span id="uc{{s.id}}" class="unreadcount">({{s.unreadCount}})</span></a> 
-					</li>
+					<div id="s{{s.id}}" class="feedbutton{% if not s.source %} group{% endif %}"> 
+						<a id="sa{{s.id}}" onclick="read({{s.id}})" href="#" class="feedbutton">{{s.name}}<span id="uc{{s.id}}" class="unreadcount">{% if s.isRiver %}R{% else %}({{s.unreadCount}}){% endif %}</span></a> 
+					</div>
 				{% endfor %}
-			</ul>
+			</div>
 		</div>
             		
-            <div id="feedpane">
-                <img src="/static/images/FeedThing.png" class="paneplant">
-            </div>
+        <div id="feedpane">
+            <img src="/static/images/FeedThing.png" class="paneplant">
+        </div>
             		
         {% csrf_token %}
 
@@ -34,13 +39,20 @@ var lastRead = null;
 function read(fid){
 
 
-    if (lastRead == fid && fid != "river") {
+    if (lastRead == fid) {
         return;
     }
 
-    if (lastRead != null) {
-        $("#s" + lastRead).fadeOut();    
-    }
+    {% if all %}
+        $("#uc" + fid).html("(0)");
+        if (lastRead != null) {
+            $("#sa" + lastRead).removeClass("read");    
+        }
+    {% else %}
+        if (lastRead != null) {
+            $("#s" + lastRead).fadeOut();    
+        }
+    {% endif %}
 
     lastRead = fid;
     
@@ -58,6 +70,7 @@ function read(fid){
 
 	$.get("/read/" + fid + qty,function(data){
 	   $("#feedpane").html(data);
+	   $(".backbutton").fadeIn();
 	   
 	});
 
@@ -68,6 +81,7 @@ function read(fid){
 	    positionFeedList();
     }
     else {
+    	oldScrollTop = $(window).scrollTop();
         $("#feedlist").fadeOut(function(){
             $("#feedpane").show()        
         });
@@ -82,17 +96,23 @@ function read(fid){
 
 function unRead() {
     //window.history.back();
+    //if(event.state) {
+	   $(".backbutton").fadeOut();
+	    window.scrollTo(0, 1);
 
-    if(event.state) {
         $("#feedpane").fadeOut(function(){
         
             $("#feedlist").fadeIn(function(){
-                $("#s" + lastRead).fadeOut();
+                {% if not all %}
+                    $("#s" + lastRead).fadeOut();
+                {% endif %}
+                
+                $(window).scrollTop(oldScrollTop);
             });
             
         });    
     
-    }
+    //}
 
 }
 
@@ -107,12 +127,12 @@ window.onpopstate = function (event) {
 
 
 
-function unsub()
+function unsub(sid)
 {
 	if (confirm("Sure?"))
 	{
-		$("#unsub").html('<div id="loader"><img src="/static/loader.gif" alt="Working"></div>');
-		$.post("/feed/{{source.id}}/unsubscribe/",function(data){
+		$("#unsub").html('<div id="loader"><img src="/static/images/loader.gif" alt="Working"></div>');
+		$.post("/subscription/" + sid +"/unsubscribe/",function(data){
 		
 			$("#loader").fadeOut(function(){
 				$("#loader").html(data);
@@ -127,60 +147,46 @@ function unsub()
 
 function positionFeedList() {
 
+
     if($(window).width() > PHONE_WIDTH) {
 
-        var fl = $("#feedlist").height();
         var wh = $(window).height();
-        var st = $(window).scrollTop();
-        var fp = $("#feedpane").height();
-        
-        $("#feedlistplaceholder").height(fl);
-        
-        if( wh < fl + 37 && st > 0) {
-            $("#feedlist").css("top",  ((37-st) < wh-fl-20 ? wh-fl-20 : (37-st))   + "px");   
-        }
-        else {
-            $("#feedlist").css("top","37px");
+        $("#feedlist").height(wh - 67);
 
-        }
     }
 
 }
 
-$(window).scroll(function(){
-    positionFeedList();
-}); 
-
-$("html").bind("touchmove",function(e){
-    positionFeedList();
-});
 
 $(window).resize(function(){
     console.log("resize");
 
     if($(window).width() > PHONE_WIDTH) {
-        $("#feedlist").css("position","fixed").css("left",$("#ftlogo").offset().left + "px").show();
-        $("#feedlistplaceholder").show();
+        $("#feedlist").show();
         $("#feedpane").show();
         positionFeedList();
     }
     else {
-        $("#feedlist").css("position","relative").css("top","0px").css("left","0px");
-        $("#feedlistplaceholder").hide();
-        //$("#feedpane").hide();
     }
 }); 
 
 
 $(document).ready(function(){
     if($(window).width() > PHONE_WIDTH) {
-        $("#feedlist").css("position","fixed").css("top","37px").css("left",$("#ftlogo").offset().left + "px");
-        $("#feedlistplaceholder").show();
         positionFeedList();
     }
     else {
         $("#feedpane").hide();
     }
+
+	  setTimeout(function(){
+	    // Hide the address bar!
+	    window.scrollTo(0, 1);
+	  }, 0);
+
+
+
+
 });
 
 </script>

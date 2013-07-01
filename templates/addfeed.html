@@ -19,7 +19,15 @@
 	<p>Enter the URL of the feed you wish to import.  If you don't know the feed URL, you can just enter the address of the site you want to subscribe to, Feed Thing will try and find a feed for you.</p>
 	<form method="post" onsubmit="addFeed(0); return false;" name="addfeed">
 		<input type="url" id="feed-0" name="feed" value="{{feed|escape}}" ><br><br>
-		<input type="checkbox" id="river" name="river" value="yes"><label for="river">High traffic feed for "River of News"</label><br>
+		
+		
+		<h4>Add to Folder:</h4>
+		<input type="radio" id="g0" name="group" value="0" checked="checked"> <label for="g0">None</label><br>
+        {% for g in groups %}
+    		<input type="radio" id="g{{g.id}}" name="group" value="{{g.id}}"> <label for="g{{g.id}}">{{g.name}}</label><br>
+        {% endfor %}
+		
+		
 		<br><input class="button" type="submit" value="Add Feed">
 		{% csrf_token %}
 	</form>
@@ -46,8 +54,10 @@ function addFeed(fid)
 	$("#addfeedlist").html("<li><img src='/static/images/loader.gif' alt='Loading'></li>");
 	$("#addresult").fadeIn();
 	
+	var gid =$('input[name="group"]:checked').val();
 	
-	$.post("/addfeed/", { feed:theFeed,river: (document.addfeed.river.checked ? "yes" : "no") }, function(data){
+	
+	$.post("/addfeed/", { feed:theFeed,group: gid }, function(data){
 	
 		$("#addfeedlist").fadeOut(function(){
 			$("#addfeedlist").html(data).fadeIn();

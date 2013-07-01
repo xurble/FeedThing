@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block head %}
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.22/jquery-ui.min.js"></script>
+    <!--<script src="/static/js/jquery-ui-1.8.22.custom.min.js"></script>-->
+{% endblock %}
+
+{% block content %}
+
+		<div id="feedlist">
+		    <h2 class="ftheader">Manage Feeds</h2>
+			<div id="feeds">
+
+                {% include "sublist.html" %}			
+			</div>
+		</div>
+            		
+            <div id="feedpane">
+                <img src="/static/images/FeedThing.png" class="paneplant">
+            </div>
+            		
+        {% csrf_token %}
+
+<script>
+
+var PHONE_WIDTH = 600;
+
+var lastRead = null;
+
+var dragging = false;
+
+function details(sid){
+
+    if (dragging) {
+        dragging = false;
+        return;
+    }
+
+    
+    $("#feedpane").html('<img src="/static/images/FeedThing.png" class="paneplant">');
+
+
+	$.get("/subscription/" + sid + "/details/",function(data){
+	   $("#feedpane").html(data);
+	   
+	});
+
+
+    if($(window).width() > PHONE_WIDTH) {
+    
+	    $(window).scrollTop(0);
+	    positionFeedList();
+    }
+    else {
+        $("#feedlist").fadeOut(function(){
+            $("#feedpane").show()        
+        });
+
+    }
+    
+    return false;
+}
+
+
+function saveSubscription(sid) {
+
+    var vals = $("#subform").serializeObject(); 
+
+    $.post("/subscription/" + sid + "/details/", vals ,function(data){
+        $("#feedpane").html(data);
+        refreshFeedList();
+    },"html");
+
+}
+
+
+function unsub(sid)
+{
+	if (confirm("Sure?"))
+	{
+		$("#unsub").html('<div id="loader"><img src="/static/images/loader.gif" alt="Working"></div>');
+		$.post("/subscription/" + sid +"/unsubscribe/",function(data){
+		
+			$("#loader").fadeOut(function(){
+				$("#loader").html(data);
+				$("#loader").fadeIn();
+			});
+		
+		},'html');
+	}
+	
+}
+
+function removeFromGroup(sid) {
+    
+    $.post("/subscription/" + sid + "/promote/", function(data) {
+    
+        $("#sub" + sid).fadeOut();
+        refreshFeedList();
+        
+        if (data == "Kill") {
+            $("#feedpane").html('<img src="/static/images/FeedThing.png" class="paneplant">')
+        }
+    
+    });
+    
+}
+
+
+function positionFeedList() {
+
+
+    if($(window).width() > PHONE_WIDTH) {
+
+        var wh = $(window).height();
+        $("#feedlist").height(wh - 67);
+
+    }
+
+}
+
+
+$(window).resize(function(){
+    console.log("resize");
+
+    if($(window).width() > PHONE_WIDTH) {
+        positionFeedList();
+    }
+    else {
+    }
+}); 
+
+
+$(document).ready(function(){
+    if($(window).width() > PHONE_WIDTH) {
+        positionFeedList();
+    }
+    else {
+        $("#feedpane").hide();
+    }
+
+    dragDrop();
+
+});
+
+function dragDrop() {
+
+    $(".makedraggable").draggable({
+        cursor:'move',
+        start:handleDragStart,
+        stop: handleDragStop,
+    
+    }).removeClass("makedraggable");
+    
+    $(".makedroppable").droppable({
+        drop:handleDrop,
+        over:handleOver,
+        out:handleOut,
+    }).removeClass("makedroppable");
+
+
+}
+
+
+//  Auto turns a form into json for posting.
+jQuery.fn.serializeObject = function() {
+  var arrayData, objectData;
+  arrayData = this.serializeArray();
+  
+  objectData = {};
+
+  $.each(arrayData, function() {
+    var value;
+    
+
+    if (this.value != null) {
+      value = this.value;
+    } else {
+      value = '';
+    }
+
+    if (objectData[this.name] != null) {
+      if (!objectData[this.name].push) {
+        objectData[this.name] = [objectData[this.name]];
+      }
+
+      objectData[this.name].push(value);
+    } else {
+      objectData[this.name] = value;
+    }
+  });
+
+  return objectData;
+};
+
+var dragPos = null;
+var dragId = null;
+
+function handleDragStart( evt, ui ) {
+    //alert(evt);
+    //alert(ui);
+    dragPos = ui.offset; // to snap back if drag aborted
+    dragId = $(this).attr("id").substr(1);
+    $(this).css("z-index","100");
+    dragging = true;
+}
+
+function handleDragStop(evt,ui) {
+   // $(this).top(dragPos.top).left(dragPos.left);  
+
+    if (dragPos) {
+        $(this).offset(dragPos).css("z-index","0");
+    }
+    
+    dragging = false;
+}   
+
+function handleDrop(evt,ui) {
+
+    var targetId = $(this).attr("id").substr(1);
+
+    addToGroup(dragId, targetId);
+}
+
+function addToGroup(sid,gid) {
+
+    $.post("/subscription/" + sid + "/addto/" + gid + "/", function(data) {
+        details(data);
+        refreshFeedList();
+    } );
+}
+
+function handleOver(evt,ui) {
+
+    var idx = $(this).attr("id").substr(1);
+
+    console.log(idx);
+
+    if($(this).hasClass("feedbutton") ) {
+        $(this).addClass("droptarget");  
+    } 
+}
+
+function handleOut(evt,ui) {
+    $(this).removeClass("droptarget");
+}
+
+function refreshFeedList() {
+
+    $.get("/subscription/list/",function(data){
+        
+        $("#feeds").html(data);
+        dragDrop();
+        
+    },"html");
+}
+
+
+</script>
+
+
+
+{% endblock %}
+
+

@@ -20,6 +20,7 @@ urlpatterns = patterns('',
     (r'^refresh/$', 'feedthing.ft.views.reader'),
     (r'^help/$', 'feedthing.ft.views.help'),
     (r'^feeds/$', 'feedthing.ft.views.feeds'),
+    (r'^allfeeds/$', 'feedthing.ft.views.allfeeds'),
 
     (r'^addfeed/$', 'feedthing.ft.views.addfeed'),
     (r'^importopml/$', 'feedthing.ft.views.importopml'),
@@ -28,9 +29,17 @@ urlpatterns = patterns('',
     (r'^read/(?P<fid>.*)/(?P<qty>.*)/','feedthing.ft.views.readfeed'),
 
 
-    (r'^feed/(?P<fid>.*)/revive/','feedthing.ft.views.revivefeed'),
-    (r'^feed/(?P<fid>.*)/unsubscribe/','feedthing.ft.views.unsubscribefeed'),
-    (r'^feed/(?P<fid>.*)/toggleriver/','feedthing.ft.views.toggleriver'),
+    (r'^manage/$','feedthing.ft.views.managefeeds'),
+    (r'^subscription/list/$','feedthing.ft.views.subscriptionlist'),
+    
+    (r'^subscription/(?P<sid>.*)/unsubscribe/$','feedthing.ft.views.unsubscribefeed'),
+    (r'^subscription/(?P<sid>.*)/details/$','feedthing.ft.views.subscriptiondetails'),
+    (r'^subscription/(?P<sid>.*)/promote/$','feedthing.ft.views.promote'),
+    (r'^subscription/(?P<sid>.*)/addto/(?P<tid>.*)/$','feedthing.ft.views.addto'),
+
+
+    (r'^feed/(?P<fid>.*)/revive/$','feedthing.ft.views.revivefeed'),
+    (r'^feed/(?P<fid>.*)/kill/$','feedthing.ft.views.killfeed'),
     
 
 

@@ -7,10 +7,12 @@ from django.db.models import Q
 from django.db.models import F
 from django.contrib.auth.decorators import login_required
 from django.template import RequestContext
+from django.utils.timezone import utc
 import datetime
 import hashlib
 import logging
 import sys
+import traceback
 
 import os
 
@@ -168,7 +170,6 @@ def allfeeds(request):
     
     return render_to_response("feeds.html",vals,context_instance=RequestContext(request))
 
-        
 @login_required
 def feedgarden(request):
     vals = {}
@@ -179,6 +180,7 @@ def feedgarden(request):
 
 @login_required
 def addfeed(request):
+
     
     feed = ""
     if request.method == 'GET':
@@ -220,7 +222,7 @@ def addfeed(request):
                     feedcount += 1
                     try:
                         name = l['title']
-                    except:
+                    except Exception as ex:
                         name = "Feed %d" % feedcount
                     rethtml += '<li><form method="post" onsubmit="return false;"> <input type="hidden" name="feed" id="feed-%d" value="%s"><a href="#" onclick="addFeed(%d)" class="button">Subscribe</a> - %s</form></li>' % (feedcount,urljoin(feed,l['href']),feedcount,name)
                     feed = urljoin(feed,l['href']) # store this in case there is only one feed and we wind up importing it
@@ -257,12 +259,16 @@ def addfeed(request):
                         us.lastRead = s.maxIndex - 10
                     
                     us.save()
+                    
+                    s.num_subs = s.subscription_set.coun()
+                    s.save()
+                    
                     return HttpResponse("<div>Imported feed %s</div>" % us.name)
 
 
             ff = feedparser.parse(ret.content) #need to start checking feed parser errors here
             ns = Source()
-            
+            ns.duePoll = datetime.datetime.utcnow().replace(tzinfo=utc)            
             
             #print request.POST["river"]
             #ns.inRiver = (request.POST["river"] == "yes")
@@ -273,11 +279,12 @@ def addfeed(request):
             try:
                 ns.htmlUrl = ff.feed.link
                 ns.name = ff.feed.title
-            except:
+            except Exception as ex:
                 pass
             ns.feedURL = feed
+            
             ns.save()
-
+            
             us = Subscription(source=ns,user=request.user,name=ns.displayName(),parent=parent)
             us.save()
 
@@ -317,9 +324,15 @@ def importopml(request):
 
                     us.save()
                     count += 1
+
+                ns.num_subs = ns.subscription_set.coun()
+                ns.save()
+
+                
             else:
                 # Feed does not already exist it must also be a new sub
                 ns = Source()
+                ns.duePoll = datetime.datetime.utcnow().replace(tzinfo=utc)
                 ns.siteURL = s.getAttribute("htmlUrl")
                 ns.feedURL = url #probably best to see that there isn't a match here :)
                 ns.name = s.getAttribute("title")
@@ -482,13 +495,14 @@ def revivefeed(request,fid):
         
         f = get_object_or_404(Source,id=int(fid))
         f.live = True
-        f.duePoll = datetime.datetime.now()
+        f.duePoll = datetime.datetime.utcnow().replace(tzinfo=utc)
         f.ETag = None
         f.lastModified = None
         f.lastSuccess = None
         f.lastChange = None
+        # f.maxIndex = 0
         f.save()
-        Post.objects.filter(source=f).delete()
+        # Post.objects.filter(source=f).delete()
         return HttpResponse("OK")
 
 @login_required
@@ -514,11 +528,14 @@ def unsubscribefeed(request,sid):
         us = get_object_or_404(Subscription,id=int(sid))
 
         if us.source:
-        
-            if us.source.subscription_set.count() == 1: # this is the last subscription for this source
-                Post.objects.filter(source=us.source).delete()
-                us.source.delete()
+            s = us.source
             us.delete()
+            s.num_subs = s.subscription_set.count()
+            if s.num_subs == 0: # this is the last subscription for this source
+                Post.objects.filter(source=s).delete()
+                s.delete()
+            else:
+                s.save()
 
             return HttpResponse("OK")
         else:
@@ -526,18 +543,19 @@ def unsubscribefeed(request,sid):
 
 
 def reader(request):
+
     response = HttpResponse()
 
     response["Content-Type"] = "text/plain"
 
-    sources = Source.objects.filter(Q(duePoll__lt = datetime.datetime.now()) & Q(live = True))[:3]
-    #sources = Source.gql("WHERE duePoll < :1 and live = :2 ORDER BY duePoll LIMIT 2",datetime.datetime.now(),True)
+    sources = Source.objects.filter(Q(duePoll__lt = datetime.datetime.utcnow().replace(tzinfo=utc)) & Q(live = True))[:3]
+
     response.write("Update Q: %d\n\n" % sources.count())
     for s in sources:
         
         response.write("\n\n------------------------------\n\n")
         
-        s.lastPolled = datetime.datetime.now()
+        s.lastPolled = datetime.datetime.utcnow().replace(tzinfo=utc)
         #newCount = s.unreadCount
     
         interval = s.interval
@@ -554,7 +572,7 @@ def reader(request):
             ret = requests.get(s.feedURL,headers=headers,allow_redirects=False)
             s.status_code = ret.status_code
             s.lastResult = "Unhandled Case"
-        except:
+        except Exception as ex:
             s.lastResult = "Fetch error"
             s.status_code = 0
         
@@ -582,7 +600,7 @@ def reader(request):
             #not modified
             interval += 5
             s.lastResult = "Not modified"
-            s.lastSuccess = datetime.datetime.now() #in case we start auto unsubscribing long dead feeds
+            s.lastSuccess = datetime.datetime.utcnow().replace(tzinfo=utc) #in case we start auto unsubscribing long dead feeds
         elif ret.status_code == 301: #permenant redirect
             try:
 
@@ -601,7 +619,7 @@ def reader(request):
                 s.feedURL = newURL
                 
                 s.lastResult = "Moved"
-            except:
+            except exception as Ex:
                 response.write("error redirecting")
                 s.lastResult = "Error redirecting feed"
                 interval += 60
@@ -628,23 +646,23 @@ def reader(request):
                 
                 if s.last302url == newURL:
                     #this is where we 302'd to last time
-                    td = datetime.datetime.now() - s.last302start
-                    if td > datetime.timedelta(days=7):
+                    td = datetime.datetime.utcnow().replace(tzinfo=utc) - s.last302start
+                    if td > datetime.timedelta(days=60):
                         s.feedURL = newURL
-                        s.last302url = None
+                        s.last302url = " "
 
                 else:
                     s.last302url = newURL
-                    s.last302start = datetime.datetime.now()
+                    s.last302start = datetime.datetime.utcnow().replace(tzinfo=utc)
 
                 s.lastResult = "Temporary Redirect to " + newURL + " since " + s.last302start.strftime("%d %B")
 
 
-            except:     
+            except Exception as ex:     
                 s.lastResult = "Failed Redirection to " + newURL
                 interval += 60
         
-        #NOT ELIF, WE HAVE TO START THE IF AGAIN TO COPE WTIH 
+        #NOT ELIF, WE HAVE TO START THE IF AGAIN TO COPE WTIH 302
         if ret != None and ret.status_code >= 200 and ret.status_code < 300: #now we are not following redirects 302,303 and so forth are going to fail here, but what the hell :)
             #great
             
@@ -654,11 +672,11 @@ def reader(request):
             
             try:
                 s.ETag = ret.headers["ETag"]
-            except:
+            except Exception as ex:
                 s.ETag = None                                   
             try:
                 s.lastModified = ret.headers["Last-Modified"]
-            except:
+            except Exception as ex:
                 s.lastModified = None                                   
             
             
@@ -668,9 +686,9 @@ def reader(request):
             try:
                 f = feedparser.parse(ret.content) #need to start checking feed parser errors here
                 entries = f['entries']
-                s.lastSuccess = datetime.datetime.now() #in case we start auto unsubscribing long dead feeds
+                s.lastSuccess = datetime.datetime.utcnow().replace(tzinfo=utc) #in case we start auto unsubscribing long dead feeds
 
-            except:
+            except Exception as ex:
                 s.lastResult = "Feed Parse Error"
                 entries = []
                 interval += 120
@@ -679,7 +697,7 @@ def reader(request):
             try:
                 s.siteURL = f.feed.link
                 s.name = f.feed.title
-            except:
+            except Exception as ex:
                 pass
                 
 
@@ -688,40 +706,42 @@ def reader(request):
             for e in entries:
                 try:
                     body = e.content[0].value
-                except:
+                except Exception as ex:
                     try:
                         body = e.description
-                    except:
-                        body = ""
+                    except Exception as ex:
+                        body = " "
             
             
                 try:
                     guid = e.guid
-                except:
+                except Exception as ex:
                     try:
                         guid = e.link
-                    except:
+                    except Exception as ex:
                         m = hashlib.md5()
                         m.update(body.encode("utf-8"))
                         guid = m.hexdigest()
                                 
-                response.write(guid + "\n")
-
                 try:
-                    p  = Post.objects.filter(Q(source=s) & Q(guid=guid))[0]
-                except: 
+                    p  = Post.objects.filter(source=s).filter(guid=guid)[0]
+                    response.write("EXISTING " + guid + "\n")
+
+                except Exception as ex:
+                    response.write("NEW " + guid + "\n")
                     p = Post(index=0)
+                    p.found = datetime.datetime.utcnow().replace(tzinfo=utc)
                     changed = True
-                p.source = s
+                    p.source = s
                 
                 try:
                     title = e.title
-                except:
+                except Exception as ex:
                     title = "No title"
                                     
                 try:
                     p.link = e.link
-                except:
+                except Exception as ex:
                     p.link = ''
                 p.title = title
                 #tags = [t["term"] for t in e.tags]
@@ -730,30 +750,33 @@ def reader(request):
                 try:
                     #dd = datetime.datetime.fromtimestamp(time.mktime(e.date_parsed))
                     #p.created = datetime.datetime(dd.year,dd.month,dd.day,dd.hour,dd.minute,dd.second,tzinfo=_GMT)
-                    #response.write(p.created)
                     
+                    p.created  = datetime.datetime.fromtimestamp(time.mktime(e.date_parsed)).replace(tzinfo=utc)
+                    # p.created  = datetime.datetime.utcnow().replace(tzinfo=utc)
+                except Exception as ex:
+                    response.write("CREATED ERROR")     
+                    p.created  = datetime.datetime.utcnow().replace(tzinfo=utc)
                     
-                    p.created  = datetime.datetime.fromtimestamp(time.mktime(e.date_parsed))
-                except:
-                    p.created  = datetime.datetime.now()
+                # response.write("CC %s \n" % str(p.created))
                     
                 p.guid = guid
                 try:
                     p.author = e.author
-                except:
+                except Exception as ex:
                     p.author = ""
 
                 try:
                     p.body = body                       
                     p.save()
-                    #response.write(p.body)
-                except:
-                    print sys.exc_info()[0]
-                    response.write("Save error for post")
+                    # response.write(p.body)
+                except Exception as ex:
+                    #response.write(str(sys.exc_info()[0]))
+                    response.write("\nSave error for post:" + str(sys.exc_info()[0]))
+                    traceback.print_tb(sys.exc_traceback,file=response)
             if changed:
                 interval /= 2
-                s.lastResult = "OK (updated)" #and temporary redirects
-                s.lastChange = datetime.datetime.now()
+                s.lastResult = " OK (updated)" #and temporary redirects
+                s.lastChange = datetime.datetime.utcnow().replace(tzinfo=utc)
                 
                 idx = s.maxIndex
                 # give indices to posts based on created date
@@ -789,7 +812,7 @@ def reader(request):
         response.write("\nUpdating interval from %d to %d\n" % (s.interval,interval))
         s.interval = interval
         td = datetime.timedelta(minutes=interval)
-        s.duePoll = datetime.datetime.now() + td
+        s.duePoll = datetime.datetime.utcnow().replace(tzinfo=utc) + td
         s.save()
         
         response.write("OK")

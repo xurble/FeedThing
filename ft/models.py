@@ -7,6 +7,8 @@ import datetime
 from urllib import urlencode
 import logging
 import sys
+from django.utils.timezone import utc
+
 
 
 from django.contrib.auth.models import User
@@ -18,7 +20,7 @@ class Source(models.Model):
     siteURL       = models.CharField(max_length=255,blank=True,null=True)
     feedURL       = models.CharField(max_length=255)
     lastPolled    = models.DateTimeField(max_length=255,blank=True,null=True)
-    duePoll       = models.DateTimeField(default=datetime.datetime.now)
+    duePoll       = models.DateTimeField()
     ETag          = models.CharField(max_length=255,blank=True,null=True)
     lastModified  = models.CharField(max_length=255,blank=True,null=True) # just pass this back and forward between server and me , no need to parse
     
@@ -29,9 +31,11 @@ class Source(models.Model):
     live          = models.BooleanField(default=True)
     status_code   = models.PositiveIntegerField(default=0)
     last302url    = models.CharField(max_length=255,default = " ")
-    last302start  = models.DateTimeField(default=datetime.datetime.now)
+    last302start  = models.DateTimeField(auto_now_add=True)
     
     maxIndex      = models.IntegerField(default=0)
+    
+    num_subs      = models.IntegerField(default=1)
     
     
     def __unicode__(self):
@@ -59,7 +63,7 @@ class Source(models.Model):
         elif self.lastChange == None or self.lastSuccess == None:
             css="background-color:#D00;color:white"
         else:
-            dd = datetime.datetime.now() - self.lastChange
+            dd = datetime.datetime.utcnow().replace(tzinfo=utc) - self.lastChange
             
             days = int (dd.days/2)
             
@@ -75,9 +79,9 @@ class Source(models.Model):
 
 # A user subscription
 class Subscription(models.Model):
-    user = models.ForeignKey(User)
-    source = models.ForeignKey(Source,blank=True,null=True) # null source means we are a folder
-    parent = models.ForeignKey('self',blank=True,null=True)
+    user     = models.ForeignKey(User)
+    source   = models.ForeignKey(Source,blank=True,null=True) # null source means we are a folder
+    parent   = models.ForeignKey('self',blank=True,null=True)
     lastRead = models.IntegerField(default=0)
     isRiver  = models.BooleanField(default=False)
     name     = models.CharField(max_length=255)
@@ -100,9 +104,9 @@ class Post(models.Model):
     title         = models.TextField()
     body          = models.TextField()
     link          = models.CharField(max_length=255,blank=True,null=True)
-    found         = models.DateTimeField(default=datetime.datetime.now)
-    created       = models.DateTimeField(default=datetime.datetime.now,db_index=True)
-    guid          = models.CharField(max_length=255,blank=True,null=True)
+    found         = models.DateTimeField()
+    created       = models.DateTimeField(db_index=True)
+    guid          = models.CharField(max_length=255,blank=True,null=True,db_index=True)
     author        = models.CharField(max_length=255,blank=True,null=True)
     index         = models.IntegerField(db_index=True)
 

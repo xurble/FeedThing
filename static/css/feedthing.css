@@ -378,8 +378,8 @@ img#littlelogo {
 	float: right;
 }
 
-div.read {
-    background-color: #7EA02D;
+div.read,div.read:hover {
+    background-color: #7EA02D !important;
 }
 
 div.location {

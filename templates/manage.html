@@ -36,6 +36,8 @@ function details(sid){
         return;
     }
 
+    $(".read").removeClass("read");
+    $("#s" + sid).addClass("read");
     
     $("#feedpane").html('<img src="/static/images/FeedThing.png" class="paneplant">');
 

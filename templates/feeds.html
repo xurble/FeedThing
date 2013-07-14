@@ -46,7 +46,7 @@ function read(fid){
     {% if all %}
         $("#uc" + fid).html("(0)");
         if (lastRead != null) {
-            $("#sa" + lastRead).removeClass("read");    
+            $("#s" + lastRead).removeClass("read");    
         }
     {% else %}
         if (lastRead != null) {
@@ -56,7 +56,7 @@ function read(fid){
 
     lastRead = fid;
     
-    $("#sa" + lastRead).addClass("read");  
+    $("#s" + lastRead).addClass("read");  
     
     $("#feedpane").html('<img src="/static/images/FeedThing.png" class="paneplant">');
 

@@ -181,117 +181,115 @@ def feedgarden(request):
 @login_required
 def addfeed(request):
 
-    
-    feed = ""
-    if request.method == 'GET':
-        if request.GET.__contains__("feed"):
-            feed = request.GET["feed"]
-        groups = Subscription.objects.filter(Q(user=request.user) & Q(source=None))
 
-        return render_to_response("addfeed.html",{"feed":feed,"groups":groups},context_instance=RequestContext(request))
-    
-    else:
-    
-        if request.POST.__contains__("feed"):
-            feed = request.POST["feed"]
-        
-        headers = { "User-Agent": "FeedThing/3.0", "Cache-Control":"no-cache,max-age=0", "Pragma":"no-cache" } #identify ourselves and also stop our requests getting picked up by google's cache
+    try:
+        feed = ""
+        if request.method == 'GET':
+            if request.GET.__contains__("feed"):
+                feed = request.GET["feed"]
+            groups = Subscription.objects.filter(Q(user=request.user) & Q(source=None))
 
-        ret = requests.get(feed, headers=headers)
-        #can I be bothered to check return codes here?  I think not on balance
-        
-        soup = BeautifulSoup(ret.content)
-        #are we actually RSS
-        rss = soup.findAll(name='rss')
-        isFeed = False
-        if len(rss) == 1:
-            #this is an rss file
-            isFeed = True
-            
+            return render_to_response("addfeed.html",{"feed":feed,"groups":groups},context_instance=RequestContext(request))
+    
         else:
-            rss = soup.findAll(name='feed')
-            if len(rss) == 1:
-                #this is an atom file
-                isFeed = True
+    
+            if request.POST.__contains__("feed"):
+                feed = request.POST["feed"]
+        
+            headers = { "User-Agent": "FeedThing/3.0", "Cache-Control":"no-cache,max-age=0", "Pragma":"no-cache" } #identify ourselves and also stop our requests getting picked up by google's cache
 
-        if not isFeed:
-            feedcount = 0
-            rethtml = ""
-            for l in soup.findAll(name='link'):
-                if l['rel'] == "alternate" and (l['type'] == 'application/atom+xml' or l['type'] == 'application/rss+xml'):
-                    feedcount += 1
-                    try:
-                        name = l['title']
-                    except Exception as ex:
-                        name = "Feed %d" % feedcount
-                    rethtml += '<li><form method="post" onsubmit="return false;"> <input type="hidden" name="feed" id="feed-%d" value="%s"><a href="#" onclick="addFeed(%d)" class="button">Subscribe</a> - %s</form></li>' % (feedcount,urljoin(feed,l['href']),feedcount,name)
-                    feed = urljoin(feed,l['href']) # store this in case there is only one feed and we wind up importing it
-                    #TODO: need to accout for relative URLs here
-            #if feedcount == 1:
-                #just 1 feed found, let's import it now
-                
-            #   ret = fetch(f)
-            #   isFeed = True
-            if feedcount == 0:
-                return HttpResponse("No feeds found")
-            else:
-                return HttpResponse(rethtml)
-                
-        if isFeed:
-            parent = None
-            if request.POST["group"] != "0":
-                parent = get_object_or_404(Subscription,id=int(request.POST["group"]))
-                if parent.user != request.user:
-                    return HttpResponse("<div>Internal error.<!--bad group --></div>")
-
+            ret = requests.get(feed, headers=headers)
+            #can I be bothered to check return codes here?  I think not on balance
+        
             
-            s = Source.objects.filter(feedURL = feed)
-            if s.count() > 0:
-                #feed already exists
-                s = s[0]
-                us = Subscription.objects.filter(Q(user=request.user) & Q(source=s))
-                if us.count() > 0:
-                    return HttpResponse("<div>Already subscribed to this feed </div>")
+            ff = feedparser.parse(ret.content) # are we a feed?
+            
+            isFeed = (len(ff.entries) > 0)            
+            
+
+            if not isFeed:
+            
+                soup = BeautifulSoup(ret.content)
+                feedcount = 0
+                rethtml = ""
+                for l in soup.findAll(name='link'):
+                    if l.has_key("rel") and l.has_key("type"):
+                        if l['rel'] == "alternate" and (l['type'] == 'application/atom+xml' or l['type'] == 'application/rss+xml'):
+                            feedcount += 1
+                            try:
+                                name = l['title']
+                            except Exception as ex:
+                                name = "Feed %d" % feedcount
+                            rethtml += '<li><form method="post" onsubmit="return false;"> <input type="hidden" name="feed" id="feed-%d" value="%s"><a href="#" onclick="addFeed(%d)" class="button">Subscribe</a> - %s</form></li>' % (feedcount,urljoin(feed,l['href']),feedcount,name)
+                            feed = urljoin(feed,l['href']) # store this in case there is only one feed and we wind up importing it
+                            #TODO: need to accout for relative URLs here
+                #if feedcount == 1:
+                    #just 1 feed found, let's import it now
+                
+                #   ret = fetch(f)
+                #   isFeed = True
+                if feedcount == 0:
+                    return HttpResponse("No feeds found")
                 else:
-                    us = Subscription(source=s,user=request.user,name=s.displayName(),parent=parent)
+                    return HttpResponse(rethtml)
+                
+            if isFeed:
+                parent = None
+                if request.POST["group"] != "0":
+                    parent = get_object_or_404(Subscription,id=int(request.POST["group"]))
+                    if parent.user != request.user:
+                        return HttpResponse("<div>Internal error.<!--bad group --></div>")
+
+            
+                s = Source.objects.filter(feedURL = feed)
+                if s.count() > 0:
+                    #feed already exists
+                    s = s[0]
+                    us = Subscription.objects.filter(Q(user=request.user) & Q(source=s))
+                    if us.count() > 0:
+                        return HttpResponse("<div>Already subscribed to this feed </div>")
+                    else:
+                        us = Subscription(source=s,user=request.user,name=s.displayName(),parent=parent)
                     
-                    if s.maxIndex > 10: #don't flood people with all these old things
-                        us.lastRead = s.maxIndex - 10
+                        if s.maxIndex > 10: #don't flood people with all these old things
+                            us.lastRead = s.maxIndex - 10
                     
-                    us.save()
+                        us.save()
                     
-                    s.num_subs = s.subscription_set.coun()
-                    s.save()
+                        s.num_subs = s.subscription_set.count()
+                        s.save()
                     
-                    return HttpResponse("<div>Imported feed %s</div>" % us.name)
+                        return HttpResponse("<div>Imported feed %s</div>" % us.name)
 
 
-            ff = feedparser.parse(ret.content) #need to start checking feed parser errors here
-            ns = Source()
-            ns.duePoll = datetime.datetime.utcnow().replace(tzinfo=utc)            
+                # need to start checking feed parser errors here
+                ns = Source()
+                ns.duePoll = datetime.datetime.utcnow().replace(tzinfo=utc)            
             
-            #print request.POST["river"]
-            #ns.inRiver = (request.POST["river"] == "yes")
+                #print request.POST["river"]
+                #ns.inRiver = (request.POST["river"] == "yes")
             
             
                     
-            ns.name = feed
-            try:
-                ns.htmlUrl = ff.feed.link
-                ns.name = ff.feed.title
-            except Exception as ex:
-                pass
-            ns.feedURL = feed
+                ns.name = feed
+                try:
+                    ns.htmlUrl = ff.feed.link
+                    ns.name = ff.feed.title
+                except Exception as ex:
+                    pass
+                ns.feedURL = feed
             
-            ns.save()
+                ns.save()
             
-            us = Subscription(source=ns,user=request.user,name=ns.displayName(),parent=parent)
-            us.save()
+                us = Subscription(source=ns,user=request.user,name=ns.displayName(),parent=parent)
+                us.save()
 
 
-            #you see really, I could parse out the items here and insert them rather than wait for them to come back round in the refresh cycle
+                #you see really, I could parse out the items here and insert them rather than wait for them to come back round in the refresh cycle
 
-            return HttpResponse("<div>Imported feed %s</div>" % ns.name)
+                return HttpResponse("<div>Imported feed %s</div>" % ns.name)
+    except Exception as xx:
+        return HttpResponse("<div>Error %s: %s</div>" % (xx.__class__.__name__,str(xx)))
     
     
 # TODO: I don't think that this is the most robust import ever :)
@@ -325,7 +323,7 @@ def importopml(request):
                     us.save()
                     count += 1
 
-                ns.num_subs = ns.subscription_set.coun()
+                ns.num_subs = ns.subscription_set.count()
                 ns.save()
 
                 
@@ -498,8 +496,8 @@ def revivefeed(request,fid):
         f.duePoll = datetime.datetime.utcnow().replace(tzinfo=utc)
         f.ETag = None
         f.lastModified = None
-        f.lastSuccess = None
-        f.lastChange = None
+        # f.lastSuccess = None
+        # f.lastChange = None
         # f.maxIndex = 0
         f.save()
         # Post.objects.filter(source=f).delete()
@@ -544,6 +542,7 @@ def unsubscribefeed(request,sid):
 
 def reader(request):
 
+    
     response = HttpResponse()
 
     response["Content-Type"] = "text/plain"
@@ -553,6 +552,8 @@ def reader(request):
     response.write("Update Q: %d\n\n" % sources.count())
     for s in sources:
         
+        was302 = False
+        
         response.write("\n\n------------------------------\n\n")
         
         s.lastPolled = datetime.datetime.utcnow().replace(tzinfo=utc)
@@ -560,11 +561,11 @@ def reader(request):
     
         interval = s.interval
     
-        headers = { "User-Agent": "FeedThing/3.0", "Cache-Control":"no-cache,max-age=0", "Pragma":"no-cache" } #identify ourselves and also stop our requests getting picked up by google's cache
+        headers = { "User-Agent": "FeedThing/3.0 at %s (%d subscribers)" % (request.META["HTTP_HOST"],s.num_subs), "Cache-Control":"no-cache,max-age=0", "Pragma":"no-cache" } #identify ourselves and also stop our requests getting picked up by google's cache
         if s.ETag:
-            headers["If-None-Match"] = s.ETag
+            headers["If-None-Match"] = str(s.ETag)
         if s.lastModified:
-            headers["If-Modified-Since"] = s.lastModified
+            headers["If-Modified-Since"] = str(s.lastModified)
         response.write(headers)
         ret = None
         response.write("\nFetching %s" % s.feedURL)
@@ -573,8 +574,10 @@ def reader(request):
             s.status_code = ret.status_code
             s.lastResult = "Unhandled Case"
         except Exception as ex:
-            s.lastResult = "Fetch error"
+            print ex
+            s.lastResult = "Fetch error:" + str(ex)
             s.status_code = 0
+            response.write("\nFetch error: " + str(ex))
         
         if ret:
             response.write("\nResult: %d" % ret.status_code)
@@ -600,7 +603,13 @@ def reader(request):
             #not modified
             interval += 5
             s.lastResult = "Not modified"
-            s.lastSuccess = datetime.datetime.utcnow().replace(tzinfo=utc) #in case we start auto unsubscribing long dead feeds
+            #s.lastSuccess = datetime.datetime.utcnow().replace(tzinfo=utc) #in case we start auto unsubscribing long dead feeds
+            
+            if (datetime.datetime.utcnow().replace(tzinfo=utc) - s.lastSuccess).days > 7:
+                s.lastResult = "Clearing etag/last modified due to lack of changes"
+                s.ETag = None
+                s.lastModified = None
+        
         elif ret.status_code == 301: #permenant redirect
             try:
 
@@ -626,6 +635,7 @@ def reader(request):
                 pass
         elif ret.status_code == 302 or ret.status_code == 303 or ret.status_code == 307: #Temporary redirect
             newURL = ""
+            was302 = True
             try:
                 newURL = ret.headers["Location"]
                 
@@ -663,22 +673,25 @@ def reader(request):
                 interval += 60
         
         #NOT ELIF, WE HAVE TO START THE IF AGAIN TO COPE WTIH 302
-        if ret != None and ret.status_code >= 200 and ret.status_code < 300: #now we are not following redirects 302,303 and so forth are going to fail here, but what the hell :)
-            #great
-            
+        if ret and ret.status_code >= 200 and ret.status_code < 300: #now we are not following redirects 302,303 and so forth are going to fail here, but what the hell :)
 
+            # great!
             
+            ok = True
             changed = False 
             
-            try:
-                s.ETag = ret.headers["ETag"]
-            except Exception as ex:
-                s.ETag = None                                   
-            try:
-                s.lastModified = ret.headers["Last-Modified"]
-            except Exception as ex:
-                s.lastModified = None                                   
-            
+            if was302:
+                s.ETag = None
+                s.lastModified = None
+            else:
+                try:
+                    s.ETag = ret.headers["ETag"]
+                except Exception as ex:
+                    s.ETag = None                                   
+                try:
+                    s.lastModified = ret.headers["Last-Modified"]
+                except Exception as ex:
+                    s.lastModified = None                                   
             
             response.write("\nEtag:%s\nLast Mod:%s\n\n" % (s.ETag,s.lastModified))
             
@@ -686,94 +699,101 @@ def reader(request):
             try:
                 f = feedparser.parse(ret.content) #need to start checking feed parser errors here
                 entries = f['entries']
-                s.lastSuccess = datetime.datetime.utcnow().replace(tzinfo=utc) #in case we start auto unsubscribing long dead feeds
+                if len(entries):
+                    s.lastSuccess = datetime.datetime.utcnow().replace(tzinfo=utc) #in case we start auto unsubscribing long dead feeds
+                else:
+                    s.lastResult = "Feed is empty"
+                    interval += 120
+                    ok = False
 
             except Exception as ex:
                 s.lastResult = "Feed Parse Error"
                 entries = []
                 interval += 120
+                ok = False
+                
+            if ok:
+
+                try:
+                    s.siteURL = f.feed.link
+                    s.name = f.feed.title
+                except Exception as ex:
+                    pass
                 
 
-            try:
-                s.siteURL = f.feed.link
-                s.name = f.feed.title
-            except Exception as ex:
-                pass
-                
-
-            #response.write(entries)
-            entries.reverse() # Entries are typically in reverse chronological order - put them in right order
-            for e in entries:
-                try:
-                    body = e.content[0].value
-                except Exception as ex:
+                #response.write(entries)
+                entries.reverse() # Entries are typically in reverse chronological order - put them in right order
+                for e in entries:
                     try:
-                        body = e.description
+                        body = e.content[0].value
                     except Exception as ex:
-                        body = " "
+                        try:
+                            body = e.description
+                        except Exception as ex:
+                            body = " "
             
             
-                try:
-                    guid = e.guid
-                except Exception as ex:
                     try:
-                        guid = e.link
+                        guid = e.guid
                     except Exception as ex:
-                        m = hashlib.md5()
-                        m.update(body.encode("utf-8"))
-                        guid = m.hexdigest()
+                        try:
+                            guid = e.link
+                        except Exception as ex:
+                            m = hashlib.md5()
+                            m.update(body.encode("utf-8"))
+                            guid = m.hexdigest()
                                 
-                try:
-                    p  = Post.objects.filter(source=s).filter(guid=guid)[0]
-                    response.write("EXISTING " + guid + "\n")
+                    try:
+                        p  = Post.objects.filter(source=s).filter(guid=guid)[0]
+                        response.write("EXISTING " + guid + "\n")
 
-                except Exception as ex:
-                    response.write("NEW " + guid + "\n")
-                    p = Post(index=0)
-                    p.found = datetime.datetime.utcnow().replace(tzinfo=utc)
-                    changed = True
-                    p.source = s
+                    except Exception as ex:
+                        response.write("NEW " + guid + "\n")
+                        p = Post(index=0)
+                        p.found = datetime.datetime.utcnow().replace(tzinfo=utc)
+                        changed = True
+                        p.source = s
                 
-                try:
-                    title = e.title
-                except Exception as ex:
-                    title = "No title"
+                    try:
+                        title = e.title
+                    except Exception as ex:
+                        title = "No title"
                                     
-                try:
-                    p.link = e.link
-                except Exception as ex:
-                    p.link = ''
-                p.title = title
-                #tags = [t["term"] for t in e.tags]
-                #link.tags = ",".join(tags)
+                    try:
+                        p.link = e.link
+                    except Exception as ex:
+                        p.link = ''
+                    p.title = title
+                    #tags = [t["term"] for t in e.tags]
+                    #link.tags = ",".join(tags)
 
-                try:
-                    #dd = datetime.datetime.fromtimestamp(time.mktime(e.date_parsed))
-                    #p.created = datetime.datetime(dd.year,dd.month,dd.day,dd.hour,dd.minute,dd.second,tzinfo=_GMT)
+                    try:
+                        #dd = datetime.datetime.fromtimestamp(time.mktime(e.date_parsed))
+                        #p.created = datetime.datetime(dd.year,dd.month,dd.day,dd.hour,dd.minute,dd.second,tzinfo=_GMT)
                     
-                    p.created  = datetime.datetime.fromtimestamp(time.mktime(e.date_parsed)).replace(tzinfo=utc)
-                    # p.created  = datetime.datetime.utcnow().replace(tzinfo=utc)
-                except Exception as ex:
-                    response.write("CREATED ERROR")     
-                    p.created  = datetime.datetime.utcnow().replace(tzinfo=utc)
+                        p.created  = datetime.datetime.fromtimestamp(time.mktime(e.date_parsed)).replace(tzinfo=utc)
+                        # p.created  = datetime.datetime.utcnow().replace(tzinfo=utc)
+                    except Exception as ex:
+                        response.write("CREATED ERROR")     
+                        p.created  = datetime.datetime.utcnow().replace(tzinfo=utc)
                     
-                # response.write("CC %s \n" % str(p.created))
+                    # response.write("CC %s \n" % str(p.created))
                     
-                p.guid = guid
-                try:
-                    p.author = e.author
-                except Exception as ex:
-                    p.author = ""
+                    p.guid = guid
+                    try:
+                        p.author = e.author
+                    except Exception as ex:
+                        p.author = ""
 
-                try:
-                    p.body = body                       
-                    p.save()
-                    # response.write(p.body)
-                except Exception as ex:
-                    #response.write(str(sys.exc_info()[0]))
-                    response.write("\nSave error for post:" + str(sys.exc_info()[0]))
-                    traceback.print_tb(sys.exc_traceback,file=response)
-            if changed:
+                    try:
+                        p.body = body                       
+                        p.save()
+                        # response.write(p.body)
+                    except Exception as ex:
+                        #response.write(str(sys.exc_info()[0]))
+                        response.write("\nSave error for post:" + str(sys.exc_info()[0]))
+                        traceback.print_tb(sys.exc_traceback,file=response)
+            if ok and changed:
                 interval /= 2
                 s.lastResult = " OK (updated)" #and temporary redirects
                 s.lastChange = datetime.datetime.utcnow().replace(tzinfo=utc)
@@ -790,7 +810,7 @@ def reader(request):
 
                 
                 
-            else:
+            elif ok:
                 s.lastResult = "OK"
                 interval += 10 # we slow down feeds a little more that don't send headers we can use
                 
@@ -815,5 +835,5 @@ def reader(request):
         s.duePoll = datetime.datetime.utcnow().replace(tzinfo=utc) + td
         s.save()
         
-        response.write("OK")
+        response.write("Done")
     return response

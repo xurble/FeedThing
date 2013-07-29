@@ -55,6 +55,10 @@
                         <th>Last Updated:</th>
                         <td>{% if subscription.source.lastChange %}{{subscription.source.lastChange|timesince}} ago{% else %}Never{% endif %}</td>
                     </tr>
+                    <tr>
+                        <th>Last Result:</th>
+                        <td>{{subscription.source.lastResult}}</td>
+                    </tr>
 
                 </table>
                 
@@ -75,7 +79,11 @@
             {% else %}
                 <h2>Sources</h2>
                 {% for s in sources %}
-                    <div id="sub{{s.id}}"><a href="javascript:removeFromGroup({{s.id}})" class="button">X</a> <a href="#" onclick="details({{s.id}})">{{s}}</a></div>
+                    <a href="javascript:removeFromGroup({{s.id}})" class="button" style="display:inline-block">X</a> 
+                    <div id="sub{{s.id}}" class="feedbutton" style="display:inline-block;padding:8px;width:60%"> 
+                        <div class="healthbox" style="float:right;background-color:{{s.source.healthBox }}"> </div>
+                        <a href="#" onclick="details({{s.id}})">{{s}}</a> 
+                    </div><br>
                 {% endfor %}
             
             {% endif %}

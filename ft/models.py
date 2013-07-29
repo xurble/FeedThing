@@ -75,6 +75,29 @@ class Source(models.Model):
                 css += ";color:white"
             
         return css
+        
+    def healthBox(self):
+        
+        if not self.live:
+            css="#ccc;"
+        elif self.lastChange == None or self.lastSuccess == None:
+            css="#F00;"
+        else:
+            dd = datetime.datetime.utcnow().replace(tzinfo=utc) - self.lastChange
+            
+            days = int (dd.days/2)
+            
+            red = days
+            if red > 255:
+                red = 255
+            
+            green = 255-days;
+            if green < 0:
+                green = 0
+            
+            css = "#%02x%02x00" % (red,green)
+            
+        return css
             
 
 # A user subscription

@@ -50,7 +50,7 @@ function read(fid){
         }
     {% else %}
         if (lastRead != null) {
-            $("#s" + lastRead).fadeOut();    
+            $("#s" + lastRead).fadeOut("fast");    
         }
     {% endif %}
 
@@ -70,7 +70,7 @@ function read(fid){
 
 	$.get("/read/" + fid + qty,function(data){
 	   $("#feedpane").html(data);
-	   $(".backbutton").fadeIn();
+	   $(".backbutton").fadeIn("fast");
 	   
 	});
 
@@ -82,7 +82,7 @@ function read(fid){
     }
     else {
     	oldScrollTop = $(window).scrollTop();
-        $("#feedlist").fadeOut(function(){
+        $("#feedlist").fadeOut("fast",function(){
             $("#feedpane").show()        
         });
 
@@ -100,11 +100,11 @@ function unRead() {
 	   $(".backbutton").fadeOut();
 	    window.scrollTo(0, 1);
 
-        $("#feedpane").fadeOut(function(){
+        $("#feedpane").fadeOut("fast",function(){
         
-            $("#feedlist").fadeIn(function(){
+            $("#feedlist").fadeIn("fast",function(){
                 {% if not all %}
-                    $("#s" + lastRead).fadeOut();
+                    $("#s" + lastRead).fadeOut("fast");
                 {% endif %}
                 
                 $(window).scrollTop(oldScrollTop);

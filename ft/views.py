@@ -1,7 +1,7 @@
 # Create your views here.
 
 from django.shortcuts import render_to_response,get_object_or_404
-from django.contrib.auth import authenticate, login,get_user
+from django.contrib.auth import authenticate, login,get_user, logout
 from django.http import HttpResponseRedirect,HttpResponse
 from django.db.models import Q
 from django.db.models import F
@@ -92,6 +92,12 @@ def loginpage(request):
     request.session.set_test_cookie()
     vals["msg"] = msg
     return render_to_response('login.html',vals,context_instance=RequestContext(request))
+
+
+def logoutpage(request):
+    print "logout"
+    logout(request)
+    return render_to_response('logout.html',{},context_instance=RequestContext(request))
     
 
 @login_required

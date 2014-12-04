@@ -4,12 +4,9 @@ import os
 
 SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
 
-
-
 paths = SITE_ROOT.split(os.sep)
 INSTALL_LOCATION = paths[len(paths)-2]  
 print INSTALL_LOCATION
-
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
@@ -148,7 +145,7 @@ INSTALLED_APPS = (
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
-    'feedthing.ft',
+    'ft',
 )
 
 # A sample logging configuration. The only tangible logging

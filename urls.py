@@ -25,7 +25,8 @@ urlpatterns = patterns('',
     (r'^addfeed/$', 'feedthing.ft.views.addfeed'),
     (r'^importopml/$', 'feedthing.ft.views.importopml'),
     (r'^feedgarden/$', 'feedthing.ft.views.feedgarden'),
-    (r'^accounts/login','feedthing.ft.views.loginpage'),
+    (r'^accounts/login/$','feedthing.ft.views.loginpage'),
+    (r'^accounts/logout/$','feedthing.ft.views.logoutpage'),
     (r'^read/(?P<fid>.*)/(?P<qty>.*)/','feedthing.ft.views.readfeed'),
 
 

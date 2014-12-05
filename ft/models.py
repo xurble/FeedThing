@@ -126,7 +126,7 @@ class Post(models.Model):
     source        = models.ForeignKey(Source,db_index=True)
     title         = models.TextField()
     body          = models.TextField()
-    link          = models.CharField(max_length=255,blank=True,null=True)
+    link          = models.CharField(max_length=512,blank=True,null=True)
     found         = models.DateTimeField()
     created       = models.DateTimeField(db_index=True)
     guid          = models.CharField(max_length=255,blank=True,null=True,db_index=True)

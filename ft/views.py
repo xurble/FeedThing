@@ -764,6 +764,8 @@ def reader(request):
                         title = e.title
                     except Exception as ex:
                         title = "No title"
+                        
+                    import pdb; pdb.set_trace()
                                     
                     try:
                         p.link = e.link

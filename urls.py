@@ -40,7 +40,8 @@ urlpatterns = patterns('',
 
 
     (r'^feed/(?P<fid>.*)/revive/$','feedthing.ft.views.revivefeed'),
-    (r'^feed/(?P<fid>.*)/kill/$','feedthing.ft.views.killfeed'),
+    #(r'^feed/(?P<fid>.*)/kill/$','feedthing.ft.views.killfeed'),
+    (r'^feed/(?P<fid>.*)/test/$','feedthing.ft.views.testfeed'),
     
 
 

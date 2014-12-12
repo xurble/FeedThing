@@ -201,10 +201,12 @@ def addfeed(request):
     
             if request.POST.__contains__("feed"):
                 feed = request.POST["feed"]
-        
-            headers = { "User-Agent": "FeedThing/3.0", "Cache-Control":"no-cache,max-age=0", "Pragma":"no-cache" } #identify ourselves and also stop our requests getting picked up by google's cache
+                
+                
+            headers = { "User-Agent": "FeedThing/3.1 (+http://%s; Initial Feed Crawler)" % request.META["HTTP_HOST"], "Cache-Control":"no-cache,max-age=0", "Pragma":"no-cache" } #identify ourselves and also stop our requests getting picked up by google's cache
 
-            ret = requests.get(feed, headers=headers)
+
+            ret = requests.get(feed, headers=headers,verify=False)
             #can I be bothered to check return codes here?  I think not on balance
         
             
@@ -509,18 +511,40 @@ def revivefeed(request,fid):
         # Post.objects.filter(source=f).delete()
         return HttpResponse("OK")
 
+
 @login_required
-def killfeed(request,fid): #kill it stone dead (From feedgarden) - need to make admin only and clean up Subscriptions
+def revivefeed(request,fid):
 
     if request.method == "POST":
         
         f = get_object_or_404(Source,id=int(fid))
-
-        Post.objects.filter(source=f).delete()
-        
-        f.delete()
-
+        f.live = True
+        f.duePoll = datetime.datetime.utcnow().replace(tzinfo=utc)
+        f.ETag = None
+        f.lastModified = None
+        # f.lastSuccess = None
+        # f.lastChange = None
+        # f.maxIndex = 0
+        f.save()
+        # Post.objects.filter(source=f).delete()
         return HttpResponse("OK")
+
+
+@login_required
+def testfeed(request,fid): #kill it stone dead (From feedgarden) - need to make admin only and clean up Subscriptions
+
+        f = get_object_or_404(Source,id=int(fid))
+
+
+        headers = { "User-Agent": "FeedThing/3.1 (+http://%s; Updater; %d subscribers)" % (request.META["HTTP_HOST"],f.num_subs), "Cache-Control":"no-cache,max-age=0", "Pragma":"no-cache" } #identify ourselves and also stop our requests getting picked up by google's cache
+
+        ret = requests.get(f.feedURL,headers=headers,allow_redirects=False,verify=False)
+        
+        
+        r = HttpResponse("%s\n------------------------------\n\nResponse: %d\n-------------------------\n%s\n--------------------\n%s" % (headers,ret.status_code,ret.headers,ret.content))
+        r["Content-type"] = "text/plain"
+        
+        return r
 
 
 @login_required
@@ -529,21 +553,31 @@ def unsubscribefeed(request,sid):
 
     if request.method == "POST":
         
-        us = get_object_or_404(Subscription,id=int(sid))
+        sub = get_object_or_404(Subscription,id=int(sid))
+        
+        if sub.user == request.user:
 
-        if us.source:
-            s = us.source
-            us.delete()
-            s.num_subs = s.subscription_set.count()
-            if s.num_subs == 0: # this is the last subscription for this source
-                Post.objects.filter(source=s).delete()
-                s.delete()
+            if sub.source:
+                source = sub.source
+                parent = sub.parent
+                sub.delete()
+    
+                if parent is not None:
+                    if parent.subscription_set.count() == 0:
+                        parent.delete()
+    
+                source.num_subs = source.subscription_set.count()
+                if ssource.num_subs == 0: # this is the last subscription for this source
+                    Post.objects.filter(source=source).delete() # cascading delete would do this I think
+                    source.delete()
+                else:
+                    source.save()
+    
+                return HttpResponse("OK")
             else:
-                s.save()
-
-            return HttpResponse("OK")
+                return HttpResponse("Can't unsubscribe from groups")
         else:
-            return HttpResponse("Can't unsubscribe from groups")
+            return HttpResoponse("Nope")
 
 
 def reader(request):
@@ -567,7 +601,8 @@ def reader(request):
     
         interval = s.interval
     
-        headers = { "User-Agent": "FeedThing/3.0 at %s (%d subscribers)" % (request.META["HTTP_HOST"],s.num_subs), "Cache-Control":"no-cache,max-age=0", "Pragma":"no-cache" } #identify ourselves and also stop our requests getting picked up by google's cache
+        headers = { "User-Agent": "FeedThing/3.1 (+http://%s; Updater; %d subscribers)" % (request.META["HTTP_HOST"],s.num_subs), "Cache-Control":"no-cache,max-age=0", "Pragma":"no-cache" } #identify ourselves and also stop our requests getting picked up by google's cache
+
         if s.ETag:
             headers["If-None-Match"] = str(s.ETag)
         if s.lastModified:
@@ -576,7 +611,7 @@ def reader(request):
         ret = None
         response.write("\nFetching %s" % s.feedURL)
         try:
-            ret = requests.get(s.feedURL,headers=headers,allow_redirects=False)
+            ret = requests.get(s.feedURL,headers=headers,allow_redirects=False,verify=False)
             s.status_code = ret.status_code
             s.lastResult = "Unhandled Case"
         except Exception as ex:
@@ -655,7 +690,7 @@ def reader(request):
                     newURL = start + end + newURL
                     
                 
-                ret = requests.get(newURL,headers=headers,allow_redirects=True)
+                ret = requests.get(newURL,headers=headers,allow_redirects=True,verify=False)
                 s.status_code = ret.status_code
                 s.lastResult = "Temporary Redirect to " + newURL
 
@@ -675,7 +710,7 @@ def reader(request):
 
 
             except Exception as ex:     
-                s.lastResult = "Failed Redirection to " + newURL
+                s.lastResult = "Failed Redirection to " + newURL +  " " + str(ex)
                 interval += 60
         
         #NOT ELIF, WE HAVE TO START THE IF AGAIN TO COPE WTIH 302
@@ -764,8 +799,6 @@ def reader(request):
                         title = e.title
                     except Exception as ex:
                         title = "No title"
-                        
-                    import pdb; pdb.set_trace()
                                     
                     try:
                         p.link = e.link

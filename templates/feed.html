@@ -1,5 +1,8 @@
 {% load ft_tags %}
 
+            <a class="button backbutton" href="javascript:unRead()">Back</a>
+
+
             {% if source %}
             <h2 class="ftheader">{{source.name}}</h2>
             <div id="unsub"><a href="javascript:unsub({{subscription.id}})" class="button">Unsubscribe</a></div>

@@ -54,6 +54,7 @@ body {
     width:100%;
     padding-top:3px;
     height: 36px;
+    opacity: 0.85;
 }
 
 .clearfix {
@@ -68,6 +69,7 @@ h1#ftlogo {
 	margin: 0px;
     float:left;
     padding-top:0px;
+    margin-left:3px;
 }
 
 h1#ftlogo a {
@@ -101,11 +103,11 @@ a {
     }
 
     a.backbutton {
-        float:right;
+        position: fixed;
         margin-bottom: 3px !important;
-        margin-top: 0px !important;
+        top: 3px;
         display: none;
-        margin-right: 3px;
+        right: 3px;
     }
 
     #opml {
@@ -257,6 +259,7 @@ div.feedbutton, .button {
     font-weight: normal;
     background-color: #dedede;
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    opacity: 1.0;
 }
 
 /* TODO:

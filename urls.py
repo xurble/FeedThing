@@ -1,12 +1,14 @@
-from django.conf.urls.defaults import patterns, include, url
+from django.conf.urls import include, url
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
 admin.autodiscover()
 
-urlpatterns = patterns('',
+from ft.views import *
+
+urlpatterns = [
     # Examples:
-    # url(r'^$', 'feedthing.views.home', name='home'),
+    # url(r'^$', 'feedthing.views.home', name='home),
     # url(r'^feedthing/', include('feedthing.foo.urls')),
 
     # Uncomment the admin/doc line below to enable admin documentation:
@@ -16,33 +18,31 @@ urlpatterns = patterns('',
     url(r'^admin/', include(admin.site.urls)),
 
 
-    (r'^$', 'feedthing.ft.views.index'),
-    (r'^refresh/$', 'feedthing.ft.views.reader'),
-    (r'^help/$', 'feedthing.ft.views.help'),
-    (r'^feeds/$', 'feedthing.ft.views.feeds'),
-    (r'^allfeeds/$', 'feedthing.ft.views.allfeeds'),
+    url(r'^$', index),
+    url(r'^refresh/$', reader),
+    url(r'^help/$', help),
+    url(r'^feeds/$', feeds),
+    url(r'^allfeeds/$', allfeeds),
 
-    (r'^addfeed/$', 'feedthing.ft.views.addfeed'),
-    (r'^importopml/$', 'feedthing.ft.views.importopml'),
-    (r'^feedgarden/$', 'feedthing.ft.views.feedgarden'),
-    (r'^accounts/login/$','feedthing.ft.views.loginpage'),
-    (r'^accounts/logout/$','feedthing.ft.views.logoutpage'),
-    (r'^read/(?P<fid>.*)/(?P<qty>.*)/','feedthing.ft.views.readfeed'),
+    url(r'^addfeed/$', addfeed),
+    url(r'^importopml/$', importopml),
+    url(r'^feedgarden/$', feedgarden),
+    url(r'^accounts/login/$',loginpage),
+    url(r'^accounts/logout/$',logoutpage),
+    url(r'^read/(?P<fid>.*)/(?P<qty>.*)/',readfeed),
 
 
-    (r'^manage/$','feedthing.ft.views.managefeeds'),
-    (r'^subscription/list/$','feedthing.ft.views.subscriptionlist'),
+    url(r'^manage/$',managefeeds),
+    url(r'^subscription/list/$',subscriptionlist),
     
-    (r'^subscription/(?P<sid>.*)/unsubscribe/$','feedthing.ft.views.unsubscribefeed'),
-    (r'^subscription/(?P<sid>.*)/details/$','feedthing.ft.views.subscriptiondetails'),
-    (r'^subscription/(?P<sid>.*)/promote/$','feedthing.ft.views.promote'),
-    (r'^subscription/(?P<sid>.*)/addto/(?P<tid>.*)/$','feedthing.ft.views.addto'),
+    url(r'^subscription/(?P<sid>.*)/unsubscribe/$',unsubscribefeed),
+    url(r'^subscription/(?P<sid>.*)/details/$',subscriptiondetails),
+    url(r'^subscription/(?P<sid>.*)/promote/$',promote),
+    url(r'^subscription/(?P<sid>.*)/addto/(?P<tid>.*)/$',addto),
 
 
-    (r'^feed/(?P<fid>.*)/revive/$','feedthing.ft.views.revivefeed'),
-    #(r'^feed/(?P<fid>.*)/kill/$','feedthing.ft.views.killfeed'),
-    (r'^feed/(?P<fid>.*)/test/$','feedthing.ft.views.testfeed'),
+    url(r'^feed/(?P<fid>.*)/revive/$',revivefeed),
+    #(r'^feed/(?P<fid>.*)/kill/$',killfeed),
+    url(r'^feed/(?P<fid>.*)/test/$',testfeed),
     
-
-
-)
+]

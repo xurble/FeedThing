@@ -72,6 +72,9 @@ function read(fid){
 	   $("#feedpane").html(data);
 	   $(".backbutton").fadeIn("fast");
 	   
+	   
+	   History.pushState({state:1}, "State 1", "?state=1");
+	   
 	});
 
 
@@ -93,6 +96,12 @@ function read(fid){
     
     return false;
 }
+
+History.Adapter.bind(window,'statechange',function(){ // Note: We are using statechange instead of popstate
+    var theState = History.getState(); // Note: We are using History.getState() instead of event.state
+    console.log(theState);
+});
+
 
 function unRead() {
     //window.history.back();

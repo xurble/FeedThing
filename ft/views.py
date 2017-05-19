@@ -1,12 +1,11 @@
 # Create your views here.
 
-from django.shortcuts import render_to_response,get_object_or_404
+from django.shortcuts import render,get_object_or_404
 from django.contrib.auth import authenticate, login,get_user, logout
 from django.http import HttpResponseRedirect,HttpResponse
 from django.db.models import Q
 from django.db.models import F
 from django.contrib.auth.decorators import login_required
-from django.template import RequestContext
 from django.utils.timezone import utc
 import datetime
 import hashlib
@@ -45,11 +44,11 @@ def index(request):
     if request.user.is_authenticated():
         return HttpResponseRedirect("/feeds/")
     else:
-        return render_to_response("index.html",{},context_instance=RequestContext(request))
+        return render(request, "index.html",{})
 
 
 def help(request):
-    return render_to_response("help.html",{},context_instance=RequestContext(request))
+    return render(request, "help.html",{})
     
 
 
@@ -91,13 +90,13 @@ def loginpage(request):
     # If we didn't post, send the test cookie along with the login form.
     request.session.set_test_cookie()
     vals["msg"] = msg
-    return render_to_response('login.html',vals,context_instance=RequestContext(request))
+    return render(request, 'login.html',vals)
 
 
 def logoutpage(request):
     print "logout"
     logout(request)
-    return render_to_response('logout.html',{},context_instance=RequestContext(request))
+    return render(request, 'logout.html',{})
     
 
 @login_required
@@ -126,7 +125,7 @@ def feeds(request):
     vals["sources"] = sources
     vals["all"] = False
     
-    return render_to_response("feeds.html",vals,context_instance=RequestContext(request))
+    return render(request, "feeds.html",vals)
 
 
 @login_required
@@ -136,7 +135,7 @@ def managefeeds(request):
     
     vals["subscriptions"] = subscriptions
     
-    return render_to_response("manage.html",vals,context_instance=RequestContext(request))
+    return render(request, "manage.html",vals)
 
 
 
@@ -147,7 +146,7 @@ def subscriptionlist(request):
     
     vals["subscriptions"] = subscriptions
     
-    return render_to_response("sublist.html",vals,context_instance=RequestContext(request))
+    return render(request, "sublist.html",vals)
 
 
 
@@ -174,13 +173,13 @@ def allfeeds(request):
     vals["all"] = True
     
     
-    return render_to_response("feeds.html",vals,context_instance=RequestContext(request))
+    return render(request, "feeds.html",vals)
 
 @login_required
 def feedgarden(request):
     vals = {}
     vals["feeds"] = Source.objects.all().order_by("duePoll")
-    return render_to_response('feedgarden.html',vals,context_instance=RequestContext(request))
+    return render(request, 'feedgarden.html',vals)
     
 
 
@@ -195,7 +194,7 @@ def addfeed(request):
                 feed = request.GET["feed"]
             groups = Subscription.objects.filter(Q(user=request.user) & Q(source=None))
 
-            return render_to_response("addfeed.html",{"feed":feed,"groups":groups},context_instance=RequestContext(request))
+            return render(request, "addfeed.html",{"feed":feed,"groups":groups})
     
         else:
     
@@ -354,7 +353,7 @@ def importopml(request):
     vals = {}
     vals["imported"] = imported    
     vals["count"] = count  
-    return render_to_response('importopml.html',vals,context_instance=RequestContext(request))
+    return render(request, 'importopml.html',vals)
 
 
 @login_required 
@@ -378,7 +377,7 @@ def subscriptiondetails(request,sid):
         else:
             vals["groups"] = Subscription.objects.filter(Q(user=request.user) & Q(source=None))
  
-        return render_to_response('subscription.html',vals,context_instance=RequestContext(request))
+        return render(request, 'subscription.html',vals)
         
         
     #else 403 ?      
@@ -491,7 +490,7 @@ def readfeed(request,fid,qty):
         
         vals["posts"] = posts
         
-        return render_to_response('feed.html',vals,context_instance=RequestContext(request))
+        return render(request, 'feed.html',vals)
     #else 403
 
 @login_required

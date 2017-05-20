@@ -14,22 +14,20 @@
         {% for p in posts %}
             <hr style="clear:both;">
 
-            {% comment %}
-            <div class="buttons">
-                <iframe border="0" scrolling="no" width="78" height="17" allowtransparency="true" frameborder="0"
-                 style="margin-bottom: -3px; z-index: 1338; border: 0px; background-color: transparent; overflow: hidden;"
-                 src="http://www.instapaper.com/e2?url={{p.link|urlencode}}&title={{p.titleURLEncoded}}"></iframe>
-    
-    
-            </div>
-            {% endcomment %}
 
             {% if not source %}
             <h2 class="ftheader">{{p.source.name}}</h2>
             {% endif %}
             <h3 class="posttitle"><a href="{{p.link|escape}}" target="new">{{p.title|safe}}</a></h3>
 
-                <div class="date">{{p.created }} - {{p.created|timesince}} ago</div>
+            <div class="buttons">
+                <iframe border="0" scrolling="no" width="78" height="17" allowtransparency="true" frameborder="0"
+                 style="margin-bottom: -3px; z-index: 1338; border: 0px; background-color: transparent; overflow: hidden;"
+                 src="http://www.instapaper.com/e2?url={{p.link|urlencode}}&title={{p.titleURLEncoded}}"></iframe>
+            </div>
+
+            <div class="date">{{p.created }} - {{p.created|timesince}} ago</div>
+
             <div class="postbody">
                 {{p.body|safe}}
             </div>

@@ -1,45 +1,50 @@
 {% extends "base.html" %}
 
 {% block content %}
+<div class="container">
+    <div class="row topmargin">
+        <div id="feeds" class="col-sm-8 ftcontent">
 
-<div id="feeds" class="ftcontent">
 
-    <div id="opml">
-    	<h3>Batch Import</h3>
-    	<p>You can add a batch of feeds in one go by supplying an OPML file.</p>
-    	<p>Your current feed reader should be able to export your current subscriptions as OPML.</p>
-    	<form method="post" action="/importopml/" enctype="multipart/form-data">
-    		<input type="file" name="opml">
-    		<input type="submit" value="Upload Subscriptions">
-    		{% csrf_token %}
-    	</form>
+            <h2>Add Feed</h2>
+            <p>Enter the URL of the feed you wish to import.  If you don't know the feed URL, you can just enter the address of the site you want to subscribe to, Feed Thing will try and find a feed for you.</p>
+            <form method="post" onsubmit="addFeed(0); return false;" name="addfeed">
+                <input type="url" id="feed-0" name="feed" value="{{feed|escape}}" ><br><br>
+        
+        
+                <h2>Add to Folder:</h2>
+                <input type="radio" id="g0" name="group" value="0" checked="checked"> <label for="g0">None</label><br>
+                {% for g in groups %}
+                    <input type="radio" id="g{{g.id}}" name="group" value="{{g.id}}"> <label for="g{{g.id}}">{{g.name}}</label><br>
+                {% endfor %}
+        
+        
+                <br><input class="btn btn-sm btn-default" type="submit" value="Add Feed">
+                {% csrf_token %}
+            </form>
+
+            <div id="addresult" style="display:none" class="topmargin"> 
+                <h2>Feeds</h2>
+                <ul id="addfeedlist">
+                </ul>
+            </div>
+
+        </div>
+        <div class="hidden-xs col-sm-4 ftcontent">
+            <div id="opml">
+                <h2>Batch Import</h2>
+                <p>You can add a batch of feeds in one go by supplying an OPML file.</p>
+                <p>Your current feed reader should be able to export your current subscriptions as OPML.</p>
+                <form method="post" action="/importopml/" enctype="multipart/form-data">
+                    <input type="file" name="opml">
+                    <br>
+                    <input type="submit" value="Upload Subscriptions" class="btn btn-sm btn-default">
+                    {% csrf_token %}
+                </form>
+            </div>
+        </div>
     </div>
-
-	<h2>Add Feed</h2>
-	<p>Enter the URL of the feed you wish to import.  If you don't know the feed URL, you can just enter the address of the site you want to subscribe to, Feed Thing will try and find a feed for you.</p>
-	<form method="post" onsubmit="addFeed(0); return false;" name="addfeed">
-		<input type="url" id="feed-0" name="feed" value="{{feed|escape}}" ><br><br>
-		
-		
-		<h4>Add to Folder:</h4>
-		<input type="radio" id="g0" name="group" value="0" checked="checked"> <label for="g0">None</label><br>
-        {% for g in groups %}
-    		<input type="radio" id="g{{g.id}}" name="group" value="{{g.id}}"> <label for="g{{g.id}}">{{g.name}}</label><br>
-        {% endfor %}
-		
-		
-		<br><input class="button" type="submit" value="Add Feed">
-		{% csrf_token %}
-	</form>
-
-    <div id="addresult" style="display:none"> 
-        <h2>Feeds</h2>
-        <ul id="addfeedlist">
-        </ul>
-    </div>
-
 </div>
-
 
 <script>
 

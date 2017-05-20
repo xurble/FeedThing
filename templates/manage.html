@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 
 {% block head %}
-    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.8.22/jquery-ui.min.js"></script>
-    <!--<script src="/static/js/jquery-ui-1.8.22.custom.min.js"></script>-->
+    <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 {% endblock %}
 
 {% block content %}
-
-		<div id="feedlist">
+<div class="container">
+    <div class="row">
+		<div class="col-sm-4" id="feedlist">
 		    <h2 class="ftheader">Manage Feeds</h2>
 			<div id="feeds">
 
@@ -15,15 +15,16 @@
 			</div>
 		</div>
             		
-            <div id="feedpane">
-                <img src="/static/images/FeedThing.png" class="paneplant">
-            </div>
+        <div id="feedpane">
+            <img src="/static/images/FeedThing.png" class="paneplant">
+        </div>
             		
         {% csrf_token %}
+    </div>
+</div>
 
 <script>
 
-var PHONE_WIDTH = 600;
 
 var lastRead = null;
 
@@ -109,37 +110,12 @@ function removeFromGroup(sid) {
 }
 
 
-function positionFeedList() {
 
 
-    if($(window).width() > PHONE_WIDTH) {
 
-        var wh = $(window).height();
-        $("#feedlist").height(wh - 67);
-
-    }
-
-}
-
-
-$(window).resize(function(){
-    console.log("resize");
-
-    if($(window).width() > PHONE_WIDTH) {
-        positionFeedList();
-    }
-    else {
-    }
-}); 
 
 
 $(document).ready(function(){
-    if($(window).width() > PHONE_WIDTH) {
-        positionFeedList();
-    }
-    else {
-        $("#feedpane").hide();
-    }
 
     dragDrop();
 

@@ -74,15 +74,9 @@ function read(fid){
         qty = "/25/";
     }
 
-    //console.log("replacestate");
-    //history.replaceState({"feed":fid}, "FEED" , "/feeds/" + fid + qty);
-
 	$.get("/read/" + fid + qty,function(data){
 	   $("#feedpane").html(data);
-	   //$(".backbutton").fadeIn("fast");
-	   
-	   //console.log("pushing state");
-	   History.pushState({feed:fid}, "Feed Loaded", "?feed=" + fid);
+	   History.pushState({feed:fid}, "FeedThing", "?feed=" + fid);
 	   
 	});
 
@@ -133,9 +127,7 @@ function unRead() {
         {% endif %}
 
         $("#feedcontent").fadeOut("fast",function(){
-        
             $("#feedpane").html('<img src="/static/images/FeedThing.png" class="paneplant">');            
-            
         });    
     
     //}
@@ -164,14 +156,6 @@ function unsub(sid)
 
 
 
-$(document).ready(function(){
-
-  setTimeout(function(){
-    // Hide the address bar!
-    window.scrollTo(0, 1);
-  }, 0);
-
-});
 
 </script>
 

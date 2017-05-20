@@ -231,7 +231,7 @@ def addfeed(request):
                                 name = l['title']
                             except Exception as ex:
                                 name = "Feed %d" % feedcount
-                            rethtml += '<li><form method="post" onsubmit="return false;"> <input type="hidden" name="feed" id="feed-%d" value="%s"><a href="#" onclick="addFeed(%d)" class="button">Subscribe</a> - %s</form></li>' % (feedcount,urljoin(feed,l['href']),feedcount,name)
+                            rethtml += '<li><form method="post" onsubmit="return false;"> <input type="hidden" name="feed" id="feed-%d" value="%s"><a href="#" onclick="addFeed(%d)" class="btn btn-xs btn-default">Subscribe</a> - %s</form></li>' % (feedcount,urljoin(feed,l['href']),feedcount,name)
                             feed = urljoin(feed,l['href']) # store this in case there is only one feed and we wind up importing it
                             #TODO: need to accout for relative URLs here
                 #if feedcount == 1:

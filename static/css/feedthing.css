@@ -48,6 +48,10 @@ body {
     padding-top:10px;
 }
 
+.topmargin {
+    padding-top:10px;
+}
+
 a.logo {
 	font-family: Junction, Futura, Helvetica, Arial , sans-serif;
 	text-decoration: none;	/* this must be within this class to work */
@@ -116,11 +120,14 @@ a.backbutton {
     display:none;
 }
 
+    .postbody img {
+        max-width: 100%;
+        display: block;
+    }
+
+
 /* Extra Small Devices, Phones */ 
 @media only screen and (max-width : 767px) {
-    .navbar {
-        background-color: pink;
-    }
 
     a.backbutton {
         margin-bottom: 3px !important;
@@ -136,13 +143,15 @@ a.backbutton {
         bottom:0px;
         background-color:white;
         padding: 0px 15px 0px 15px;
-        overflow-y: auto;
+        overflow-y: scroll;
+        -webkit-overflow-scrolling: touch;
 
     }
     
     #feedscroller {
         min-height: 100%;
     }
+
 
 }
 
@@ -156,6 +165,11 @@ h3.posttitle {
     margin:0px;
     font-size:18px;
 }
+
+div.read,div.read:hover {
+    background-color: #7EA02D !important;
+}
+
 
 
 a img {
@@ -179,6 +193,29 @@ a, a:hover {
 	font-size:11px;
 	color:#444;
 	padding: 2px 0px 6px 0px;
+}
+
+.unreadcount {
+    float:right;
+    font-weight:normal;
+    font-size:80%;
+}
+
+.buttons {
+	float: right;
+}
+
+#opml {
+    background-color: #DCE8C4;
+    padding : 0px 5px 10px 5px;
+}
+
+input[type=url] {
+    width:99%;
+}
+
+blockquote {
+    font-size:15px;
 }
 
 
@@ -208,9 +245,6 @@ a, a:hover {
         display: none;
     }
     
-    input[type=url] {
-        width:99%;
-    }
     
     body { min-height: 480px; }
 
@@ -218,10 +252,6 @@ a, a:hover {
         overflow-x:hidden;
     }
     
-    .postbody img {
-        max-width: 300px;
-        display: block;
-    }
     
     #content {
     	padding-left:5px;
@@ -312,10 +342,6 @@ a, a:hover {
     input[type=url] {
         width:500px;
     }
-    .postbody img {
-        max-width: 590px;
-        display: block;
-    }
 
 
   
@@ -401,11 +427,6 @@ div.droptarget {
     color:white !important;
 }
 
-.unreadcount {
-    float:right;
-    font-weight:normal;
-    font-size:80%;
-}
 
 .ftcontent h2, h2.ftheader, .feedname {
 	font-family: Junction, Helvetica, Arial , sans-serif;
@@ -470,14 +491,6 @@ img#littlelogo {
     padding-bottom: 6px;
  }
 
-
-.buttons {
-	float: right;
-}
-
-div.read,div.read:hover {
-    background-color: #7EA02D !important;
-}
 
 div.location {
     color:#666;

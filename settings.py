@@ -7,7 +7,6 @@ SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
 import settings_server
 DEBUG = settings_server.DEBUG
 
-TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
@@ -90,12 +89,6 @@ STATICFILES_FINDERS = (
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = settings_server.SECRET_KEY
 
-# List of callables that know how to import templates from various sources.
-TEMPLATE_LOADERS = (
-    'django.template.loaders.filesystem.Loader',
-    'django.template.loaders.app_directories.Loader',
-#     'django.template.loaders.eggs.Loader',
-)
 
 MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
@@ -119,6 +112,7 @@ TEMPLATES = [
                     'django.contrib.auth.context_processors.auth',
                     'django.contrib.messages.context_processors.messages',
                 ],
+                'debug' : DEBUG,
             },
         },
     ]

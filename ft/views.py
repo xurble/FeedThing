@@ -125,6 +125,8 @@ def feeds(request):
     vals["sources"] = sources
     vals["all"] = False
     
+    vals["preload"] = request.GET.get("feed","0")
+    
     return render(request, "feeds.html",vals)
 
 
@@ -171,7 +173,9 @@ def allfeeds(request):
     
     vals["sources"] = sources
     vals["all"] = True
-    
+
+    vals["preload"] = request.GET.get("feed","0")
+
     
     return render(request, "feeds.html",vals)
 

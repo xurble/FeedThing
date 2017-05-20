@@ -1,8 +1,16 @@
 {% extends "base.html" %}
 
-{% block content %}
+{% block head %}
 
-		<div id="feedlist">
+    <script src="/static/js/history.js"></script>
+
+{% endblock %}
+
+
+{% block content %}
+<div class="container">
+    <div class="row">
+		<div class="col-sm-4" id="feedlist">
 		    <h2 class="ftheader">Feeds</h2>
 			<div id="feeds">
 			
@@ -24,15 +32,16 @@
 			</div>
 		</div>
             		
-        <div id="feedpane">
+        <div class="col-sm-8" id="feedpane">
             <img src="/static/images/FeedThing.png" class="paneplant">
         </div>
-            		
+    </div>
+</div>	
         {% csrf_token %}
 
 <script>
 
-var PHONE_WIDTH = 600;
+//console.log('yo!');
 
 var lastRead = null;
 
@@ -70,70 +79,68 @@ function read(fid){
 
 	$.get("/read/" + fid + qty,function(data){
 	   $("#feedpane").html(data);
-	   $(".backbutton").fadeIn("fast");
+	   //$(".backbutton").fadeIn("fast");
 	   
-	   
-	   History.pushState({state:1}, "State 1", "?state=1");
+	   //console.log("pushing state");
+	   History.pushState({feed:fid}, "Feed Loaded", "?feed=" + fid);
 	   
 	});
 
 
-    if($(window).width() > PHONE_WIDTH) {
-    
-	    $(window).scrollTop(0);
-	    positionFeedList();
-    }
-    else {
-    	oldScrollTop = $(window).scrollTop();
-        $("#feedlist").fadeOut("fast",function(){
-            $("#feedpane").show()        
-        });
-
-
-
-
-    }
     
     return false;
 }
 
-History.Adapter.bind(window,'statechange',function(){ // Note: We are using statechange instead of popstate
-    var theState = History.getState(); // Note: We are using History.getState() instead of event.state
-    console.log(theState);
+
+$(document).ready(function(){
+
+
+	// Bind to StateChange Event
+	History.Adapter.bind(window,'statechange',function(){ // Note: We are using statechange instead of popstate
+		//console.log("statechange");
+
+
+		var State = History.getState(); // Note: We are using History.getState() instead of event.state
+		
+		
+		if (!State.data.hasOwnProperty("feed")) {
+		    //console.log("unreading");
+		    // this is a reset
+		    unRead();
+		} else {
+		    read(State.data.feed,"all");
+		}	
+		//debugger;
+		
+	});
+	
+	History.pushState(null,null,"#");
+
+    {% if preload != "0" %}
+        read({{preload}}, "all");
+    {% endif %}
+
 });
+
 
 
 function unRead() {
     //window.history.back();
     //if(event.state) {
-	   $(".backbutton").fadeOut();
-	    window.scrollTo(0, 1);
 
-        $("#feedpane").fadeOut("fast",function(){
+        {% if not all %}
+            $("#s" + lastRead).fadeOut("fast");
+        {% endif %}
+
+        $("#feedcontent").fadeOut("fast",function(){
         
-            $("#feedlist").fadeIn("fast",function(){
-                {% if not all %}
-                    $("#s" + lastRead).fadeOut("fast");
-                {% endif %}
-                
-                $(window).scrollTop(oldScrollTop);
-            });
+            $("#feedpane").html('<img src="/static/images/FeedThing.png" class="paneplant">');            
             
         });    
     
     //}
 
 }
-
-window.onpopstate = function (event) {
-    
-    console.log(event.state);
-
-
-
-}
-
-
 
 
 function unsub(sid)
@@ -154,47 +161,15 @@ function unsub(sid)
 }
 
 
-function positionFeedList() {
 
-
-    if($(window).width() > PHONE_WIDTH) {
-
-        var wh = $(window).height();
-        $("#feedlist").height(wh - 67);
-
-    }
-
-}
-
-
-$(window).resize(function(){
-    console.log("resize");
-
-    if($(window).width() > PHONE_WIDTH) {
-        $("#feedlist").show();
-        $("#feedpane").show();
-        positionFeedList();
-    }
-    else {
-    }
-}); 
 
 
 $(document).ready(function(){
-    if($(window).width() > PHONE_WIDTH) {
-        positionFeedList();
-    }
-    else {
-        $("#feedpane").hide();
-    }
 
-	  setTimeout(function(){
-	    // Hide the address bar!
-	    window.scrollTo(0, 1);
-	  }, 0);
-
-
-
+  setTimeout(function(){
+    // Hide the address bar!
+    window.scrollTo(0, 1);
+  }, 0);
 
 });
 

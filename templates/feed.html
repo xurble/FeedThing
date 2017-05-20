@@ -1,43 +1,45 @@
 {% load ft_tags %}
 
-            <a class="button backbutton" href="javascript:unRead()">Back</a>
+<div id="feedcontent">
+    <div id="feedscroller">
+        <a class="btn btn-sm btn-default backbutton pull-right" href="javascript:history.back()">Back</a>
 
+        {% if source %}
+        <h2 class="ftheader">{{source.name}}</h2>
+        <div class="meta">{% if source.lastSuccess %}Last read {{source.lastSuccess|timesince}} ago.{% else %}Feed has not been read.{% endif %}</div>
+        <div id="unsub"><a href="javascript:unsub({{subscription.id}})" class="btn btn-xs btn-default">Unsubscribe</a></div>
+        {% endif %}
+        <br style="clear:both">
+        <div class="posts">
+        {% for p in posts %}
+            <hr style="clear:both;">
 
-            {% if source %}
-            <h2 class="ftheader">{{source.name}}</h2>
-            <div id="unsub"><a href="javascript:unsub({{subscription.id}})" class="button">Unsubscribe</a></div>
-            <div class="meta">{% if source.lastSuccess %}Last read {{source.lastSuccess|timesince}} ago.{% else %}Feed has not been read.{% endif %}</div>
-            {% endif %}
-            <br style="clear:both">
-            <div class="posts">
-			{% for p in posts %}
-				<hr style="clear:both;">
-
-				<div class="buttons">
-					<a href="http://delicious.com/save" onclick="window.open('http://delicious.com/save?v=5&noui&jump=close&url='+encodeURIComponent('{{p.link|escape}}')+'&title='+encodeURIComponent('{{p.title	}}'), 'delicious','toolbar=no,width=550,height=550'); return false;"><img src="/static/images/delicious.png" alt="Delicious" ></a>				
-<br>				
-
-<iframe border="0" scrolling="no" width="78" height="17" allowtransparency="true" frameborder="0"
- style="margin-bottom: -3px; z-index: 1338; border: 0px; background-color: transparent; overflow: hidden;"
- src="http://www.instapaper.com/e2?url={{p.link|urlencode}}&title={{p.titleURLEncoded}}"></iframe>
-				
-				
-				</div>
-
-                {% if not source %}
-                <h2 class="ftheader">{{p.source.name}}</h2>
-                {% endif %}
-				<h3 class="posttitle"><a href="{{p.link|escape}}" target="new">{{p.title|safe}}</a></h3>
-
-    				<div class="date">{{p.created }} - {{p.created|timesince}} ago</div>
-				<div class="postbody">
-					{{p.body|safe}}
-				</div>
-
-			{% endfor %}		
-
+            {% comment %}
+            <div class="buttons">
+                <iframe border="0" scrolling="no" width="78" height="17" allowtransparency="true" frameborder="0"
+                 style="margin-bottom: -3px; z-index: 1338; border: 0px; background-color: transparent; overflow: hidden;"
+                 src="http://www.instapaper.com/e2?url={{p.link|urlencode}}&title={{p.titleURLEncoded}}"></iframe>
+    
+    
             </div>
-            <div class="clearfix"></div>
+            {% endcomment %}
+
+            {% if not source %}
+            <h2 class="ftheader">{{p.source.name}}</h2>
+            {% endif %}
+            <h3 class="posttitle"><a href="{{p.link|escape}}" target="new">{{p.title|safe}}</a></h3>
+
+                <div class="date">{{p.created }} - {{p.created|timesince}} ago</div>
+            <div class="postbody">
+                {{p.body|safe}}
+            </div>
+
+        {% endfor %}		
+
+        </div>
+        <div class="clearfix"></div>
+    </div>
+</div>
 
 
 

@@ -11,7 +11,70 @@ from django.utils.timezone import utc
 
 
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import AbstractBaseUser
+from django.contrib.auth.models import PermissionsMixin
+
+from django.contrib.auth.models import BaseUserManager
+from django.utils import timezone
+
+class FTUserManager(BaseUserManager):
+    def create_user(self, email, password=None, **extra_fields):
+        today = timezone.now()
+
+        if not email:
+            raise ValueError('The given email address must be set')
+
+        email = FTUserManager.normalize_email(email)
+        user  = self.model(email=email,
+                          is_staff=False, is_active=True, **extra_fields)
+
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_superuser(self, email, password, **extra_fields):
+        u = self.create_user(email, password, **extra_fields)
+        u.is_staff = True
+        u.is_active = True
+        u.is_superuser = True
+        u.save(using=self._db)
+        return u
+
+
+class User(AbstractBaseUser, PermissionsMixin):
+
+    email       = models.EmailField(unique=True, blank=False)
+    name        = models.CharField(max_length=128, verbose_name="Full Name")
+    salutation  = models.CharField(max_length=128, null=True,blank=True, verbose_name="What should we call you?")
+
+
+    is_active   = models.BooleanField(default=True)
+    is_admin    = models.BooleanField(default=False)
+    is_staff    = models.BooleanField(default=False)
+    
+
+    USERNAME_FIELD = 'email'
+
+    objects = FTUserManager()
+    
+    def __unicode__(self):
+        return self.name
+    
+    class Meta:
+        verbose_name = 'user'
+        verbose_name_plural = 'users'
+
+    def get_full_name(self):
+        return self.name
+
+    def get_short_name(self):
+        if self.salutation is None:
+            return self.name
+        else:
+            return self.salutation
+            
+        
+
 
 
 class Source(models.Model):
@@ -110,7 +173,7 @@ class Subscription(models.Model):
     name     = models.CharField(max_length=255)
     
     def __unicode__(self):
-        return u"'%s' for user %s" % (self.name, self.user.username)
+        return u"'%s' for user %s" % (self.name, self.user.email)
 
     def unreadCount(self):
         if self.source:

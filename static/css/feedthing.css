@@ -141,6 +141,7 @@ a.backbutton {
         top:50px;
         left:0px;
         bottom:0px;
+        right: 0px;
         background-color:white;
         padding: 0px 15px 0px 15px;
         overflow-y: scroll;
@@ -218,176 +219,22 @@ blockquote {
     font-size:15px;
 }
 
-
-/*
-
-
-@media only screen and (max-width: 667px)
-{
-
-    ul.navigation {
-        display:none;
-    }
-
-    a.backbutton {
-        position: fixed;
-        margin-bottom: 3px !important;
-        top: 3px;
-        display: none;
-        right: 3px;
-    }
-
-    #opml {
-        display: none;
-    }
-    
-    #footer {
-        display: none;
-    }
-    
-    
-    body { min-height: 480px; }
-
-    #feedpane {
-        overflow-x:hidden;
-    }
-    
-    
-    #content {
-    	padding-left:5px;
-    	padding-right: 5px;
-    }
-
-	#xfeedlist {
-        position:fixed;
-        overflow-y: scroll;
-        width:100%;
-	}
-
-}
-
-
-@media only screen and (min-width: 668px)
-{
-
-
-    ul.navigation {
-    	display: inline-block;
-    	padding:0px;
-    	margin: 0px;
-    	margin-top: 6px;
-    	float:right;
-    }
-    ul.navigation li {
-    	display: inline-block;
-    	margin-right:10px;
-    }
-
-    ul.navigation li a {
-    	color: #666;
-    }
-    ul.navigation li a:hover {
-    	color: #7EA02D;
-    }
-
-  
-    .center {
-    	margin-left:auto;
-    	margin-right:auto;
-    	width: 960px;
-    	padding-left:5px;
-    	padding-right:5px;
-    }
-
-    a.backbutton {
-        display: none !important;
-    }
-
-    #feedlist {
-        float:left;
-        width:340px;
-        padding-bottom:20px;
-        overflow-y: scroll;
-        padding-right:10px;
-        overflow-x: hidden;
-        position:fixed;
-    }
-
-    #feedpane {
-        overflow-x:hidden;
-    	float: left;
-    	width: 595px;
-    	padding-left:15px;
-    	margin-left:360px;
-    }
-
-    #opml {
-    	float:right;
-    	background-color: #DCE8C4;
-    	margin:10px;
-    	width:200px;
-    }
-
-
-    #footer{
-    	clear: both;
-    	margin-top:50px;
-    	padding:20px;
-    	text-align:right;
-    	font-size:10px;
-    	border-top: 1px solid #CCC;
-    
-    }
-    
-    input[type=url] {
-        width:500px;
-    }
-
-
-  
-}
-
-
-
-
-
-
-
-div.feedbutton, .button {
-    text-decoration:none;
-    border:1px solid #ccc;
-    margin-bottom:2px;
-    color:black;
-    font-weight: normal;
-    background-color: #dedede;
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-    opacity: 1.0;
-}
-
-
-
-div.feedbutton a {
-    color:black;
-}
-
 div#feeds div.group {
    background-color: #999;
 }
 
-.button {
-    display: inline-block;
-    border-radius: 3px;
-    padding:8px;
-    padding-bottom:7px;
-    font-size:13px;
+#gardentable, #gardentable td,#gardentable th {
+	border:1px solid #CCC;
+	border-collapse: collapse;
+	padding:2px;
 }
 
-
-a.feedbutton {
-    padding:8px;
-    display:block;
+.healthbox {
+    margin-right:3px;
+    height:12px;
+    width:12px;
+    border: 1px solid #999;
 }
-
 
 .error {
     color:red;
@@ -408,6 +255,7 @@ input[type=text],input[type=password],input[type=url] {
     font-size: 16px;
 }
 
+
 hr {
     border: none;
     border-top:1px solid #ccc;
@@ -421,88 +269,14 @@ div.feedbutton a:hover {
     text-decoration: underline;
 }
 
-
 div.droptarget {
     background-color:green !important;
     color:white !important;
 }
 
 
-.ftcontent h2, h2.ftheader, .feedname {
-	font-family: Junction, Helvetica, Arial , sans-serif;
-	font-size: 11pt;
-
-	padding: 8px 8px 2px 0px;
-	margin: 2px 2px 2px 0px;
-	color:#999;
-	font-weight: normal;
-	text-transform: uppercase;
-	letter-spacing: 5pt;
-	text-decoration: none;	
-}
-
-h2.ftheader {
-    text-align: center;
-}
-
-
-#opml h3 {
-	background-color: #7EA02D;
-	color: white;
-	padding:3px;
-	text-align: center;
-	margin: 0px;
-	letter-spacing: 1pt;
-}
-
-#opml p, #opml form {
-	padding:5px;
-}
-
-#unsub {
-	float:right;
-}
-
-.meta {
-    float:left;
-}
-
-#gardentable, #gardentable td,#gardentable th {
-	border:1px solid #CCC;
-	border-collapse: collapse;
-}
-
-.posts h3.posttitle {
-    font-family: Junction, Helvetica,Arial;
-}
-
-
-
-img#littlelogo {
-    margin-left: auto;
-    margin-right: auto;
-	display:block;
-    max-width:75px;
-    padding-top: 15px;
-}
-
-
- ul#addfeedlist li {
-    padding-bottom: 6px;
- }
-
 
 div.location {
     color:#666;
     font-style: italic;
-    margin-bottom: 12px;
 }
-
-.healthbox {
-    margin-right:3px;
-    height:12px;
-    width:12px;
-    border: 1px solid #999;
-}
-
-*/

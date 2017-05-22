@@ -1,6 +1,7 @@
 # Create your views here.
 
 from django.shortcuts import render,get_object_or_404
+from django.template.loader import render_to_string
 from django.contrib.auth import authenticate, login,get_user, logout
 from django.http import HttpResponseRedirect,HttpResponse
 from django.db.models import Q
@@ -302,6 +303,17 @@ def addfeed(request):
     except Exception as xx:
         return HttpResponse("<div>Error %s: %s</div>" % (xx.__class__.__name__,str(xx)))
     
+@login_required
+def downloadfeeds(request):    
+    
+    
+    opml = render_to_string("opml.xml", {"feeds":Source.objects.all()})
+    
+    
+    
+    ret =  HttpResponse(opml, content_type="application/xml+opml")
+    ret['Content-Disposition'] = 'inline; filename=feedthing-export.xml'
+    return ret
     
 # TODO: I don't think that this is the most robust import ever :)
 @login_required
@@ -570,7 +582,7 @@ def unsubscribefeed(request,sid):
                         parent.delete()
     
                 source.num_subs = source.subscription_set.count()
-                if ssource.num_subs == 0: # this is the last subscription for this source
+                if source.num_subs == 0: # this is the last subscription for this source
                     Post.objects.filter(source=source).delete() # cascading delete would do this I think
                     source.delete()
                 else:
@@ -619,7 +631,7 @@ def reader(request):
             s.lastResult = "Unhandled Case"
         except Exception as ex:
             print ex
-            s.lastResult = "Fetch error:" + str(ex)
+            s.lastResult = ("Fetch error:" + str(ex))[:255]
             s.status_code = 0
             response.write("\nFetch error: " + str(ex))
         

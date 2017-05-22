@@ -67,7 +67,7 @@ function read(fid){
     
     $("#s" + lastRead).addClass("read");  
     
-    $("#feedpane").html('<img src="/static/images/FeedThing.png" class="paneplant">');
+    $("#feedpane").html('<div id="feedcontent"> <img src="/static/images/FeedThing.png" class="paneplant"></div>');
 
     var qty = "/all/";
     if (fid == "river") {

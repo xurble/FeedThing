@@ -27,6 +27,10 @@ urlpatterns = [
     url(r'^addfeed/$', addfeed),
     url(r'^importopml/$', importopml),
     url(r'^feedgarden/$', feedgarden),
+
+    url(r'^downloadfeeds/$', downloadfeeds),
+
+
     url(r'^accounts/login/$',loginpage),
     url(r'^accounts/logout/$',logoutpage),
     url(r'^read/(?P<fid>.*)/(?P<qty>.*)/',readfeed),

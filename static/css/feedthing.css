@@ -136,6 +136,7 @@ a.backbutton {
         right: 3px;
     }
     
+    /*
     #feedcontent {
         position:fixed;
         top:50px;
@@ -152,7 +153,7 @@ a.backbutton {
     #feedscroller {
         min-height: 100%;
     }
-
+    */
 
 }
 
@@ -213,6 +214,22 @@ a, a:hover {
 
 input[type=url] {
     width:99%;
+}
+
+h1 {
+    font-size:18px
+}
+
+h2 {
+    font-size: 17px;
+}
+
+h3 {
+    font-size:16px;
+}
+
+h4,h5,h6 {
+    font-size:15px;
 }
 
 blockquote {

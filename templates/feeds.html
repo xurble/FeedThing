@@ -66,7 +66,7 @@ function read(fid){
     lastRead = fid;
     
     $("#s" + lastRead).addClass("read");  
-    
+    $("#feedlist").addClass("hidden-xs");
     $("#feedpane").html('<div id="feedcontent"> <img src="/static/images/FeedThing.png" class="paneplant"></div>');
 
     var qty = "/all/";
@@ -74,11 +74,12 @@ function read(fid){
         qty = "/25/";
     }
 
-	$.get("/read/" + fid + qty,function(data){
-	   $("#feedpane").html(data);
-	   History.pushState({feed:fid}, "FeedThing", "?feed=" + fid);
-	   
-	});
+    $.get("/read/" + fid + qty,function(data){
+       $("#feedpane").html(data);
+       History.pushState({feed:fid}, "FeedThing", "?feed=" + fid);
+    });
+    
+
 
 
     
@@ -111,6 +112,7 @@ $(document).ready(function(){
 	History.pushState(null,null,"#");
 
     {% if preload != "0" %}
+        $("#feedlist").addClass("hidden-xs");
         read({{preload}}, "all");
     {% endif %}
 
@@ -126,7 +128,9 @@ function unRead() {
             $("#s" + lastRead).fadeOut("fast");
         {% endif %}
 
+    
         $("#feedcontent").fadeOut("fast",function(){
+            $("#feedlist").removeClass("hidden-xs");
             $("#feedpane").html('<img src="/static/images/FeedThing.png" class="paneplant">');            
         });    
     

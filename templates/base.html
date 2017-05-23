@@ -23,8 +23,8 @@
         <link rel="apple-touch-icon" href="/static/images/touch.png">
 
 
-
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="viewport" content="width=device-width,initial-scale=1.0">
 
  
         {% comment %}
@@ -106,15 +106,13 @@
         }
     });
 
-    $(document).ready(function(){
-
-      setTimeout(function(){
-        // Hide the address bar!
-        window.scrollTo(0, 1);
-      }, 0);
-
+    window.addEventListener("load",function() {
+        // Set a timeout...
+        setTimeout(function(){
+            // Hide the address bar!
+            window.scrollTo(0, 1);
+        }, 0);
     });
-
 
 
         </script>

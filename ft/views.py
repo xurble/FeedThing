@@ -209,7 +209,7 @@ def addfeed(request):
                 feed = request.POST["feed"]
                 
                 
-            headers = { "User-Agent": "FeedThing/3.1 (+http://%s; Initial Feed Crawler)" % request.META["HTTP_HOST"], "Cache-Control":"no-cache,max-age=0", "Pragma":"no-cache" } #identify ourselves and also stop our requests getting picked up by google's cache
+            headers = { "User-Agent": "FeedThing/3.2 (+http://%s; Initial Feed Crawler)" % request.META["HTTP_HOST"], "Cache-Control":"no-cache,max-age=0", "Pragma":"no-cache" } #identify ourselves and also stop our requests getting picked up by google's cache
 
 
             ret = requests.get(feed, headers=headers,verify=False)
@@ -564,7 +564,7 @@ def testfeed(request,fid): #kill it stone dead (From feedgarden) - need to make 
         f = get_object_or_404(Source,id=int(fid))
 
 
-        headers = { "User-Agent": "FeedThing/3.1 (+http://%s; Updater; %d subscribers)" % (request.META["HTTP_HOST"],f.num_subs), "Cache-Control":"no-cache,max-age=0", "Pragma":"no-cache" } #identify ourselves and also stop our requests getting picked up by google's cache
+        headers = { "User-Agent": "FeedThing/3.2 (+http://%s; Updater; %d subscribers)" % (request.META["HTTP_HOST"],f.num_subs), "Cache-Control":"no-cache,max-age=0", "Pragma":"no-cache" } #identify ourselves and also stop our requests getting picked up by google's cache
 
         ret = requests.get(f.feedURL,headers=headers,allow_redirects=False,verify=False)
         

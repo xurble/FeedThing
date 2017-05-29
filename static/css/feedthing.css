@@ -120,14 +120,33 @@ a.backbutton {
     display:none;
 }
 
-    .postbody img {
-        max-width: 100%;
-        display: block;
-    }
+.postbody img {
+    max-width: 100%;
+    display: block;
+}
+
+body, html {
+    height:100%;
+}
+
+.fullpage {
+    height: 100%;
+}
+
+
+#feedlist, #feedpane {
+    max-height: 100%;
+    overflow-y: scroll;
+    -webkit-overflow-scrolling: touch;
+}
 
 
 /* Extra Small Devices, Phones */ 
 @media only screen and (max-width : 767px) {
+
+    html, body, .fullpage {
+        height:auto;
+    }
 
     a.backbutton {
         margin-bottom: 3px !important;

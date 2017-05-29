@@ -178,13 +178,17 @@ def read_feed(source_feed, host_name):
         
         feed_body = ret.content.strip()
         
-        if "xml" in ret.headers["Content-Type"] or feed_body[0:1] == "<":
+        content_type = "Not Set"
+        if "Content-Type" in ret.headers:
+            content_type = ret.headers["Content-Type"]
+        
+        if "xml" in content_type or feed_body[0:1] == "<":
             (ok,changed, interval) = parse_feed_xml(source_feed, feed_body, interval , response)
-        elif "json" in ret.headers["Content-Type"] or feed_body[0:1] == "{":
+        elif "json" in content_type or feed_body[0:1] == "{":
             (ok,changed, interval) = parse_feed_json(source_feed, feed_body, interval, response)
         else:
             ok = False
-            source_feed.lastResult = "Unknown Feed Type: " + ret.headers["Content-Type"]
+            source_feed.lastResult = "Unknown Feed Type: " + content_type
             interval += 120 # we slow down when feeds look duff
 
         if ok and changed:

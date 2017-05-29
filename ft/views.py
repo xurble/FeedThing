@@ -215,15 +215,26 @@ def addfeed(request):
             ret = requests.get(feed, headers=headers,verify=False)
             #can I be bothered to check return codes here?  I think not on balance
         
-            isFeed = False   
+            isFeed = False  
+
+            content_type = "Not Set"
+            if "Content-Type" in ret.headers:
+                content_type = ret.headers["Content-Type"]
+                
+            feed_title = feed
+             
             
             body = ret.content.strip()
-            if "xml" in ret.headers["Content-Type"] or body[0:1] == "<":
+            if "xml" in content_type or body[0:1] == "<":
                 ff = feedparser.parse(body) # are we a feed?
-                isFeed = (len(ff.entries) > 0)  
-            if "json" in ret.headers["Content-Type"] or body[0:1] == "{":
+                isFeed = (len(ff.entries) > 0) 
+                if isFeed:
+                    feed_title = ff.feed.title
+            if "json" in content_type or body[0:1] == "{":
                 data = json.loads(body)
                 isFeed = "items" in data and len(data["items"]) > 0
+                if isFeed:
+                    feed_title = data["title"]
             
 
             if not isFeed:
@@ -290,12 +301,7 @@ def addfeed(request):
             
             
                     
-                ns.name = feed
-                try:
-                    ns.htmlUrl = ff.feed.link
-                    ns.name = ff.feed.title
-                except Exception as ex:
-                    pass
+                ns.name    = feed_title
                 ns.feedURL = feed
             
                 ns.save()

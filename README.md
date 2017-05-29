@@ -7,7 +7,7 @@ FeedThing supports all common feed flavours - RSS, Atom and JSON Feed.
 
 FeedThing treats feeds in the specific esoteric way I like.  
 
-* Regular (I want to read everything by this order) feeds show up with just the unread posts in *chronological* order.
+* Regular (I want to read everything by this author) feeds show up with just the unread posts in *chronological* order.
 * High traffic news feeds show just the most recent 20 posts in *reverse chronological* order.
 
 Feeds can be placed into folders in which case all the fields in the folder are treated as if they were a single feed.

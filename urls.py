@@ -12,7 +12,7 @@ urlpatterns = [
 
 
     url(r'^$', index),
-    url(r'^refresh/$', reader),
+    url(r'^refresh/$', read_request_listener),
     url(r'^help/$', help),
     url(r'^feeds/$', feeds),
     url(r'^allfeeds/$', allfeeds),

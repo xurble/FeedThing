@@ -312,20 +312,14 @@ def parse_feed_xml(source_feed, feed_content, interval, response):
             except Exception as ex:
                 p.link = ''
             p.title = title
-            #tags = [t["term"] for t in e.tags]
-            #link.tags = ",".join(tags)
 
             try:
-                #dd = datetime.datetime.fromtimestamp(time.mktime(e.date_parsed))
-                #p.created = datetime.datetime(dd.year,dd.month,dd.day,dd.hour,dd.minute,dd.second,tzinfo=_GMT)
         
                 p.created  = datetime.datetime.fromtimestamp(time.mktime(e.date_parsed)).replace(tzinfo=utc)
-                # p.created  = datetime.datetime.utcnow().replace(tzinfo=utc)
+
             except Exception as ex:
                 response.write("CREATED ERROR")     
                 p.created  = datetime.datetime.utcnow().replace(tzinfo=utc)
-        
-            # response.write("CC %s \n" % str(p.created))
         
             p.guid = guid
             try:
@@ -392,6 +386,7 @@ def parse_feed_json(source_feed, feed_content, interval, response):
                 body = e["content_text"]
             if "content_html" in e:
                 body = e["content_html"] # prefer html over text
+                
 
             try:
                 guid = e["id"]
@@ -417,28 +412,27 @@ def parse_feed_json(source_feed, feed_content, interval, response):
             try:
                 title = e["title"]
             except Exception as ex:
-                title = "No title"
+                title = "No title"      
+                
+            # borrow the RSS parser's sanitizer
+            body  = feedparser._sanitizeHTML(body, "utf-8") # TODO: validate charset ??
+            title = feedparser._sanitizeHTML(title, "utf-8") # TODO: validate charset ??
+            # no other fields are ever marked as |safe in the templates
+
                         
             try:
                 p.link = e["url"]
             except Exception as ex:
                 p.link = ''
+            
             p.title = title
-            #tags = [t["term"] for t in e.tags]
-            #link.tags = ",".join(tags)
 
             try:
-                #dd = datetime.datetime.fromtimestamp(time.mktime(e.date_parsed))
-                #p.created = datetime.datetime(dd.year,dd.month,dd.day,dd.hour,dd.minute,dd.second,tzinfo=_GMT)
-                
-        
                 p.created  = pyrfc3339.parse(e["date_published"])
-                # p.created  = datetime.datetime.utcnow().replace(tzinfo=utc)
             except Exception as ex:
                 response.write("CREATED ERROR")     
                 p.created  = datetime.datetime.utcnow().replace(tzinfo=utc)
         
-            # response.write("CC %s \n" % str(p.created))
         
             p.guid = guid
             try:

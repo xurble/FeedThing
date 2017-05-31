@@ -17,7 +17,6 @@ import traceback
 def update_feeds(host_name, max_feeds=3):
 
 
-    import pdb; pdb.set_trace()
     sources = Source.objects.filter(Q(duePoll__lt = datetime.datetime.utcnow().replace(tzinfo=utc)) & Q(live = True)).order_by('duePoll')[:max_feeds]
 
 
@@ -137,7 +136,7 @@ def read_feed(source_feed, host_name):
                 newURL = start + end + newURL
                 
             
-            ret = requests.get(newURL,headers=headers,allow_redirects=True,verify=False)
+            ret = requests.get(newURL,headers=headers,allow_redirects=True,verify=False, timeout=20)
             source_feed.status_code = ret.status_code
             source_feed.lastResult = "Temporary Redirect to " + newURL
 

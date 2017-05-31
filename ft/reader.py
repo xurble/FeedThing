@@ -14,6 +14,23 @@ import pyrfc3339
 import json
 import traceback
 
+
+def fix_relative(html,url):
+
+    """ this is fucking cheesy """
+    try:
+        base = "/".join(url.split("/")[:3]).encode("utf-8")
+
+        html = html.replace("src='/", "src='%s/" % base)
+        html = html.replace('src="/', 'src="%s/' % base)
+    
+    except Exception as ex:
+        print ex    
+
+
+    return html
+
+
 def update_feeds(host_name, max_feeds=3):
 
 
@@ -182,6 +199,7 @@ def read_feed(source_feed, host_name):
         
         feed_body = ret.content.strip()
         
+        
         content_type = "Not Set"
         if "Content-Type" in ret.headers:
             content_type = ret.headers["Content-Type"]
@@ -283,6 +301,9 @@ def parse_feed_xml(source_feed, feed_content, interval, response):
                     body = e.description
                 except Exception as ex:
                     body = " "
+
+            body = fix_relative(body,source_feed.siteURL)
+
 
 
             try:
@@ -391,6 +412,7 @@ def parse_feed_json(source_feed, feed_content, interval, response):
             if "content_html" in e:
                 body = e["content_html"] # prefer html over text
                 
+            body = fix_relative(body,source_feed.siteURL)
 
             try:
                 guid = e["id"]

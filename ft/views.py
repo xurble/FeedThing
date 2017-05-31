@@ -8,6 +8,8 @@ from django.db.models import Q
 from django.db.models import F
 from django.contrib.auth.decorators import login_required
 from django.utils.timezone import utc
+from django.core.exceptions import PermissionDenied
+
 import datetime
 import hashlib
 import logging
@@ -44,7 +46,7 @@ from reader import update_feeds
 
 def index(request):
 
-    if request.user.is_authenticated():
+    if request.user.is_authenticated:
         return HttpResponseRedirect("/feeds/")
     else:
         return render(request, "index.html",{})
@@ -316,18 +318,20 @@ def addfeed(request):
     except Exception as xx:
         return HttpResponse("<div>Error %s: %s</div>" % (xx.__class__.__name__,str(xx)))
     
+
 @login_required
 def downloadfeeds(request):    
     
+    if not request.user.is_superuser:
+        raise PermissionDenied()
     
     opml = render_to_string("opml.xml", {"feeds":Source.objects.all()})
-    
-    
     
     ret =  HttpResponse(opml, content_type="application/xml+opml")
     ret['Content-Disposition'] = 'inline; filename=feedthing-export.xml'
     return ret
     
+
 # TODO: I don't think that this is the most robust import ever :)
 @login_required
 def importopml(request):
@@ -385,7 +389,7 @@ def importopml(request):
     return render(request, 'importopml.html',vals)
 
 
-@login_required 
+@login_required
 def subscriptiondetails(request,sid):
 
     sub = get_object_or_404(Subscription,id=int(sid))

@@ -43,7 +43,9 @@ def read_feed(source_feed, host_name):
 
     interval =  source_feed.interval
 
-    headers = { "User-Agent": "FeedThing/3.2 (+http://%s; Updater; %d subscribers)" % (host_name,source_feed.num_subs), "Cache-Control":"no-cache,max-age=0", "Pragma":"no-cache" } #identify ourselves and also stop our requests getting picked up by google's cache
+    headers = { "User-Agent": "FeedThing/3.2 (+http://%s; Updater; %d subscribers)" % (host_name,source_feed.num_subs),  } #identify ourselves 
+    # "Cache-Control":"no-cache,max-age=0", "Pragma":"no-cache" -- just removed these. Think they were a solution to app-engine and actually counter-productive now
+
 
     if source_feed.ETag:
         headers["If-None-Match"] = str(source_feed.ETag)
@@ -305,7 +307,7 @@ def parse_feed_xml(source_feed, feed_content, interval, response):
             try:
                 title = e.title
             except Exception as ex:
-                title = "No title"
+                title = ""
                         
             try:
                 p.link = e.link
@@ -412,7 +414,7 @@ def parse_feed_json(source_feed, feed_content, interval, response):
             try:
                 title = e["title"]
             except Exception as ex:
-                title = "No title"      
+                title = ""      
                 
             # borrow the RSS parser's sanitizer
             body  = feedparser._sanitizeHTML(body, "utf-8") # TODO: validate charset ??

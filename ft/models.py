@@ -187,7 +187,7 @@ class Subscription(models.Model):
 class Post(models.Model):
     
     source        = models.ForeignKey(Source,db_index=True)
-    title         = models.TextField()
+    title         = models.TextField(blank=True)
     body          = models.TextField()
     link          = models.CharField(max_length=512,blank=True,null=True)
     found         = models.DateTimeField()

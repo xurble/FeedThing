@@ -18,15 +18,17 @@
             {% if not source %}
             <h2 class="ftheader">{{p.source.name}}</h2>
             {% endif %}
-            <h3 class="posttitle"><a href="{{p.link|escape}}" target="new">{{p.title|safe}}</a></h3>
+            <h3 class="posttitle"><a href="{{p.link|escape}}">{{p.title|safe}}</a></h3>
 
             <div class="buttons">
+                <a href="{{p.link|escape}}"><i class="fa fa-external-link" aria-hidden="true" title="Go to item"></i></a>&nbsp;
+                <a href="#"><i class="fa fa-star-o" aria-hidden="true"></i></a>&nbsp;
                 <iframe border="0" scrolling="no" width="78" height="17" allowtransparency="true" frameborder="0"
                  style="margin-bottom: -3px; z-index: 1338; border: 0px; background-color: transparent; overflow: hidden;"
                  src="http://www.instapaper.com/e2?url={{p.link|urlencode}}&title={{p.titleURLEncoded}}"></iframe>
             </div>
 
-            <div class="date">{{p.created }} - {{p.created|timesince}} ago</div>
+            <div class="date">{{p.created }} - {{p.created|timesince}} ago.</div>
 
             <div class="postbody">
                 {{p.body|safe}}

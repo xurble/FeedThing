@@ -562,12 +562,20 @@ def revivefeed(request,fid):
 def testfeed(request,fid): #kill it stone dead (From feedgarden) - need to make admin only and clean up Subscriptions
 
         f = get_object_or_404(Source,id=int(fid))
+        
+        headers = { "User-Agent": "FeedThing/3.2 (+http://%s; Updater; %d subscribers)" % (request.META["HTTP_HOST"],f.num_subs),  } #identify ourselves and also stop our requests getting picked up by google's cache
 
+        if request.GET.get("cache","no") == "yes":
+            if f.ETag:
+                headers["If-None-Match"] = str(f.ETag)
+            if f.lastModified:
+                headers["If-Modified-Since"] = str(f.lastModified)
+        else:
+            headers["Cache-Control"] = "no-cache,max-age=0" 
+            headers["Pragma"] = "no-cache"
 
-        headers = { "User-Agent": "FeedThing/3.2 (+http://%s; Updater; %d subscribers)" % (request.META["HTTP_HOST"],f.num_subs), "Cache-Control":"no-cache,max-age=0", "Pragma":"no-cache" } #identify ourselves and also stop our requests getting picked up by google's cache
 
         ret = requests.get(f.feedURL,headers=headers,allow_redirects=False,verify=False)
-        
         
         r = HttpResponse("%s\n------------------------------\n\nResponse: %d\n-------------------------\n%s\n--------------------\n%s" % (headers,ret.status_code,ret.headers,ret.content))
         r["Content-type"] = "text/plain"

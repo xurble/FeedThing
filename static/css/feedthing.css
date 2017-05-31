@@ -48,6 +48,10 @@ body {
     padding-top:10px;
 }
 
+.logo img {
+    margin-right: 6px;
+}
+
 .topmargin {
     padding-top:10px;
 }
@@ -57,12 +61,14 @@ a.logo {
 	text-decoration: none;	/* this must be within this class to work */
 	color:#999 !important;
     font-size:22px; 
+    font-weight: normal;
 }
 
 h1, h2, h3, h4, h5 , h6 {
 	font-family: Junction, Futura, Helvetica, Arial , sans-serif;
 	text-decoration: none;	/* this must be within this class to work */
 	margin:3px;
+	font-weight:normal;
 }
 
 h2.ftheader, .ftcontent h2 {
@@ -123,6 +129,7 @@ a.backbutton {
 .postbody img {
     max-width: 100%;
     display: block;
+    margin: 5px 0px 5px 0px;
 }
 
 body, html {
@@ -179,12 +186,12 @@ body, html {
 .posts {
     line-height: 1.3;
     font-family: Helvetica, Arial;
-    font-size: 15px;
+    font-size: 16px;
 }
 
 h3.posttitle {
     margin:0px;
-    font-size:18px;
+    font-size:20px;
 }
 
 div.read,div.read:hover {
@@ -197,9 +204,6 @@ a img {
 	border:none;	
 }
 
-img {
-    margin:3px;
-}
 
 .clearfix {
     clear:both;
@@ -225,8 +229,9 @@ a, a:hover {
 .buttons {
 	float: right;
     font-size:16px;
-    margin: 5px 5px 5px 0px dotted #ccc;
-    padding:3px;
+    margin: 0px 0px 5px 5px;
+    padding:5px;
+    border: 1px dotted #ccc;
 }
 
 #opml {
@@ -239,23 +244,23 @@ input[type=url] {
 }
 
 h1 {
-    font-size:18px
+    font-size:20px
 }
 
 h2 {
-    font-size: 17px;
+    font-size: 19px;
 }
 
 h3 {
-    font-size:16px;
+    font-size:18px;
 }
 
 h4,h5,h6 {
-    font-size:15px;
+    font-size:17px;
 }
 
 blockquote {
-    font-size:15px;
+    font-size:16px;
 }
 
 div#feeds div.group {
@@ -312,8 +317,6 @@ div.droptarget {
     background-color:green !important;
     color:white !important;
 }
-
-
 
 div.location {
     color:#666;

@@ -212,7 +212,7 @@ def addfeed(request):
             headers = { "User-Agent": "FeedThing/3.2 (+http://%s; Initial Feed Crawler)" % request.META["HTTP_HOST"], "Cache-Control":"no-cache,max-age=0", "Pragma":"no-cache" } #identify ourselves and also stop our requests getting picked up by google's cache
 
 
-            ret = requests.get(feed, headers=headers,verify=False)
+            ret = requests.get(feed, headers=headers,verify=False, timeout=15)
             #can I be bothered to check return codes here?  I think not on balance
         
             isFeed = False  
@@ -575,7 +575,7 @@ def testfeed(request,fid): #kill it stone dead (From feedgarden) - need to make 
             headers["Pragma"] = "no-cache"
 
 
-        ret = requests.get(f.feedURL,headers=headers,allow_redirects=False,verify=False)
+        ret = requests.get(f.feedURL,headers=headers,allow_redirects=False,verify=False,timeout=20)
         
         r = HttpResponse("%s\n------------------------------\n\nResponse: %d\n-------------------------\n%s\n--------------------\n%s" % (headers,ret.status_code,ret.headers,ret.content))
         r["Content-type"] = "text/plain"

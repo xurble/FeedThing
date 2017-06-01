@@ -99,6 +99,8 @@ class Source(models.Model):
     
     num_subs      = models.IntegerField(default=1)
     
+    needs_proxy   = models.BooleanField(default=False)
+    
     
     def __unicode__(self):
         return self.displayName()

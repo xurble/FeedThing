@@ -533,7 +533,7 @@ def revivefeed(request,fid):
         
         f = get_object_or_404(Source,id=int(fid))
         f.live = True
-        f.duePoll = datetime.datetime.utcnow().replace(tzinfo=utc)
+        f.duePoll = (datetime.datetime.utcnow().replace(tzinfo=utc) - datetime.timedelta(days=10))
         f.ETag = None
         f.lastModified = None
         # f.lastSuccess = None
@@ -544,22 +544,6 @@ def revivefeed(request,fid):
         return HttpResponse("OK")
 
 
-@login_required
-def revivefeed(request,fid):
-
-    if request.method == "POST":
-        
-        f = get_object_or_404(Source,id=int(fid))
-        f.live = True
-        f.duePoll = datetime.datetime.utcnow().replace(tzinfo=utc)
-        f.ETag = None
-        f.lastModified = None
-        # f.lastSuccess = None
-        # f.lastChange = None
-        # f.maxIndex = 0
-        f.save()
-        # Post.objects.filter(source=f).delete()
-        return HttpResponse("OK")
 
 
 @login_required

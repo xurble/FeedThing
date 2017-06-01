@@ -66,6 +66,16 @@ def read_feed(source_feed, host_name):
     # "Cache-Control":"no-cache,max-age=0", "Pragma":"no-cache" -- just removed these. Think they were a solution to app-engine and actually counter-productive now
 
 
+    if source_feed.needs_proxy : # Fuck you cloudflare.  
+        proxies = {
+          'http': 'http://104.196.173.160:80',
+          'https': 'http://104.196.173.160:80',
+        }
+        # OK so if this works we should start scraping open proxy lists not hardcoding :)
+    else:
+        proxies = {}
+    
+
     if source_feed.ETag:
         headers["If-None-Match"] = str(source_feed.ETag)
     if source_feed.lastModified:
@@ -74,7 +84,7 @@ def read_feed(source_feed, host_name):
     ret = None
     response.write("\nFetching %s" % source_feed.feedURL)
     try:
-        ret = requests.get(source_feed.feedURL,headers=headers,allow_redirects=False,verify=False,timeout=20)
+        ret = requests.get(source_feed.feedURL,headers=headers,allow_redirects=False,verify=False,timeout=20,proxies=proxies)
         source_feed.status_code = ret.status_code
         source_feed.lastResult = "Unhandled Case"
     except Exception as ex:
@@ -153,7 +163,7 @@ def read_feed(source_feed, host_name):
                 newURL = start + end + newURL
                 
             
-            ret = requests.get(newURL,headers=headers,allow_redirects=True,verify=False, timeout=20)
+            ret = requests.get(newURL,headers=headers,allow_redirects=True,verify=False, timeout=20,proxies=proxies)
             source_feed.status_code = ret.status_code
             source_feed.lastResult = "Temporary Redirect to " + newURL
 

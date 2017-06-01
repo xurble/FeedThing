@@ -107,8 +107,13 @@ def read_feed(source_feed, host_name):
         interval += 120
         source_feed.lastResult = "The feed could not be found"
     elif ret.status_code == 403 or ret.status_code == 410: #Forbidden or gone
-        source_feed.live = False
-        source_feed.lastResult = "Feed is no longer accessible (%d)" % ret.status_code
+
+        if "Cloudflare" in ret.content:
+            source_feed.needs_proxy = True
+            source_feed.lastResult = "Blocked by Cloudflare, will try via proxy next time (%d)" % ret.status_code
+        else:
+            source_feed.live = False
+            source_feed.lastResult = "Feed is no longer accessible (%d)" % ret.status_code
     elif ret.status_code >= 400 and ret.status_code < 500:
         #treat as bad request
         source_feed.live = False

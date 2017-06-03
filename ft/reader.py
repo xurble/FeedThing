@@ -156,6 +156,7 @@ def read_feed(source_feed, host_name):
 
             response.write("\nBurning the proxy.")
             proxy.delete()
+            interval /= 2
 
         
     if ret == None and source_feed.status_code == 1:   
@@ -176,9 +177,12 @@ def read_feed(source_feed, host_name):
             if source_feed.needs_proxy and proxy is not None:
                 # we are already proxied - this proxy on cloudflare's shit list too?
                 proxy.delete()
+                response.write("\Proxy seemed to also be blocked, burning")
+                interval /= 2
+                source_feed.lastResult = "Proxy kind of worked but still got cloudflared."
             else:            
                 source_feed.needs_proxy = True
-            source_feed.lastResult = "Blocked by Cloudflare, will try via proxy next time."
+                source_feed.lastResult = "Blocked by Cloudflare, will try via proxy next time."
         else:
             source_feed.live = False
             source_feed.lastResult = "Feed is no longer accessible (%d)" % ret.status_code

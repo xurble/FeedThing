@@ -147,18 +147,20 @@ def read_feed(source_feed, host_name):
         ret = requests.get(source_feed.feedURL,headers=headers,allow_redirects=False,verify=False,timeout=20,proxies=proxies)
         source_feed.status_code = ret.status_code
         source_feed.lastResult = "Unhandled Case"
-    except requests.exceptions.ProxyError:
-        source_feed.lastResult = "Proxy failed. Next retry will use new proxy"
-        source_feed.status_code = 1 # this will stop us increasing the interval
-
-        response.write("\nBurning the proxy.")
-        proxy.delete()
 
     except Exception as ex:
         print ex
         source_feed.lastResult = ("Fetch error:" + str(ex))[:255]
         source_feed.status_code = 0
         response.write("\nFetch error: " + str(ex))
+
+        if proxy is not None
+            source_feed.lastResult = "Proxy failed. Next retry will use new proxy"
+            source_feed.status_code = 1 # this will stop us increasing the interval
+
+            response.write("\nBurning the proxy.")
+            proxy.delete()
+
         
     
     if ret:

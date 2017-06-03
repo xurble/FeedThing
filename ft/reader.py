@@ -61,7 +61,7 @@ def find_proxies():
                     WebProxy(address="http://%s:%s" % (host,ip)).save()
                     count += 1
         
-                    if count == 2:
+                    if count == 3:
 
                         return ret + "\nDone!"
             
@@ -78,18 +78,10 @@ def find_proxies():
     return ret
             
         
-        
-    
 
 def update_feeds(host_name, max_feeds=3):
 
-
-    proxies = WebProxy.objects.count()
-    if proxies == 0:
-        # we have no proxies on our books at the moment
-        # so this time round we are going to try and find some
-        return find_proxies()
-    
+    WebProxy.objects.all().delete()
 
     sources = Source.objects.filter(Q(duePoll__lt = datetime.datetime.utcnow().replace(tzinfo=utc)) & Q(live = True)).order_by('duePoll')[:max_feeds]
 
@@ -124,11 +116,14 @@ def read_feed(source_feed, host_name):
 
 
     proxies = {}
-    proxy = None
+    proxy_list  = None
     if source_feed.needs_proxy : # Fuck you cloudflare. 
         try:
+            if WebProxy.objects.count() == 0:
+                find_proxies()
+            
             proxy = WebProxy.objects.all()[0]
-     
+            
             proxies = {
               'http': proxy.address,
               'https': proxy.address,
@@ -183,7 +178,7 @@ def read_feed(source_feed, host_name):
                 proxy.delete()
             else:            
                 source_feed.needs_proxy = True
-            source_feed.lastResult = "Blocked by Cloudflare, will try via proxy next time (%d)" % ret.status_code
+            source_feed.lastResult = "Blocked by Cloudflare, will try via proxy next time."
         else:
             source_feed.live = False
             source_feed.lastResult = "Feed is no longer accessible (%d)" % ret.status_code

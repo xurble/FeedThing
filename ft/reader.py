@@ -198,26 +198,29 @@ def read_feed(source_feed, host_name):
             source_feed.lastModified = None
     
     elif ret.status_code == 301: #permenant redirect
+        newURL = ""
         try:
-
-            newURL = ret.headers["Location"]
+            if "Location" in ret.headers:
+                newURL = ret.headers["Location"]
             
-            if newURL[0] == "/":
-                #find the domain from the feed
-                start = source_feed.feedURL[:8]
-                end = source_feed.feedURL[8:]
-                if end.find("/") >= 0:
-                    end = end[:end.find("/")]
+                if newURL[0] == "/":
+                    #find the domain from the feed
+                    start = source_feed.feedURL[:8]
+                    end = source_feed.feedURL[8:]
+                    if end.find("/") >= 0:
+                        end = end[:end.find("/")]
                 
-                newURL = start + end + newURL
+                    newURL = start + end + newURL
 
 
-            source_feed.feedURL = newURL
+                source_feed.feedURL = newURL
             
-            source_feed.lastResult = "Moved"
+                source_feed.lastResult = "Moved"
+            else:
+                source_feed.lastResult = "Feed has moved but no location provided"
         except exception as Ex:
             response.write("error redirecting")
-            source_feed.lastResult = "Error redirecting feed"
+            source_feed.lastResult = "Error redirecting feed to " + newURL  
             interval += 60
             pass
     elif ret.status_code == 302 or ret.status_code == 303 or ret.status_code == 307: #Temporary redirect

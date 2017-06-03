@@ -73,8 +73,11 @@ class User(AbstractBaseUser, PermissionsMixin):
             return self.salutation
             
         
-
-
+class WebProxy(models.Model):
+    # this class if for Cloudflare avoidance and contains a list of potential
+    # web proxies that we can try, scraped from the internet
+    address = models.CharField(max_length=255)
+    
 
 class Source(models.Model):
     # This is an actual feed that we poll

@@ -14,6 +14,8 @@ import pyrfc3339
 import json
 import traceback
 
+from django.conf import settings
+
 
 def fix_relative(html,url):
 
@@ -27,12 +29,67 @@ def fix_relative(html,url):
     except Exception as ex:
         print ex    
 
-
     return html
+    
+    
+def find_proxies():
+    
+    # temp hack because happy-proxy.com signup is borked
+    count = 0
+    ret = "Looking for proxies\n"
+    
+    try:
+        req = requests.get("https://www.proxynova.com/proxy-server-list/",timeout=30, verify=False)
+        if req.status_code == 200:
+            soup = BeautifulSoup(req.content)
+            cells = soup.findAll("td")
+            for cell in cells:
+                scr = unicode(cell.next)
+                if u'<script>document.write(\'' in scr:
+                    scr = scr.replace(u'<script>document.write(\'',u"")
+                    scr = scr.replace(u"'.substr(2) + '",u"")
+                    scr = scr.replace(u"');</script>", u"")
+                    host = scr[2:]
+            
+                    ip = unicode(cell.nextSibling.nextSibling.next.next.next).strip()
+            
+                    if "<" in ip:
+                        ip = cell.nextSibling.nextSibling.next.strip()
+            
+            
+                    ret += "\nAdding: http://%s:%s" % (host,ip)
+                    WebProxy(address="http://%s:%s" % (host,ip)).save()
+                    count += 1
+        
+                    if count == 2:
 
+                        return ret + "\nDone!"
+            
+                    pass
+    except Exception as ex:
+        ret += unicode(ex)
+            
+    if count == 0:
+        # something went wrong.
+        # to stop infinite loops we will insert a duff proxy now
+        # which will break the next read, but it would be broken anyway
+        WebProxy(address="http://127.0.0.1:9876").save()
+        ret += "\n\nNo proxies found :("
+    return ret
+            
+        
+        
+    
 
 def update_feeds(host_name, max_feeds=3):
 
+
+    proxies = WebProxy.objects.count()
+    if proxies == 0:
+        # we have no proxies on our books at the moment
+        # so this time round we are going to try and find some
+        return find_proxies()
+    
 
     sources = Source.objects.filter(Q(duePoll__lt = datetime.datetime.utcnow().replace(tzinfo=utc)) & Q(live = True)).order_by('duePoll')[:max_feeds]
 
@@ -66,15 +123,18 @@ def read_feed(source_feed, host_name):
     # "Cache-Control":"no-cache,max-age=0", "Pragma":"no-cache" -- just removed these. Think they were a solution to app-engine and actually counter-productive now
 
 
-    if source_feed.needs_proxy : # Fuck you cloudflare.  
-        proxies = {
-          'http': 'http://104.196.173.160:80',
-          'https': 'http://104.196.173.160:80',
-        }
-        # OK so if this works we should start scraping open proxy lists not hardcoding :)
-    else:
-        proxies = {}
-    
+    proxies = {}
+    if source_feed.needs_proxy : # Fuck you cloudflare. 
+        try:
+            proxy = WebProxy.objects.all()[0]
+     
+            proxies = {
+              'http': proxy.address,
+              'https': proxy.address,
+            }
+            # OK so if this works we should start scraping open proxy lists not hardcoding :)
+        except:
+            pass    
 
     if source_feed.ETag:
         headers["If-None-Match"] = str(source_feed.ETag)
@@ -87,14 +147,23 @@ def read_feed(source_feed, host_name):
         ret = requests.get(source_feed.feedURL,headers=headers,allow_redirects=False,verify=False,timeout=20,proxies=proxies)
         source_feed.status_code = ret.status_code
         source_feed.lastResult = "Unhandled Case"
+    except requests.exceptions.ProxyError:
+        source_feed.lastResult = "Proxy failed. Next retry will use new proxy"
+        source_feed.status_code = 1 # this will stop us increasing the interval
+
+        response.write("\nBurning the proxy.")
+        proxy.delete()
+
     except Exception as ex:
         print ex
         source_feed.lastResult = ("Fetch error:" + str(ex))[:255]
         source_feed.status_code = 0
         response.write("\nFetch error: " + str(ex))
+        
     
     if ret:
         response.write("\nResult: %d" % ret.status_code)
+        
                 
     if ret == None or source_feed.status_code == 0:
         interval += 120
@@ -108,8 +177,12 @@ def read_feed(source_feed, host_name):
         source_feed.lastResult = "The feed could not be found"
     elif ret.status_code == 403 or ret.status_code == 410: #Forbidden or gone
 
-        if "Cloudflare" in ret.content:
-            source_feed.needs_proxy = True
+        if "Cloudflare" in ret.content or ("Server" in ret.headers and "cloudflare" in ret.headers["Server"]):
+            if source_feed.needs_proxy:
+                # we are already proxied - this proxy on cloudflare's shit list too?
+                proxy.delete()
+            else:            
+                source_feed.needs_proxy = True
             source_feed.lastResult = "Blocked by Cloudflare, will try via proxy next time (%d)" % ret.status_code
         else:
             source_feed.live = False

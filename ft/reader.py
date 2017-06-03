@@ -161,12 +161,11 @@ def read_feed(source_feed, host_name):
 
             response.write("\nBurning the proxy.")
             proxy.delete()
-            ret = "X" # I feel so dirty
 
         
-    if ret == "X":   
+    if ret == None and source_feed.status_code == 1:   
         pass
-    if ret == None or source_feed.status_code == 0:
+    elif ret == None or source_feed.status_code == 0:
         interval += 120
     elif ret.status_code < 200 or ret.status_code >= 500:
         #errors, impossible return codes

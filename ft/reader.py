@@ -124,6 +124,7 @@ def read_feed(source_feed, host_name):
 
 
     proxies = {}
+    proxy = None
     if source_feed.needs_proxy : # Fuck you cloudflare. 
         try:
             proxy = WebProxy.objects.all()[0]
@@ -180,7 +181,7 @@ def read_feed(source_feed, host_name):
     elif ret.status_code == 403 or ret.status_code == 410: #Forbidden or gone
 
         if "Cloudflare" in ret.content or ("Server" in ret.headers and "cloudflare" in ret.headers["Server"]):
-            if source_feed.needs_proxy:
+            if source_feed.needs_proxy and proxy is not None:
                 # we are already proxied - this proxy on cloudflare's shit list too?
                 proxy.delete()
             else:            

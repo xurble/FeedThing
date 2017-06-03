@@ -161,6 +161,7 @@ def read_feed(source_feed, host_name):
 
             response.write("\nBurning the proxy.")
             proxy.delete()
+            ret = "NOT NONE!" # I feel so dirty
 
         
     
@@ -337,8 +338,8 @@ def read_feed(source_feed, host_name):
     
     if interval < 60:
         interval = 60 #no less than 1 hour
-    if interval > (60 * 60 * 24 * 3):
-        interval = (60 * 60 * 24 * 3) #no more than 3 days
+    if interval > (60 * 60 * 24):
+        interval = (60 * 60 * 24) #no more than 1 day
     
     response.write("\nUpdating interval from %d to %d\n" % (source_feed.interval,interval))
     source_feed.interval = interval

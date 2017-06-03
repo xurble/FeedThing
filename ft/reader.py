@@ -148,7 +148,7 @@ def read_feed(source_feed, host_name):
         ret = requests.get(source_feed.feedURL,headers=headers,allow_redirects=False,verify=False,timeout=20,proxies=proxies)
         source_feed.status_code = ret.status_code
         source_feed.lastResult = "Unhandled Case"
-
+        response.write("\nResult: %d" % ret.status_code)
     except Exception as ex:
         print ex
         source_feed.lastResult = ("Fetch error:" + str(ex))[:255]
@@ -161,14 +161,11 @@ def read_feed(source_feed, host_name):
 
             response.write("\nBurning the proxy.")
             proxy.delete()
-            ret = "NOT NONE!" # I feel so dirty
+            ret = "X" # I feel so dirty
 
         
-    
-    if ret:
-        response.write("\nResult: %d" % ret.status_code)
-        
-                
+    if ret == "X":   
+        pass
     if ret == None or source_feed.status_code == 0:
         interval += 120
     elif ret.status_code < 200 or ret.status_code >= 500:

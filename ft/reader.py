@@ -154,7 +154,7 @@ def read_feed(source_feed, host_name):
         source_feed.status_code = 0
         response.write("\nFetch error: " + str(ex))
 
-        if proxy is not None
+        if proxy is not None:
             source_feed.lastResult = "Proxy failed. Next retry will use new proxy"
             source_feed.status_code = 1 # this will stop us increasing the interval
 

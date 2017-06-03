@@ -205,12 +205,11 @@ def read_feed(source_feed, host_name):
             
                 if newURL[0] == "/":
                     #find the domain from the feed
-                    start = source_feed.feedURL[:8]
-                    end = source_feed.feedURL[8:]
-                    if end.find("/") >= 0:
-                        end = end[:end.find("/")]
+                    
+                    base = "/".join(source_feed.feedURL.split("/")[:3]).encode("utf-8")
+                    
                 
-                    newURL = start + end + newURL
+                    newURL = base + newURL
 
 
                 source_feed.feedURL = newURL

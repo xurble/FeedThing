@@ -117,6 +117,7 @@ def read_feed(source_feed, host_name):
 
     proxies = {}
     proxy_list  = None
+    proxy = None
     if source_feed.needs_proxy : # Fuck you cloudflare. 
         try:
             if WebProxy.objects.count() == 0:

@@ -1,4 +1,5 @@
 from django import template
+from django.utils.safestring import mark_safe
 
 register = template.Library()
 
@@ -18,3 +19,15 @@ def hoursmins(value):
     
     return "%d:%02d" % (hours,minutes)
     
+    
+    
+@register.filter(name='river')
+def river(value):
+
+    value = value.replace("<img", "<!")
+    
+    if len(value) > 500:
+        value = value[:500] + " ..."
+
+
+    return mark_safe(value)

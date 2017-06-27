@@ -480,7 +480,6 @@ def readfeed(request,fid,qty):
     else:
         qty = int(qty)
         
-
     sub = get_object_or_404(Subscription,id=int(fid))
     if sub.user == request.user:
         if sub.source == None:  
@@ -500,7 +499,7 @@ def readfeed(request,fid,qty):
                 
 
             if len(posts) == 0: # Either didn't find any new posts or are a river
-                sources = [sub.source for sub in sources]
+                sources = [src.source for src in sources]
                 posts = list(Post.objects.filter(source__in = sources).order_by("-created")[:20])
                     
             
@@ -522,6 +521,7 @@ def readfeed(request,fid,qty):
             vals["subscription"] = sub
         
         vals["posts"] = posts
+        vals["river"] = sub.isRiver
         
         return render(request, 'feed.html',vals)
     #else 403

@@ -62,7 +62,7 @@
             <span class="icon-bar"></span>
           </button>
             <div class="logo">
-                <a href="/" class="navbar-link logo">
+                <a href="{% url 'home' %}" class="navbar-link logo">
                   <img src="/static/images/FeedThing.svg" alt="logo" height="25">FeedThing
                </a>
             </div>
@@ -71,20 +71,21 @@
           <ul class="nav navbar-nav navbar-right">
 	                
 	            {% if user.is_authenticated %}
-	                <li><a href="/feeds/" target="_top">Feeds</a></li>
-	                <li><a href="/addfeed/" target="_top">Add Feed</a></li>
-	                <li><a href="/manage/" target="_top">Manage Feeds</a></li>
+	                <li><a href="{% url 'feeds' %}">Feeds</a></li>
+	                <li><a href="{% url 'addfeed' %}">Add Feed</a></li>
+	                <li><a href="/manage/">Manage Feeds</a></li>
+	                <li><a href="{% url 'savedposts' %}">Saved</a></li>
 	                {% if user.is_superuser %}
-	                    <li><a href="/feedgarden/" target="_top">Queue</a></li>
+	                    <li><a href="/feedgarden/">Queue</a></li>
 	                {% endif %}
 	            {% else %}
-    	            <li><a href="/" target="_top">Home</a></li>
+    	            <li><a href="{% url 'home' %}">Home</a></li>
 	            {% endif %}
-	                <li><a href="/help/" target="_top">Help</a></li>
+	                <li><a href="{% url 'help' %}">Help</a></li>
 	            {% if user.is_authenticated %}
-	                <li><a href="/accounts/logout/" target="_top">Log out</a></li>
+	                <li><a href="/accounts/logout/">Log out</a></li>
 	            {% else %}
-	                <li><a href="/feeds/" target="_top">Log In</a></li>
+	                <li><a href="{% url 'feeds' %}">Log In</a></li>
 	            {% endif %}
           </ul>
         </div><!--/.nav-collapse -->

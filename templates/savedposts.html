@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% load ft_tags %}
+
+{% block content %}
+<div class="container">
+    <div class="row topmargin">
+        <div class="col-xs-12 ftcontent posts">
+            <h2>Saved Posts</h2>
+
+
+            {% for p in posts %}
+
+                <br>
+                <hr class="river">
+                <h2 class="riversource">{{p.subscription.name}}</h2>
+                <div class="buttons">
+                    <a href="{{p.post.link|escape}}"><i class="fa fa-external-link" aria-hidden="true" title="Go to item"></i></a>&nbsp;
+                    <a href="javascript:unSavePost({{p.post.id}})"><i id="star-{{p.post.id}}" class="fa fa-star" aria-hidden="true"></i></a>
+                </div>
+                <h3 class="posttitle"><a href="{{p.post.link|escape}}">{{p.post.title|safe}}</a></h3>
+
+
+                <div class="date"><a href="{{p.post.link|escape}}">{{p.post.created }} - {{p.post.created|timesince}} ago.</a></div>
+
+                <div class="riverbody">
+                    {{p.post.body|safe}}
+                </div>
+
+            {% endfor %}		
+
+            <div class="clearfix"></div>
+
+        
+        </div>
+    </div>
+</div>
+
+{% endblock %}  

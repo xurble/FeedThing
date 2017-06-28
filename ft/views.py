@@ -30,24 +30,14 @@ import datetime
 from BeautifulSoup import BeautifulSoup
 from urlparse import urljoin
 import requests
-
+from django.core.urlresolvers import reverse
 from reader import update_feeds
 
-
-#class GMT(datetime.tzinfo):
-#    def utcoffset(self,dt): 
-#        return datetime.timedelta(hours=0,minutes=0) 
-#    def tzname(self,dt): 
-#        return "GMT" 
-#    def dst(self,dt): 
-#        return datetime.timedelta(0)     
-
-#_GMT = GMT()
 
 def index(request):
 
     if request.user.is_authenticated:
-        return HttpResponseRedirect("/feeds/")
+        return HttpResponseRedirect(reverse("feeds"))
     else:
         return render(request, "index.html",{})
 
@@ -59,7 +49,7 @@ def help(request):
 
 def loginpage(request):
 
-    next = "/feeds/"
+    next = reverse("feeds")
     vals = {}
     msg = ""
     # If we submitted the form...
@@ -615,7 +605,40 @@ def unsubscribefeed(request,sid):
             else:
                 return HttpResponse("Can't unsubscribe from groups")
         else:
-            return HttpResoponse("Nope")
+            return HttpResponse("Nope")
+
+
+@login_required
+def savepost(request,pid):
+
+    post = get_object_or_404(Post,id=int(pid))
+    
+    sub = Subscription.objects.filter(source=post.source).filter(user=request.user)[0]
+    
+    sp = SavedPost(post=post, user=request.user, subscription=sub)
+    sp.save()
+    
+    return HttpResponse("OK")
+    
+@login_required
+def forgetpost(request,pid):
+
+    post = get_object_or_404(Post,id=int(pid))
+    
+    sp = SavedPost.objects.filter(post=post).filter(user=request.user)[0]
+    sp.delete()
+    
+    return HttpResponse("OK")
+    
+@login_required
+def savedposts(request):
+
+    vals = {}
+    
+    vals["posts"] = SavedPost.objects.filter(user=request.user)
+    
+    return render(request, 'savedposts.html',vals)
+    
 
 
 def read_request_listener(request):

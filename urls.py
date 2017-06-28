@@ -11,13 +11,13 @@ urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
 
 
-    url(r'^$', index),
-    url(r'^refresh/$', read_request_listener),
-    url(r'^help/$', help),
-    url(r'^feeds/$', feeds),
-    url(r'^allfeeds/$', allfeeds),
+    url(r'^$', index, name="home"),
+    url(r'^refresh/$', read_request_listener, name="refresh"),
+    url(r'^help/$', help, name="help"),
+    url(r'^feeds/$', feeds, name="feeds"),
+    url(r'^allfeeds/$', allfeeds, name="allfeeds"),
 
-    url(r'^addfeed/$', addfeed),
+    url(r'^addfeed/$', addfeed, name="addfeed"),
     url(r'^importopml/$', importopml),
     url(r'^feedgarden/$', feedgarden),
 
@@ -27,6 +27,12 @@ urlpatterns = [
     url(r'^accounts/login/$',loginpage),
     url(r'^accounts/logout/$',logoutpage),
     url(r'^read/(?P<fid>.*)/(?P<qty>.*)/',readfeed),
+
+    url(r'^post/(?P<pid>.*)/save/$',savepost, name="savepost"),
+    url(r'^post/(?P<pid>.*)/forgot/$',forgetpost, name="forgetpost"),
+
+    url(r'^saved/$',savedposts, name="savedposts"),
+    
 
 
     url(r'^manage/$',managefeeds),

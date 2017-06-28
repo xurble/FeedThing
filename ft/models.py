@@ -218,3 +218,16 @@ class Post(models.Model):
     
     def __unicode__(self):
         return "%s: post %d, %s" % (self.source.display_name,self.index,self.title)
+
+
+class SavedPost(models.Model):
+
+    user         = models.ForeignKey(User)
+    post         = models.ForeignKey(Post)
+    subscription = models.ForeignKey(Subscription, null=True)
+    
+    date_saved = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-date_saved']
+        unique_together = (("post", "user"),)

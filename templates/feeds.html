@@ -139,10 +139,9 @@ function unRead() {
 }
 
 
-function unsub(sid)
-{
-	if (confirm("Sure?"))
-	{
+function unsub(sid) {
+	if (confirm("Sure?")) {
+
 		$("#unsub").html('<div id="loader"><img src="/static/images/loader.gif" alt="Working" width="32" height="32"></div>');
 		$.post("/subscription/" + sid +"/unsubscribe/",function(data){
 		
@@ -156,7 +155,13 @@ function unsub(sid)
 	
 }
 
-
+function savePost(pid) {
+    $.post("/post/" + pid + "/save/",function(data) {
+        if (data=="OK") {
+            $("#star-" + pid).removeClass("fa-star-o").addClass("fa-star");
+        }
+    });
+}
 
 
 

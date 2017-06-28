@@ -6,7 +6,7 @@
             {% if subscription.source %}
                 <div id="unsub"><a href="javascript:unsub({{subscription.id}})" class="button">Unsubscribe</a></div>
             
-                <div class="meta">{% if subscription.source.lastSuccess %}Last read {{subscription.source.lastSuccess|timesince}} ago.{% else %}Feed has not been read.{% endif %}</div>
+                <div class="meta">{% if subscription.source.last_success %}Last read {{subscription.source.last_success|timesince}} ago.{% else %}Feed has not been read.{% endif %}</div>
             {% endif %}
             <br style="clear:both">
 
@@ -17,7 +17,7 @@
             <label for="subname">Name:</label><br>
             <input type="text" name="subname" id="subname" value="{{subscription.name}}" style="width:90%">
             <br><br>
-            <input type="checkbox" name="isriver" id="isriver" value="True" {% if subscription.isRiver %}checked="checked"{% endif %}> <label for="isriver">Is River</label>            
+            <input type="checkbox" name="isriver" id="isriver" value="True" {% if subscription.is_river %}checked="checked"{% endif %}> <label for="isriver">Is River</label>            
             <br><br>
             <button type="submit" class="button">Save</button>
             {% csrf_token %}
@@ -37,7 +37,7 @@
                     </tr>                
                     <tr>
                         <th>Feed:</th>
-                        <td><a href="{{subscription.source.feedURL}}">{{subscription.source.feedURL}}</a></td>
+                        <td><a href="{{subscription.source.feed_url}}">{{subscription.source.feed_url}}</a></td>
                     </tr>
                     <tr>
                         <th>Interval:</th>
@@ -45,19 +45,19 @@
                     </tr>
                     <tr>
                         <th>Last Successful Read:</th>
-                        <td>{% if subscription.source.lastSuccess %}{{subscription.source.lastSuccess|timesince}} ago{% else %}Never{% endif %}</td>
+                        <td>{% if subscription.source.last_success %}{{subscription.source.last_success|timesince}} ago{% else %}Never{% endif %}</td>
                     </tr>
                     <tr>
                         <th>Next Read:</th>
-                        <td>{{subscription.source.duePoll|timeuntil}}</td>
+                        <td>{{subscription.source.due_poll|timeuntil}}</td>
                     </tr>
                     <tr>
                         <th>Last Updated:</th>
-                        <td>{% if subscription.source.lastChange %}{{subscription.source.lastChange|timesince}} ago{% else %}Never{% endif %}</td>
+                        <td>{% if subscription.source.last_change %}{{subscription.source.last_change|timesince}} ago{% else %}Never{% endif %}</td>
                     </tr>
                     <tr>
                         <th>Last Result:</th>
-                        <td>{{subscription.source.lastResult}}</td>
+                        <td>{{subscription.source.last_result}}</td>
                     </tr>
 
                 </table>

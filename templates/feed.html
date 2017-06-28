@@ -7,7 +7,7 @@
         {% if subscription %}
             <h2 class="ftheader">{{subscription.name}}</h2>
             {% if source %}
-                <div class="meta">{% if source.lastSuccess %}Last read {{source.lastSuccess|timesince}} ago.{% else %}Feed has not been read.{% endif %}</div>
+                <div class="meta">{% if source.last_success %}Last read {{source.last_success|timesince}} ago.{% else %}Feed has not been read.{% endif %}</div>
                 <div id="unsub"><a href="javascript:unsub({{subscription.id}})" class="btn btn-xs btn-default">Unsubscribe</a></div>
             {% endif %}
         {% endif %}

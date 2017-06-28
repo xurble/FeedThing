@@ -107,21 +107,21 @@ def logoutpage(request):
 @login_required
 def feeds(request):
     vals = {}
-    toRead = list(Subscription.objects.filter(Q(user = request.user) & (Q(isRiver = True) | Q(lastRead__lt = F('source__maxIndex')))).order_by("source__name"))
+    toRead = list(Subscription.objects.filter(Q(user = request.user) & (Q(is_river = True) | Q(last_read__lt = F('source__max_index')))).order_by("source__name"))
     
     sources = []
     groups = {}
     
     for src in toRead:
         if src.parent:
-            if src.parent.isRiver == False:
+            if src.parent.is_river == False:
                 #this is a group
                 if src.parent.id in groups:
                     grp = groups[src.parent.id]
-                    grp._unreadCount += src.unreadCount()
+                    grp._undread_count += src.undread_count
                 else:
                     grp = src.parent
-                    grp._unreadCount = src.unreadCount()
+                    grp._undread_count = src.undread_count
                     groups[grp.id] = grp
                     sources.append(grp)
         else:
@@ -169,10 +169,10 @@ def allfeeds(request):
     for src in toRead:
         if src.source == None:
             
-            src._unreadCount = 0
+            src._undread_count = 0
             
             for c in src.subscription_set.all():
-                src._unreadCount += c.unreadCount()
+                src._undread_count += c.undread_count
             
         sources.append(src)
     
@@ -187,7 +187,7 @@ def allfeeds(request):
 @login_required
 def feedgarden(request):
     vals = {}
-    vals["feeds"] = Source.objects.all().order_by("duePoll")
+    vals["feeds"] = Source.objects.all().order_by("due_poll")
     return render(request, 'feedgarden.html',vals)
     
 
@@ -273,7 +273,7 @@ def addfeed(request):
                         return HttpResponse("<div>Internal error.<!--bad group --></div>")
 
             
-                s = Source.objects.filter(feedURL = feed)
+                s = Source.objects.filter(feed_url = feed)
                 if s.count() > 0:
                     #feed already exists
                     s = s[0]
@@ -283,8 +283,8 @@ def addfeed(request):
                     else:
                         us = Subscription(source=s,user=request.user,name=s.display_name(),parent=parent)
                     
-                        if s.maxIndex > 10: #don't flood people with all these old things
-                            us.lastRead = s.maxIndex - 10
+                        if s.max_index > 10: #don't flood people with all these old things
+                            us.last_read = s.max_index - 10
                     
                         us.save()
                     
@@ -296,7 +296,7 @@ def addfeed(request):
 
                 # need to start checking feed parser errors here
                 ns = Source()
-                ns.duePoll = datetime.datetime.utcnow().replace(tzinfo=utc)            
+                ns.due_poll = datetime.datetime.utcnow().replace(tzinfo=utc)            
             
                 #print request.POST["river"]
                 #ns.inRiver = (request.POST["river"] == "yes")
@@ -304,7 +304,7 @@ def addfeed(request):
             
                     
                 ns.name    = feed_title
-                ns.feedURL = feed
+                ns.feed_url = feed
             
                 ns.save()
             
@@ -347,7 +347,7 @@ def importopml(request):
 
         url  = s.getAttribute("xmlUrl")
         if url.strip() != "":
-            ns = Source.objects.filter(feedURL = url)
+            ns = Source.objects.filter(feed_url = url)
             if ns.count() > 0:
                 
                 #feed already exists - so there may already be a user subscription for it
@@ -356,8 +356,8 @@ def importopml(request):
                 if us.count() == 0:
                     us = Subscription(source=ns,user=request.user,name=ns.display_name())
 
-                    if ns.maxIndex > 10: #don't flood people with all these old things
-                        us.lastRead = ns.maxIndex - 10
+                    if ns.max_index > 10: #don't flood people with all these old things
+                        us.last_read = ns.max_index - 10
 
 
                     us.save()
@@ -370,9 +370,9 @@ def importopml(request):
             else:
                 # Feed does not already exist it must also be a new sub
                 ns = Source()
-                ns.duePoll = datetime.datetime.utcnow().replace(tzinfo=utc)
-                ns.siteURL = s.getAttribute("htmlUrl")
-                ns.feedURL = url #probably best to see that there isn't a match here :)
+                ns.due_poll = datetime.datetime.utcnow().replace(tzinfo=utc)
+                ns.site_url = s.getAttribute("htmlUrl")
+                ns.feed_url = url #probably best to see that there isn't a match here :)
                 ns.name = s.getAttribute("title")
                 ns.save()
     
@@ -401,7 +401,7 @@ def subscriptiondetails(request,sid):
  
         if request.method == "POST":
             sub.name = request.POST["subname"]
-            sub.isRiver = "isriver" in request.POST
+            sub.is_river = "isriver" in request.POST
             sub.save()
 
         if sub.source == None:
@@ -493,11 +493,11 @@ def readfeed(request,fid,qty):
                 sub_map[s.source.id] = s
             
             
-            if not sub.isRiver:
+            if not sub.is_river:
                 for src in sources:
-                    srcposts = list(Post.objects.filter(Q(source = src.source) & Q(index__gt = src.lastRead)).order_by("index")[:qty])
+                    srcposts = list(Post.objects.filter(Q(source = src.source) & Q(index__gt = src.last_read)).order_by("index")[:qty])
         
-                    src.lastRead = src.source.maxIndex
+                    src.last_read = src.source.max_index
                     src.save()
                     posts += srcposts
                 
@@ -514,8 +514,8 @@ def readfeed(request,fid,qty):
             
         else:
             posts = [] 
-            if not sub.isRiver:
-                posts = list(Post.objects.filter(Q(source = sub.source) & Q(index__gt = sub.lastRead)).order_by("index")[:qty])
+            if not sub.is_river:
+                posts = list(Post.objects.filter(Q(source = sub.source) & Q(index__gt = sub.last_read)).order_by("index")[:qty])
         
             if len(posts) == 0: # No Posts or a river
                 posts = list(Post.objects.filter(source = sub.source).order_by("-created")[:10])
@@ -526,7 +526,7 @@ def readfeed(request,fid,qty):
             #this assumes that we always read all posts which kind of defeats 
             #the quantity argument above.  Quantity is vestigial
             
-            sub.lastRead = sub.source.maxIndex
+            sub.last_read = sub.source.max_index
             sub.save()
         
             vals["source"] = sub.source
@@ -534,7 +534,7 @@ def readfeed(request,fid,qty):
         
         vals["posts"] = posts
         
-        if sub.isRiver:
+        if sub.is_river:
             return render(request, 'river.html',vals)
         else:
             return render(request, 'feed.html',vals)
@@ -547,12 +547,12 @@ def revivefeed(request,fid):
         
         f = get_object_or_404(Source,id=int(fid))
         f.live = True
-        f.duePoll = (datetime.datetime.utcnow().replace(tzinfo=utc) - datetime.timedelta(days=10))
-        f.ETag = None
-        f.lastModified = None
-        # f.lastSuccess = None
-        # f.lastChange = None
-        # f.maxIndex = 0
+        f.due_poll = (datetime.datetime.utcnow().replace(tzinfo=utc) - datetime.timedelta(days=10))
+        f.etag = None
+        f.last_modified = None
+        # f.last_success = None
+        # f.last_change = None
+        # f.max_index = 0
         f.save()
         # Post.objects.filter(source=f).delete()
         return HttpResponse("OK")
@@ -568,16 +568,16 @@ def testfeed(request,fid): #kill it stone dead (From feedgarden) - need to make 
         headers = { "User-Agent": "FeedThing/3.2 (+http://%s; Updater; %d subscribers)" % (request.META["HTTP_HOST"],f.num_subs),  } #identify ourselves and also stop our requests getting picked up by google's cache
 
         if request.GET.get("cache","no") == "yes":
-            if f.ETag:
-                headers["If-None-Match"] = str(f.ETag)
-            if f.lastModified:
-                headers["If-Modified-Since"] = str(f.lastModified)
+            if f.etag:
+                headers["If-None-Match"] = str(f.etag)
+            if f.last_modified:
+                headers["If-Modified-Since"] = str(f.last_modified)
         else:
             headers["Cache-Control"] = "no-cache,max-age=0" 
             headers["Pragma"] = "no-cache"
 
 
-        ret = requests.get(f.feedURL,headers=headers,allow_redirects=False,verify=False,timeout=20)
+        ret = requests.get(f.feed_url,headers=headers,allow_redirects=False,verify=False,timeout=20)
         
         r = HttpResponse("%s\n------------------------------\n\nResponse: %d\n-------------------------\n%s\n--------------------\n%s" % (headers,ret.status_code,ret.headers,ret.content))
         r["Content-type"] = "text/plain"

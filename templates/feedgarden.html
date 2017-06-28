@@ -22,20 +22,20 @@
                     <th> </th>
                 </tr>
                 {% for f in feeds %}
-                    <tr style="{{f.gardenStyle}}">
+                    <tr style="{{f.garden_style}}">
                         <td style="text-align:center">{{f.num_subs}}</td>
                         <td>
-                            <a href="{{f.feedURL|escape}}"><img src="/static/images/feed.png" alt="Feed"></a>
+                            <a href="{{f.feed_url|escape}}"><img src="/static/images/feed.png" alt="Feed"></a>
                             <a href="{{f.best_link|escape}}">{{f.display_name}}</a> 
                             [<a href="/feed/{{f.id}}/test/">Test</a>] 
                             [<a href="/feed/{{f.id}}/test/?cache=yes">Cache?</a>]
                             {% if f.needs_proxy %}(P){% endif %}
                         </td>
                         <td style="text-align:right">{{f.interval|hoursmins}}</td>
-                        <td>{% if f.lastSuccess %}{{f.lastSuccess|timesince}} ago{% else %}Never{% endif %}</td>
-                        <td>{{f.duePoll|timeuntil}}</td>
-                        <td>[{{f.status_code}}] {{f.lastResult}}</td>
-                        <td>{% if f.lastChange %}{{f.lastChange|timesince}} ago{% else %}Never{% endif %}</td>
+                        <td>{% if f.last_success %}{{f.last_success|timesince}} ago{% else %}Never{% endif %}</td>
+                        <td>{{f.due_poll|timeuntil}}</td>
+                        <td>[{{f.status_code}}] {{f.last_result}}</td>
+                        <td>{% if f.last_change %}{{f.last_change|timesince}} ago{% else %}Never{% endif %}</td>
                         <td id="r{{f.id}}"><a href="javascript:refresh({{f.id}})">Refresh</a></td>
                     </tr>
                 {% endfor %}

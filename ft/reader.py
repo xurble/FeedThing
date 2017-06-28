@@ -83,7 +83,7 @@ def update_feeds(host_name, max_feeds=3):
 
     WebProxy.objects.all().delete()
 
-    sources = Source.objects.filter(Q(duePoll__lt = datetime.datetime.utcnow().replace(tzinfo=utc)) & Q(live = True)).order_by('duePoll')[:max_feeds]
+    sources = Source.objects.filter(Q(due_poll__lt = datetime.datetime.utcnow().replace(tzinfo=utc)) & Q(live = True)).order_by('due_poll')[:max_feeds]
 
 
     ret = "Update Q: %d\n\n" % sources.count()
@@ -106,8 +106,8 @@ def read_feed(source_feed, host_name):
     
     response.write("\n\n------------------------------\n\n")
     
-    source_feed.lastPolled = datetime.datetime.utcnow().replace(tzinfo=utc)
-    #newCount = source_feed.unreadCount
+    source_feed.last_polled = datetime.datetime.utcnow().replace(tzinfo=utc)
+    #newCount = source_feed.undread_count
 
     interval =  source_feed.interval
 
@@ -133,26 +133,26 @@ def read_feed(source_feed, host_name):
         except:
             pass    
 
-    if source_feed.ETag:
-        headers["If-None-Match"] = str(source_feed.ETag)
-    if source_feed.lastModified:
-        headers["If-Modified-Since"] = str(source_feed.lastModified)
+    if source_feed.etag:
+        headers["If-None-Match"] = str(source_feed.etag)
+    if source_feed.last_modified:
+        headers["If-Modified-Since"] = str(source_feed.last_modified)
     response.write(headers)
     ret = None
-    response.write("\nFetching %s" % source_feed.feedURL)
+    response.write("\nFetching %s" % source_feed.feed_url)
     try:
-        ret = requests.get(source_feed.feedURL,headers=headers,allow_redirects=False,verify=False,timeout=20,proxies=proxies)
+        ret = requests.get(source_feed.feed_url,headers=headers,allow_redirects=False,verify=False,timeout=20,proxies=proxies)
         source_feed.status_code = ret.status_code
-        source_feed.lastResult = "Unhandled Case"
+        source_feed.last_result = "Unhandled Case"
         response.write("\nResult: %d" % ret.status_code)
     except Exception as ex:
         print ex
-        source_feed.lastResult = ("Fetch error:" + str(ex))[:255]
+        source_feed.last_result = ("Fetch error:" + str(ex))[:255]
         source_feed.status_code = 0
         response.write("\nFetch error: " + str(ex))
 
         if proxy is not None:
-            source_feed.lastResult = "Proxy failed. Next retry will use new proxy"
+            source_feed.last_result = "Proxy failed. Next retry will use new proxy"
             source_feed.status_code = 1 # this will stop us increasing the interval
 
             response.write("\nBurning the proxy.")
@@ -167,11 +167,11 @@ def read_feed(source_feed, host_name):
     elif ret.status_code < 200 or ret.status_code >= 500:
         #errors, impossible return codes
         interval += 120
-        source_feed.lastResult = "Server error fetching feed (%d)" % ret.status_code
+        source_feed.last_result = "Server error fetching feed (%d)" % ret.status_code
     elif ret.status_code == 404:
         #not found
         interval += 120
-        source_feed.lastResult = "The feed could not be found"
+        source_feed.last_result = "The feed could not be found"
     elif ret.status_code == 403 or ret.status_code == 410: #Forbidden or gone
 
         if "Cloudflare" in ret.content or ("Server" in ret.headers and "cloudflare" in ret.headers["Server"]):
@@ -180,27 +180,27 @@ def read_feed(source_feed, host_name):
                 proxy.delete()
                 response.write("\Proxy seemed to also be blocked, burning")
                 interval /= 2
-                source_feed.lastResult = "Proxy kind of worked but still got cloudflared."
+                source_feed.last_result = "Proxy kind of worked but still got cloudflared."
             else:            
                 source_feed.needs_proxy = True
-                source_feed.lastResult = "Blocked by Cloudflare, will try via proxy next time."
+                source_feed.last_result = "Blocked by Cloudflare, will try via proxy next time."
         else:
             source_feed.live = False
-            source_feed.lastResult = "Feed is no longer accessible (%d)" % ret.status_code
+            source_feed.last_result = "Feed is no longer accessible (%d)" % ret.status_code
     elif ret.status_code >= 400 and ret.status_code < 500:
         #treat as bad request
         source_feed.live = False
-        source_feed.lastResult = "Bad request (%d)" % ret.status_code
+        source_feed.last_result = "Bad request (%d)" % ret.status_code
     elif ret.status_code == 304:
         #not modified
         interval += 5
-        source_feed.lastResult = "Not modified"
-        #source_feed.lastSuccess = datetime.datetime.utcnow().replace(tzinfo=utc) #in case we start auto unsubscribing long dead feeds
+        source_feed.last_result = "Not modified"
+        #source_feed.last_success = datetime.datetime.utcnow().replace(tzinfo=utc) #in case we start auto unsubscribing long dead feeds
         
-        if (datetime.datetime.utcnow().replace(tzinfo=utc) - source_feed.lastSuccess).days > 7:
-            source_feed.lastResult = "Clearing etag/last modified due to lack of changes"
-            source_feed.ETag = None
-            source_feed.lastModified = None
+        if (datetime.datetime.utcnow().replace(tzinfo=utc) - source_feed.last_success).days > 7:
+            source_feed.last_result = "Clearing etag/last modified due to lack of changes"
+            source_feed.etag = None
+            source_feed.last_modified = None
     
     elif ret.status_code == 301: #permenant redirect
         newURL = ""
@@ -211,20 +211,20 @@ def read_feed(source_feed, host_name):
                 if newURL[0] == "/":
                     #find the domain from the feed
                     
-                    base = "/".join(source_feed.feedURL.split("/")[:3]).encode("utf-8")
+                    base = "/".join(source_feed.feed_url.split("/")[:3]).encode("utf-8")
                     
                 
                     newURL = base + newURL
 
 
-                source_feed.feedURL = newURL
+                source_feed.feed_url = newURL
             
-                source_feed.lastResult = "Moved"
+                source_feed.last_result = "Moved"
             else:
-                source_feed.lastResult = "Feed has moved but no location provided"
+                source_feed.last_result = "Feed has moved but no location provided"
         except exception as Ex:
             response.write("error redirecting")
-            source_feed.lastResult = "Error redirecting feed to " + newURL  
+            source_feed.last_result = "Error redirecting feed to " + newURL  
             interval += 60
             pass
     elif ret.status_code == 302 or ret.status_code == 303 or ret.status_code == 307: #Temporary redirect
@@ -235,8 +235,8 @@ def read_feed(source_feed, host_name):
             
             if newURL[0] == "/":
                 #find the domain from the feed
-                start = source_feed.feedURL[:8]
-                end = source_feed.feedURL[8:]
+                start = source_feed.feed_url[:8]
+                end = source_feed.feed_url[8:]
                 if end.find("/") >= 0:
                     end = end[:end.find("/")]
                 
@@ -245,25 +245,25 @@ def read_feed(source_feed, host_name):
             
             ret = requests.get(newURL,headers=headers,allow_redirects=True,verify=False, timeout=20,proxies=proxies)
             source_feed.status_code = ret.status_code
-            source_feed.lastResult = "Temporary Redirect to " + newURL
+            source_feed.last_result = "Temporary Redirect to " + newURL
 
             
             if source_feed.last302url == newURL:
                 #this is where we 302'd to last time
                 td = datetime.datetime.utcnow().replace(tzinfo=utc) - source_feed.last302start
                 if td > datetime.timedelta(days=60):
-                    source_feed.feedURL = newURL
+                    source_feed.feed_url = newURL
                     source_feed.last302url = " "
 
             else:
                 source_feed.last302url = newURL
                 source_feed.last302start = datetime.datetime.utcnow().replace(tzinfo=utc)
 
-            source_feed.lastResult = "Temporary Redirect to " + newURL + " since " + source_feed.last302start.strftime("%d %B")
+            source_feed.last_result = "Temporary Redirect to " + newURL + " since " + source_feed.last302start.strftime("%d %B")
 
 
         except Exception as ex:     
-            source_feed.lastResult = "Failed Redirection to " + newURL +  " " + str(ex)
+            source_feed.last_result = "Failed Redirection to " + newURL +  " " + str(ex)
             interval += 60
     
     #NOT ELIF, WE HAVE TO START THE IF AGAIN TO COPE WTIH 302
@@ -273,19 +273,19 @@ def read_feed(source_feed, host_name):
         
         
         if was302:
-            source_feed.ETag = None
-            source_feed.lastModified = None
+            source_feed.etag = None
+            source_feed.last_modified = None
         else:
             try:
-                source_feed.ETag = ret.headers["ETag"]
+                source_feed.etag = ret.headers["etag"]
             except Exception as ex:
-                source_feed.ETag = None                                   
+                source_feed.etag = None                                   
             try:
-                source_feed.lastModified = ret.headers["Last-Modified"]
+                source_feed.last_modified = ret.headers["Last-Modified"]
             except Exception as ex:
-                source_feed.lastModified = None                                   
+                source_feed.last_modified = None                                   
         
-        response.write("\nEtag:%s\nLast Mod:%s\n\n" % (source_feed.ETag,source_feed.lastModified))
+        response.write("\netag:%s\nLast Mod:%s\n\n" % (source_feed.etag,source_feed.last_modified))
         
         feed_body = ret.content.strip()
         
@@ -300,15 +300,15 @@ def read_feed(source_feed, host_name):
             (ok,changed, interval) = parse_feed_json(source_feed, feed_body, interval, response)
         else:
             ok = False
-            source_feed.lastResult = "Unknown Feed Type: " + content_type
+            source_feed.last_result = "Unknown Feed Type: " + content_type
             interval += 120 # we slow down when feeds look duff
 
         if ok and changed:
             interval /= 2
-            source_feed.lastResult = " OK (updated)" #and temporary redirects
-            source_feed.lastChange = datetime.datetime.utcnow().replace(tzinfo=utc)
+            source_feed.last_result = " OK (updated)" #and temporary redirects
+            source_feed.last_change = datetime.datetime.utcnow().replace(tzinfo=utc)
             
-            idx = source_feed.maxIndex
+            idx = source_feed.max_index
             # give indices to posts based on created date
             posts = Post.objects.filter(Q(source=source_feed) & Q(index=0)).order_by("created")
             for p in posts:
@@ -316,22 +316,22 @@ def read_feed(source_feed, host_name):
                 p.index = idx
                 p.save()
                 
-            source_feed.maxIndex = idx
+            source_feed.max_index = idx
 
             
             
         elif ok:
-            source_feed.lastResult = "OK"
+            source_feed.last_result = "OK"
             interval += 10 # we slow down feeds a little more that don't send headers we can use
             
-        #source_feed.unreadCount = newCount
+        #source_feed.undread_count = newCount
     
 
     #else:
     #   #should not be able to get here
     #   oops = "Gareth can't program! %d" % ret.status_code
     #   logging.error(oops)
-    #   source_feed.lastResult = oops
+    #   source_feed.last_result = oops
         
     
     if interval < 60:
@@ -342,7 +342,7 @@ def read_feed(source_feed, host_name):
     response.write("\nUpdating interval from %d to %d\n" % (source_feed.interval,interval))
     source_feed.interval = interval
     td = datetime.timedelta(minutes=interval)
-    source_feed.duePoll = datetime.datetime.utcnow().replace(tzinfo=utc) + td
+    source_feed.due_poll = datetime.datetime.utcnow().replace(tzinfo=utc) + td
     source_feed.save()
     
     ret = response.getvalue()
@@ -360,14 +360,14 @@ def parse_feed_xml(source_feed, feed_content, interval, response):
         f = feedparser.parse(feed_content) #need to start checking feed parser errors here
         entries = f['entries']
         if len(entries):
-            source_feed.lastSuccess = datetime.datetime.utcnow().replace(tzinfo=utc) #in case we start auto unsubscribing long dead feeds
+            source_feed.last_success = datetime.datetime.utcnow().replace(tzinfo=utc) #in case we start auto unsubscribing long dead feeds
         else:
-            source_feed.lastResult = "Feed is empty"
+            source_feed.last_result = "Feed is empty"
             interval += 120
             ok = False
 
     except Exception as ex:
-        source_feed.lastResult = "Feed Parse Error"
+        source_feed.last_result = "Feed Parse Error"
         entries = []
         interval += 120
         ok = False
@@ -375,7 +375,7 @@ def parse_feed_xml(source_feed, feed_content, interval, response):
     if ok:
 
         try:
-            source_feed.siteURL = f.feed.link
+            source_feed.site_url = f.feed.link
             source_feed.name = f.feed.title
         except Exception as ex:
             pass
@@ -392,7 +392,7 @@ def parse_feed_xml(source_feed, feed_content, interval, response):
                 except Exception as ex:
                     body = " "
 
-            body = fix_relative(body,source_feed.siteURL)
+            body = fix_relative(body,source_feed.site_url)
 
 
 
@@ -464,14 +464,14 @@ def parse_feed_json(source_feed, feed_content, interval, response):
         f = json.loads(feed_content)
         entries = f['items']
         if len(entries):
-            source_feed.lastSuccess = datetime.datetime.utcnow().replace(tzinfo=utc) #in case we start auto unsubscribing long dead feeds
+            source_feed.last_success = datetime.datetime.utcnow().replace(tzinfo=utc) #in case we start auto unsubscribing long dead feeds
         else:
-            source_feed.lastResult = "Feed is empty"
+            source_feed.last_result = "Feed is empty"
             interval += 120
             ok = False
 
     except Exception as ex:
-        source_feed.lastResult = "Feed Parse Error"
+        source_feed.last_result = "Feed Parse Error"
         entries = []
         interval += 120
         ok = False
@@ -483,11 +483,11 @@ def parse_feed_json(source_feed, feed_content, interval, response):
             # TODO: permanently disable
             # for now interval to max
             interval = (24*3*60)
-            source_feed.lastResult = "This feed has expired"
+            source_feed.last_result = "This feed has expired"
             return (False,False,interval)
 
         try:
-            source_feed.siteURL = f["home_page_url"]
+            source_feed.site_url = f["home_page_url"]
             source_feed.name = f["title"]
         except Exception as ex:
             pass
@@ -502,7 +502,7 @@ def parse_feed_json(source_feed, feed_content, interval, response):
             if "content_html" in e:
                 body = e["content_html"] # prefer html over text
                 
-            body = fix_relative(body,source_feed.siteURL)
+            body = fix_relative(body,source_feed.site_url)
 
             try:
                 guid = e["id"]

@@ -82,23 +82,23 @@ class WebProxy(models.Model):
 class Source(models.Model):
     # This is an actual feed that we poll
     name          = models.CharField(max_length=255,blank=True,null=True)
-    siteURL       = models.CharField(max_length=255,blank=True,null=True)
-    feedURL       = models.CharField(max_length=255)
-    lastPolled    = models.DateTimeField(max_length=255,blank=True,null=True)
-    duePoll       = models.DateTimeField()
-    ETag          = models.CharField(max_length=255,blank=True,null=True)
-    lastModified  = models.CharField(max_length=255,blank=True,null=True) # just pass this back and forward between server and me , no need to parse
+    site_url      = models.CharField(max_length=255,blank=True,null=True)
+    feed_url      = models.CharField(max_length=255)
+    last_polled   = models.DateTimeField(max_length=255,blank=True,null=True)
+    due_poll      = models.DateTimeField()
+    etag          = models.CharField(max_length=255,blank=True,null=True)
+    last_modified = models.CharField(max_length=255,blank=True,null=True) # just pass this back and forward between server and me , no need to parse
     
-    lastResult    = models.CharField(max_length=255,blank=True,null=True)
+    last_result   = models.CharField(max_length=255,blank=True,null=True)
     interval      = models.PositiveIntegerField(default=400)
-    lastSuccess   = models.DateTimeField(null=True)
-    lastChange    = models.DateTimeField(null=True)
+    last_success  = models.DateTimeField(null=True)
+    last_change   = models.DateTimeField(null=True)
     live          = models.BooleanField(default=True)
     status_code   = models.PositiveIntegerField(default=0)
     last302url    = models.CharField(max_length=255,default = " ")
     last302start  = models.DateTimeField(auto_now_add=True)
     
-    maxIndex      = models.IntegerField(default=0)
+    max_index     = models.IntegerField(default=0)
     
     num_subs      = models.IntegerField(default=1)
     
@@ -111,10 +111,10 @@ class Source(models.Model):
     @property
     def best_link(self):
         #the html link else hte feed link
-        if self.siteURL == None or self.siteURL == '':
-            return self.feedURL
+        if self.site_url == None or self.site_url == '':
+            return self.feed_url
         else:
-            return self.siteURL
+            return self.site_url
 
     @property
     def display_name(self):
@@ -122,17 +122,18 @@ class Source(models.Model):
             return self.best_link
         else:
             return self.name
-            
-    def gardenStyle(self):
+    
+    @property
+    def garden_style(self):
         
         
         
         if not self.live:
             css="background-color:#ccc;"
-        elif self.lastChange == None or self.lastSuccess == None:
+        elif self.last_change == None or self.last_success == None:
             css="background-color:#D00;color:white"
         else:
-            dd = datetime.datetime.utcnow().replace(tzinfo=utc) - self.lastChange
+            dd = datetime.datetime.utcnow().replace(tzinfo=utc) - self.last_change
             
             days = int (dd.days/2)
             
@@ -149,10 +150,10 @@ class Source(models.Model):
         
         if not self.live:
             css="#ccc;"
-        elif self.lastChange == None or self.lastSuccess == None:
+        elif self.last_change == None or self.last_success == None:
             css="#F00;"
         else:
-            dd = datetime.datetime.utcnow().replace(tzinfo=utc) - self.lastChange
+            dd = datetime.datetime.utcnow().replace(tzinfo=utc) - self.last_change
             
             days = int (dd.days/2)
             
@@ -171,22 +172,23 @@ class Source(models.Model):
 
 # A user subscription
 class Subscription(models.Model):
-    user     = models.ForeignKey(User)
-    source   = models.ForeignKey(Source,blank=True,null=True) # null source means we are a folder
-    parent   = models.ForeignKey('self',blank=True,null=True)
-    lastRead = models.IntegerField(default=0)
-    isRiver  = models.BooleanField(default=False)
-    name     = models.CharField(max_length=255)
+    user      = models.ForeignKey(User)
+    source    = models.ForeignKey(Source,blank=True,null=True) # null source means we are a folder
+    parent    = models.ForeignKey('self',blank=True,null=True)
+    last_read = models.IntegerField(default=0)
+    is_river  = models.BooleanField(default=False)
+    name      = models.CharField(max_length=255)
     
     def __unicode__(self):
         return u"'%s' for user %s" % (self.name, self.user.email)
 
-    def unreadCount(self):
+    @property
+    def undread_count(self):
         if self.source:
-            return self.source.maxIndex - self.lastRead
+            return self.source.max_index - self.last_read
         else:
             try:
-                return self._unreadCount 
+                return self._undread_count 
             except:
                 return -666
                 
@@ -202,6 +204,7 @@ class Post(models.Model):
     author        = models.CharField(max_length=255,blank=True,null=True)
     index         = models.IntegerField(db_index=True)
 
+
     def _titleURLEncoded(self):
         try:
             ret = urlencode({"X":self.title})
@@ -212,7 +215,6 @@ class Post(models.Model):
             ret = ""
         return ret
         
-    titleURLEncoded = property(_titleURLEncoded)
     
     def __unicode__(self):
         return "%s: post %d, %s" % (self.source.display_name,self.index,self.title)

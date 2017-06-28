@@ -26,7 +26,7 @@
 
 				{% for s in sources %}
 					<div id="s{{s.id}}" class="feedbutton{% if not s.source %} group{% endif %}"> 
-						<a id="sa{{s.id}}" onclick="read({{s.id}})" href="#" class="feedbutton">{{s.name}}<span id="uc{{s.id}}" class="unreadcount">{% if s.isRiver %}R{% else %}({{s.unreadCount}}){% endif %}</span></a> 
+						<a id="sa{{s.id}}" onclick="read({{s.id}})" href="#" class="feedbutton">{{s.name}}<span id="uc{{s.id}}" class="unreadcount">{% if s.is_river %}R{% else %}({{s.undread_count}}){% endif %}</span></a> 
 					</div>
 				{% endfor %}
 			</div>
@@ -43,29 +43,29 @@
 
 //console.log('yo!');
 
-var lastRead = null;
+var last_read = null;
 
 function read(fid){
 
 
-    if (lastRead == fid) {
+    if (last_read == fid) {
         return;
     }
 
     {% if all %}
         $("#uc" + fid).html("(0)");
-        if (lastRead != null) {
-            $("#s" + lastRead).removeClass("read");    
+        if (last_read != null) {
+            $("#s" + last_read).removeClass("read");    
         }
     {% else %}
-        if (lastRead != null) {
-            $("#s" + lastRead).fadeOut("fast");    
+        if (last_read != null) {
+            $("#s" + last_read).fadeOut("fast");    
         }
     {% endif %}
 
-    lastRead = fid;
+    last_read = fid;
     
-    $("#s" + lastRead).addClass("read");  
+    $("#s" + last_read).addClass("read");  
     $("#feedlist").addClass("hidden-xs");
     $("#feedpane").html('<div id="feedcontent"> <img src="/static/images/FeedThing.png" class="paneplant"></div>');
 
@@ -125,7 +125,7 @@ function unRead() {
     //if(event.state) {
 
         {% if not all %}
-            $("#s" + lastRead).fadeOut("fast");
+            $("#s" + last_read).fadeOut("fast");
         {% endif %}
 
     

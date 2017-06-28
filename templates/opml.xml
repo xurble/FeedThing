@@ -8,7 +8,7 @@
 
         <outline text="{{f.display_name|escape}}"
             title="{{f.display_name|escape}}" type="rss"
-            xmlUrl="{{f.feedURL|escape}}" htmlUrl="{{f.best_link|escape}}"/>
+            xmlUrl="{{f.feed_url|escape}}" htmlUrl="{{f.best_link|escape}}"/>
 
 
 	{% endfor %}

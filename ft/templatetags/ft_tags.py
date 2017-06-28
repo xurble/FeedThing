@@ -24,10 +24,17 @@ def hoursmins(value):
 @register.filter(name='river')
 def river(value):
 
-    value = value.replace("<img", "<!")
+    ret = ""
+    parts = value.split("<")
+    for part in parts:
+        if ">" in part:
+            ret += "".join(part.split(">")[1:])
+        else:
+            ret += part
+
+    if len(ret) > 500:
+        ret = ret[:500] 
+        ret = ret[:ret.rfind(" ")] + " ..."
     
-    if len(value) > 500:
-        value = value[:500] + " ..."
 
-
-    return mark_safe(value)
+    return mark_safe(ret)

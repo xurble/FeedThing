@@ -71,17 +71,21 @@ h1, h2, h3, h4, h5 , h6 {
 	font-weight:normal;
 }
 
-h2.ftheader, .ftcontent h2 {
+h2.ftheader, .ftcontent h2, h2.riversource {
 	color:#999 !important;
 	font-weight: normal !important;
 	text-transform: uppercase;
-	letter-spacing: 3pt;
-	font-size: 11pt;
+	letter-spacing: 4px;
+	font-size: 15px;
 	padding: 8px 8px 2px 0px;
 	margin: 2px 2px 2px 0px;
 	color:#999;
-	letter-spacing: 5pt;
 	text-decoration: none;	
+}
+
+h2.riversource {
+    padding-top:0px;
+	font-size: 10px;
 }
 
 .btn-default {
@@ -130,6 +134,10 @@ a.backbutton {
     max-width: 100%;
     display: block;
     margin: 5px 0px 5px 0px;
+}
+
+.riverbody {
+    font-size:15px;
 }
 
 body, html {
@@ -191,7 +199,12 @@ body, html {
 
 h3.posttitle {
     margin:0px;
-    font-size:20px;
+    font-size:18px;
+}
+
+h3.rivertitle {
+    margin:0px;
+    font-size:13px;
 }
 
 div.read,div.read:hover {
@@ -303,6 +316,11 @@ input[type=text],input[type=password],input[type=url] {
 hr {
     border: none;
     border-top:1px solid #ccc;
+}
+
+hr.river {
+    padding:0;
+    margin:0 0 8px;
 }
 
 div.feedbutton:hover , .button:hover {

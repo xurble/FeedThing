@@ -521,9 +521,11 @@ def readfeed(request,fid,qty):
             vals["subscription"] = sub
         
         vals["posts"] = posts
-        vals["river"] = sub.isRiver
         
-        return render(request, 'feed.html',vals)
+        if sub.isRiver:
+            return render(request, 'river.html',vals)
+        else:
+            return render(request, 'feed.html',vals)
     #else 403
 
 @login_required

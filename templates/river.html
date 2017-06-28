@@ -4,16 +4,14 @@
     <div id="feedscroller">
         <a class="btn btn-sm btn-default backbutton pull-right" href="javascript:history.back()">Back</a>
 
-        {% if source %}
-        <h2 class="ftheader">{{source.displayName}}</h2>
-        <div class="meta">{% if source.lastSuccess %}Last read {{source.lastSuccess|timesince}} ago.{% else %}Feed has not been read.{% endif %}</div>
-        <div id="unsub"><a href="javascript:unsub({{subscription.id}})" class="btn btn-xs btn-default">Unsubscribe</a></div>
-        {% endif %}
-        <br style="clear:both">
         <div class="posts">
         {% for p in posts %}
-            <hr style="clear:both;">
 
+            <br>
+            {% ifchanged p.source.name %}
+            <hr class="river">
+            <h2 class="riversource">{{p.source.displayName}}</h2>
+            {% endifchanged %}
             <div class="buttons">
                 <a href="{{p.link|escape}}"><i class="fa fa-external-link" aria-hidden="true" title="Go to item"></i></a>&nbsp;
                 <a href="#"><i class="fa fa-star-o" aria-hidden="true"></i></a>&nbsp;
@@ -21,17 +19,13 @@
                  style="margin-bottom: -3px; z-index: 1338; border: 0px; background-color: transparent; overflow: hidden;"
                  src="http://www.instapaper.com/e2?url={{p.link|urlencode}}&title={{p.titleURLEncoded}}"></iframe>
             </div>
-
-            {% if not source %}
-            <h2 class="ftheader">{{p.source.name}}</h2>
-            {% endif %}
             <h3 class="posttitle"><a href="{{p.link|escape}}">{{p.title|safe}}</a></h3>
 
 
             <div class="date">{{p.created }} - {{p.created|timesince}} ago.</div>
 
-            <div class="postbody">
-                {{p.body|safe}}
+            <div class="riverbody">
+                {{p.body|river}}
             </div>
 
         {% endfor %}		

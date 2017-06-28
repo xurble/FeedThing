@@ -162,6 +162,10 @@ body, html {
     html, body, .fullpage {
         height:auto;
     }
+    
+    div.logo {
+        margin-left:15px
+    }
 
     a.backbutton {
         margin-bottom: 3px !important;

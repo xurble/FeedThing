@@ -281,7 +281,7 @@ def addfeed(request):
                     if us.count() > 0:
                         return HttpResponse("<div>Already subscribed to this feed </div>")
                     else:
-                        us = Subscription(source=s,user=request.user,name=s.displayName(),parent=parent)
+                        us = Subscription(source=s,user=request.user,name=s.display_name(),parent=parent)
                     
                         if s.maxIndex > 10: #don't flood people with all these old things
                             us.lastRead = s.maxIndex - 10
@@ -308,7 +308,7 @@ def addfeed(request):
             
                 ns.save()
             
-                us = Subscription(source=ns,user=request.user,name=ns.displayName(),parent=parent)
+                us = Subscription(source=ns,user=request.user,name=ns.display_name(),parent=parent)
                 us.save()
 
 
@@ -354,7 +354,7 @@ def importopml(request):
                 ns = ns[0]
                 us = Subscription.objects.filter(source=ns).filter(user=request.user)
                 if us.count() == 0:
-                    us = Subscription(source=ns,user=request.user,name=ns.displayName())
+                    us = Subscription(source=ns,user=request.user,name=ns.display_name())
 
                     if ns.maxIndex > 10: #don't flood people with all these old things
                         us.lastRead = ns.maxIndex - 10
@@ -376,7 +376,7 @@ def importopml(request):
                 ns.name = s.getAttribute("title")
                 ns.save()
     
-                us = Subscription(source=ns,user=request.user,name = ns.displayName())
+                us = Subscription(source=ns,user=request.user,name = ns.display_name())
                 us.save()
     
                 count += 1
@@ -488,6 +488,10 @@ def readfeed(request,fid,qty):
             
             sources = list(Subscription.objects.filter(parent=sub))
             
+            sub_map = {}
+            for s in sources:
+                sub_map[s.source.id] = s
+            
             
             if not sub.isRiver:
                 for src in sources:
@@ -501,6 +505,11 @@ def readfeed(request,fid,qty):
             if len(posts) == 0: # Either didn't find any new posts or are a river
                 sources = [src.source for src in sources]
                 posts = list(Post.objects.filter(source__in = sources).order_by("-created")[:20])
+
+            for p in posts:
+                p.sub_name = sub_map[p.source.id].name
+
+            vals["subscription"] = sub
                     
             
         else:
@@ -510,6 +519,9 @@ def readfeed(request,fid,qty):
         
             if len(posts) == 0: # No Posts or a river
                 posts = list(Post.objects.filter(source = sub.source).order_by("-created")[:10])
+                
+            for p in posts:
+                p.sub_name = sub.name
          
             #this assumes that we always read all posts which kind of defeats 
             #the quantity argument above.  Quantity is vestigial

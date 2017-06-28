@@ -106,18 +106,20 @@ class Source(models.Model):
     
     
     def __unicode__(self):
-        return self.displayName()
+        return self.display_name
     
-    def bestLink(self):
+    @property
+    def best_link(self):
         #the html link else hte feed link
         if self.siteURL == None or self.siteURL == '':
             return self.feedURL
         else:
             return self.siteURL
-            
-    def displayName(self):
+
+    @property
+    def display_name(self):
         if self.name == None or self.name == "":
-            return self.bestLink()
+            return self.best_link
         else:
             return self.name
             
@@ -213,4 +215,4 @@ class Post(models.Model):
     titleURLEncoded = property(_titleURLEncoded)
     
     def __unicode__(self):
-        return "%s: post %d, %s" % (self.source.displayName(),self.index,self.title)
+        return "%s: post %d, %s" % (self.source.display_name,self.index,self.title)

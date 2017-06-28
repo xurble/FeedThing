@@ -67,7 +67,7 @@ a.logo {
 h1, h2, h3, h4, h5 , h6 {
 	font-family: Junction, Futura, Helvetica, Arial , sans-serif;
 	text-decoration: none;	/* this must be within this class to work */
-	margin:3px;
+	margin:3px 0px 3px 0px;
 	font-weight:normal;
 }
 
@@ -136,8 +136,8 @@ a.backbutton {
     margin: 5px 0px 5px 0px;
 }
 
-.riverbody {
-    font-size:15px;
+.riverbody, .postbody {
+    font-size:14px;
 }
 
 body, html {
@@ -169,25 +169,14 @@ body, html {
         display: inline-block;
         right: 3px;
     }
-    
-    /*
-    #feedcontent {
-        position:fixed;
-        top:50px;
-        left:0px;
-        bottom:0px;
-        right: 0px;
-        background-color:white;
-        padding: 0px 15px 0px 15px;
-        overflow-y: scroll;
-        -webkit-overflow-scrolling: touch;
 
+
+    .posts img {
+        max-width: calc(100% +  30px);
+        margin-left: -15px;
+        margin-right: -15px;
     }
     
-    #feedscroller {
-        min-height: 100%;
-    }
-    */
 
 }
 
@@ -199,7 +188,7 @@ body, html {
 
 h3.posttitle {
     margin:0px;
-    font-size:18px;
+    font-size:15px;
 }
 
 h3.rivertitle {
@@ -227,10 +216,13 @@ a, a:hover {
 	text-decoration: none;
 }
 
-.date {
+.date, .date a {
 	font-size:11px;
-	color:#444;
+	color:#666;
 	padding: 2px 0px 6px 0px;
+}
+.date a:hover {
+    text-decoration: underline;
 }
 
 .unreadcount {
@@ -241,10 +233,10 @@ a, a:hover {
 
 .buttons {
 	float: right;
-    font-size:16px;
+    font-size:22px;
     margin: 0px 0px 5px 5px;
     padding:5px;
-    border: 1px dotted #ccc;
+    //border: 1px dotted #ccc;
 }
 
 #opml {
@@ -257,28 +249,29 @@ input[type=url] {
 }
 
 h1 {
-    font-size:20px
+    font-size:18px
 }
 
 h2 {
-    font-size: 19px;
+    font-size: 17px;
 }
 
 h3 {
-    font-size:18px;
+    font-size:16px;
 }
 
 h4,h5,h6 {
-    font-size:17px;
+    font-size:15px;
 }
 
 blockquote {
-    font-size:16px;
+    font-size:14px;
 }
 
 div#feeds div.group {
    background-color: #999;
 }
+
 
 #gardentable, #gardentable td,#gardentable th {
 	border:1px solid #CCC;

@@ -6,9 +6,9 @@
 	{% for f in feeds %}
 
 
-        <outline text="{{f.displayName|escape}}"
-            title="{{f.displayName|escape}}" type="rss"
-            xmlUrl="{{f.feedURL|escape}}" htmlUrl="{{f.bestLink|escape}}"/>
+        <outline text="{{f.display_name|escape}}"
+            title="{{f.display_name|escape}}" type="rss"
+            xmlUrl="{{f.feedURL|escape}}" htmlUrl="{{f.best_link|escape}}"/>
 
 
 	{% endfor %}

@@ -185,7 +185,6 @@ def feedgarden(request):
 @login_required
 def addfeed(request):
 
-
     try:
         feed = ""
         if request.method == 'GET':
@@ -271,7 +270,7 @@ def addfeed(request):
                     if us.count() > 0:
                         return HttpResponse("<div>Already subscribed to this feed </div>")
                     else:
-                        us = Subscription(source=s,user=request.user,name=s.display_name(),parent=parent)
+                        us = Subscription(source=s,user=request.user,name=s.display_name,parent=parent)
                     
                         if s.max_index > 10: #don't flood people with all these old things
                             us.last_read = s.max_index - 10
@@ -298,7 +297,7 @@ def addfeed(request):
             
                 ns.save()
             
-                us = Subscription(source=ns,user=request.user,name=ns.display_name(),parent=parent)
+                us = Subscription(source=ns,user=request.user,name=ns.display_name,parent=parent)
                 us.save()
 
 
@@ -344,7 +343,7 @@ def importopml(request):
                 ns = ns[0]
                 us = Subscription.objects.filter(source=ns).filter(user=request.user)
                 if us.count() == 0:
-                    us = Subscription(source=ns,user=request.user,name=ns.display_name())
+                    us = Subscription(source=ns,user=request.user,name=ns.display_name)
 
                     if ns.max_index > 10: #don't flood people with all these old things
                         us.last_read = ns.max_index - 10
@@ -366,7 +365,7 @@ def importopml(request):
                 ns.name = s.getAttribute("title")
                 ns.save()
     
-                us = Subscription(source=ns,user=request.user,name = ns.display_name())
+                us = Subscription(source=ns,user=request.user,name = ns.display_name)
                 us.save()
     
                 count += 1

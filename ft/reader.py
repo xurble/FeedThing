@@ -1,33 +1,35 @@
 import feedparser
 from django.db.models import Q
 
-from models import *
+from .models import *
 
 import time
 import datetime
 
-from BeautifulSoup import BeautifulSoup
-from urlparse import urljoin
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin
 import requests
-import StringIO
+import io
 import pyrfc3339
 import json
 import traceback
 
 from django.conf import settings
 
+import hashlib
+
 
 def fix_relative(html,url):
 
     """ this is fucking cheesy """
     try:
-        base = "/".join(url.split("/")[:3]).encode("utf-8")
+        base = "/".join(url.split("/")[:3])
 
         html = html.replace("src='/", "src='%s/" % base)
         html = html.replace('src="/', 'src="%s/' % base)
     
     except Exception as ex:
-        print ex    
+        print(ex)    
 
     return html
     
@@ -44,14 +46,14 @@ def find_proxies():
             soup = BeautifulSoup(req.content)
             cells = soup.findAll("td")
             for cell in cells:
-                scr = unicode(cell.next)
-                if u'<script>document.write(\'' in scr:
-                    scr = scr.replace(u'<script>document.write(\'',u"")
-                    scr = scr.replace(u"'.substr(2) + '",u"")
-                    scr = scr.replace(u"');</script>", u"")
+                scr = str(cell.__next__)
+                if '<script>document.write(\'' in scr:
+                    scr = scr.replace('<script>document.write(\'',"")
+                    scr = scr.replace("'.substr(2) + '","")
+                    scr = scr.replace("');</script>", "")
                     host = scr[2:]
             
-                    ip = unicode(cell.nextSibling.nextSibling.next.next.next).strip()
+                    ip = str(cell.nextSibling.nextSibling.next.next.__next__).strip()
             
                     if "<" in ip:
                         ip = cell.nextSibling.nextSibling.next.strip()
@@ -67,7 +69,7 @@ def find_proxies():
             
                     pass
     except Exception as ex:
-        ret += unicode(ex)
+        ret += str(ex)
             
     if count == 0:
         # something went wrong.
@@ -79,28 +81,29 @@ def find_proxies():
             
         
 
-def update_feeds(host_name, max_feeds=3):
+def update_feeds(response, host_name, max_feeds=3):
+
+    if  response is None:
+        response = io.StringIO()
 
     WebProxy.objects.all().delete()
 
-    sources = Source.objects.filter(Q(due_poll__lt = datetime.datetime.utcnow().replace(tzinfo=utc)) & Q(live = True)).order_by('due_poll')[:max_feeds]
+    todo = Source.objects.filter(Q(due_poll__lt = datetime.datetime.utcnow()) & Q(live = True))
+    
+    response.write("Queue size is {}".format(todo.count()))
+
+    sources = todo.order_by("due_poll")[:max_feeds]
+
+    response.write("\nProcessing %d\n\n" % sources.count())
 
 
-    ret = "Update Q: %d\n\n" % sources.count()
     for s in sources:
         
-        ret = ret + read_feed(s,host_name)
+        read_feed(response, s, host_name)
         
-        
-    ret += ("\n\nDone")
     
     
-    return ret
-    
-    
-def read_feed(source_feed, host_name):
-
-    response = StringIO.StringIO()
+def read_feed(response, source_feed, host_name):
 
     was302 = False
     
@@ -111,7 +114,7 @@ def read_feed(source_feed, host_name):
 
     interval =  source_feed.interval
 
-    headers = { "User-Agent": "FeedThing/3.2 (+http://%s; Updater; %d subscribers)" % (host_name,source_feed.num_subs),  } #identify ourselves 
+    headers = { "User-Agent": "FeedThing/3.3 (+http://%s; Updater; %d subscribers)" % (host_name,source_feed.num_subs),  } #identify ourselves 
     # "Cache-Control":"no-cache,max-age=0", "Pragma":"no-cache" -- just removed these. Think they were a solution to app-engine and actually counter-productive now
 
 
@@ -137,7 +140,7 @@ def read_feed(source_feed, host_name):
         headers["If-None-Match"] = str(source_feed.etag)
     if source_feed.last_modified:
         headers["If-Modified-Since"] = str(source_feed.last_modified)
-    response.write(headers)
+
     ret = None
     response.write("\nFetching %s" % source_feed.feed_url)
     try:
@@ -146,7 +149,7 @@ def read_feed(source_feed, host_name):
         source_feed.last_result = "Unhandled Case"
         response.write("\nResult: %d" % ret.status_code)
     except Exception as ex:
-        print ex
+        print(ex)
         source_feed.last_result = ("Fetch error:" + str(ex))[:255]
         source_feed.status_code = 0
         response.write("\nFetch error: " + str(ex))
@@ -211,7 +214,7 @@ def read_feed(source_feed, host_name):
                 if newURL[0] == "/":
                     #find the domain from the feed
                     
-                    base = "/".join(source_feed.feed_url.split("/")[:3]).encode("utf-8")
+                    base = "/".join(source_feed.feed_url.split("/")[:3])
                     
                 
                     newURL = base + newURL
@@ -287,8 +290,7 @@ def read_feed(source_feed, host_name):
         
         response.write("\netag:%s\nLast Mod:%s\n\n" % (source_feed.etag,source_feed.last_modified))
         
-        feed_body = ret.content.strip()
-        
+        feed_body = ret.text.strip()
         
         content_type = "Not Set"
         if "Content-Type" in ret.headers:
@@ -345,9 +347,6 @@ def read_feed(source_feed, host_name):
     source_feed.due_poll = datetime.datetime.utcnow().replace(tzinfo=utc) + td
     source_feed.save()
     
-    ret = response.getvalue()
-    response.close()
-    return ret
 
     
 def parse_feed_xml(source_feed, feed_content, interval, response):
@@ -390,9 +389,12 @@ def parse_feed_xml(source_feed, feed_content, interval, response):
                 try:
                     body = e.description
                 except Exception as ex:
-                    body = " "
+                    try:
+                        body = e.summary                    
+                    except Exception as ex:
+                        body = " "
 
-            body = fix_relative(body,source_feed.site_url)
+            body = fix_relative(body, source_feed.site_url)
 
 
 
@@ -430,7 +432,7 @@ def parse_feed_xml(source_feed, feed_content, interval, response):
 
             try:
         
-                p.created  = datetime.datetime.fromtimestamp(time.mktime(e.date_parsed)).replace(tzinfo=utc)
+                p.created  = datetime.datetime.fromtimestamp(time.mktime(e.published_parsed)).replace(tzinfo=utc)
 
             except Exception as ex:
                 response.write("CREATED ERROR")     
@@ -443,13 +445,13 @@ def parse_feed_xml(source_feed, feed_content, interval, response):
                 p.author = ""
 
             try:
-                p.body = body                       
+                p.body = body                          
                 p.save()
                 # response.write(p.body)
             except Exception as ex:
                 #response.write(str(sys.exc_info()[0]))
                 response.write("\nSave error for post:" + str(sys.exc_info()[0]))
-                traceback.print_tb(sys.exc_traceback,file=response)
+                traceback.print_tb(sys.exc_info()[2],file=response)
 
     return (ok,changed,interval)
     
@@ -531,8 +533,8 @@ def parse_feed_json(source_feed, feed_content, interval, response):
                 title = ""      
                 
             # borrow the RSS parser's sanitizer
-            body  = feedparser._sanitizeHTML(body, "utf-8") # TODO: validate charset ??
-            title = feedparser._sanitizeHTML(title, "utf-8") # TODO: validate charset ??
+            body  = feedparser._sanitizeHTML(body, "utf-8", 'text/html') # TODO: validate charset ??
+            title = feedparser._sanitizeHTML(title, "utf-8", 'text/html') # TODO: validate charset ??
             # no other fields are ever marked as |safe in the templates
 
                         
@@ -563,6 +565,6 @@ def parse_feed_json(source_feed, feed_content, interval, response):
             except Exception as ex:
                 #response.write(str(sys.exc_info()[0]))
                 response.write("\nSave error for post:" + str(sys.exc_info()[0]))
-                traceback.print_tb(sys.exc_traceback,file=response)
+                traceback.print_tb(sys.exc_info()[2],file=response)
 
     return (ok,changed,interval)

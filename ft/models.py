@@ -4,7 +4,7 @@ from django.db import models
 
 import time
 import datetime
-from urllib import urlencode
+from urllib.parse import urlencode
 import logging
 import sys
 from django.utils.timezone import utc
@@ -56,7 +56,7 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     objects = FTUserManager()
     
-    def __unicode__(self):
+    def __str__(self):
         return self.name
     
     class Meta:
@@ -105,7 +105,7 @@ class Source(models.Model):
     needs_proxy   = models.BooleanField(default=False)
     
     
-    def __unicode__(self):
+    def __str__(self):
         return self.display_name
     
     @property
@@ -172,15 +172,15 @@ class Source(models.Model):
 
 # A user subscription
 class Subscription(models.Model):
-    user      = models.ForeignKey(User)
-    source    = models.ForeignKey(Source,blank=True,null=True) # null source means we are a folder
-    parent    = models.ForeignKey('self',blank=True,null=True)
+    user      = models.ForeignKey(User, on_delete=models.CASCADE)
+    source    = models.ForeignKey(Source,blank=True,null=True, on_delete=models.CASCADE) # null source means we are a folder
+    parent    = models.ForeignKey('self',blank=True,null=True, on_delete=models.CASCADE)
     last_read = models.IntegerField(default=0)
     is_river  = models.BooleanField(default=False)
     name      = models.CharField(max_length=255)
     
-    def __unicode__(self):
-        return u"'%s' for user %s" % (self.name, self.user.email)
+    def __str__(self):
+        return "'%s' for user %s" % (self.name, self.user.email)
 
     @property
     def undread_count(self):
@@ -194,7 +194,7 @@ class Subscription(models.Model):
                 
 class Post(models.Model):
     
-    source        = models.ForeignKey(Source,db_index=True)
+    source        = models.ForeignKey(Source,db_index=True, on_delete=models.CASCADE)
     title         = models.TextField(blank=True)
     body          = models.TextField()
     link          = models.CharField(max_length=512,blank=True,null=True)
@@ -216,15 +216,15 @@ class Post(models.Model):
         return ret
         
     
-    def __unicode__(self):
+    def __str__(self):
         return "%s: post %d, %s" % (self.source.display_name,self.index,self.title)
 
 
 class SavedPost(models.Model):
 
-    user         = models.ForeignKey(User)
-    post         = models.ForeignKey(Post)
-    subscription = models.ForeignKey(Subscription, null=True)
+    user         = models.ForeignKey(User, on_delete=models.CASCADE)
+    post         = models.ForeignKey(Post, on_delete=models.CASCADE)
+    subscription = models.ForeignKey(Subscription, null=True, on_delete=models.CASCADE)
     
     date_saved = models.DateTimeField(auto_now_add=True)
     

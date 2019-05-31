@@ -1,8 +1,8 @@
 # Create your views here.
 
-from django.shortcuts import render,get_object_or_404
+from django.shortcuts import render, get_object_or_404
 from django.template.loader import render_to_string
-from django.contrib.auth import authenticate, login,get_user, logout
+from django.contrib.auth import authenticate, login, get_user, logout
 from django.http import HttpResponseRedirect,HttpResponse
 from django.db.models import Q
 from django.db.models import F
@@ -22,16 +22,16 @@ import feedparser
 
 from xml.dom import minidom
 
-from models import *
+from .models import *
 
 import time
 import datetime
 
-from BeautifulSoup import BeautifulSoup
-from urlparse import urljoin
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin
 import requests
-from django.core.urlresolvers import reverse
-from reader import update_feeds
+from django.urls import reverse
+from ft .reader import update_feeds
 
 
 def index(request):
@@ -89,7 +89,7 @@ def loginpage(request):
 
 
 def logoutpage(request):
-    print "logout"
+    print("logout")
     logout(request)
     return render(request, 'logout.html',{})
     
@@ -200,7 +200,7 @@ def addfeed(request):
                 feed = request.POST["feed"]
                 
                 
-            headers = { "User-Agent": "FeedThing/3.2 (+http://%s; Initial Feed Crawler)" % request.META["HTTP_HOST"], "Cache-Control":"no-cache,max-age=0", "Pragma":"no-cache" } #identify ourselves and also stop our requests getting picked up by google's cache
+            headers = { "User-Agent": "FeedThing/3.3 (+http://%s; Initial Feed Crawler)" % request.META["HTTP_HOST"], "Cache-Control":"no-cache,max-age=0", "Pragma":"no-cache" } #identify ourselves and also stop our requests getting picked up by google's cache
 
 
             ret = requests.get(feed, headers=headers,verify=False, timeout=15)
@@ -214,8 +214,7 @@ def addfeed(request):
                 
             feed_title = feed
              
-            
-            body = ret.content.strip()
+            body = ret.text.strip()
             if "xml" in content_type or body[0:1] == "<":
                 ff = feedparser.parse(body) # are we a feed?
                 isFeed = (len(ff.entries) > 0) 
@@ -230,12 +229,12 @@ def addfeed(request):
 
             if not isFeed:
             
-                soup = BeautifulSoup(ret.content)
+                soup = BeautifulSoup(body)
                 feedcount = 0
                 rethtml = ""
                 for l in soup.findAll(name='link'):
-                    if l.has_key("rel") and l.has_key("type"):
-                        if l['rel'] == "alternate" and (l['type'] == 'application/atom+xml' or l['type'] == 'application/rss+xml' or l['type'] == 'application/json'):
+                    if l.has_attr("rel") and l.has_attr("type"):
+                        if l['rel'][0] == "alternate" and (l['type'] == 'application/atom+xml' or l['type'] == 'application/rss+xml' or l['type'] == 'application/json'):
                             feedcount += 1
                             try:
                                 name = l['title']
@@ -536,7 +535,7 @@ def revivefeed(request,fid):
         
         f = get_object_or_404(Source,id=int(fid))
         f.live = True
-        f.due_poll = (datetime.datetime.utcnow().replace(tzinfo=utc) - datetime.timedelta(days=10))
+        f.due_poll = (datetime.datetime.utcnow().replace(tzinfo=utc) - datetime.timedelta(days=100))
         f.etag = None
         f.last_modified = None
         # f.last_success = None
@@ -554,7 +553,7 @@ def testfeed(request,fid): #kill it stone dead (From feedgarden) - need to make 
 
         f = get_object_or_404(Source,id=int(fid))
         
-        headers = { "User-Agent": "FeedThing/3.2 (+http://%s; Updater; %d subscribers)" % (request.META["HTTP_HOST"],f.num_subs),  } #identify ourselves and also stop our requests getting picked up by google's cache
+        headers = { "User-Agent": "FeedThing/3.3 (+http://%s; Updater; %d subscribers)" % (request.META["HTTP_HOST"],f.num_subs),  } #identify ourselves and also stop our requests getting picked up by google's cache
 
         if request.GET.get("cache","no") == "yes":
             if f.etag:
@@ -642,9 +641,11 @@ def savedposts(request):
 
 def read_request_listener(request):
 
-    ret = update_feeds(request.META["HTTP_HOST"])
+
+    response = HttpResponse()
+
+    update_feeds(response, request.META["HTTP_HOST"])
     
-    response = HttpResponse(ret)
 
     response["Content-Type"] = "text/plain"
 

@@ -2,9 +2,9 @@
 
 import os
 
-SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
+SITE_ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
 
-import settings_server
+from feedthing import  settings_server
 DEBUG = settings_server.DEBUG
 
 
@@ -59,7 +59,7 @@ MEDIA_URL = ''
 # Don't put anything in this directory yourself; store your static files
 # in apps' "static/" subdirectories and in STATICFILES_DIRS.
 # Example: "/home/media/media.lawrence.com/static/"
-STATIC_ROOT = ''
+STATIC_ROOT = os.path.join(SITE_ROOT, "_staticfiles")
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
@@ -70,13 +70,7 @@ STATIC_URL = '/static/'
 # Examples: "http://foo.com/static/admin/", "/static/admin/".
 ADMIN_MEDIA_PREFIX = '/static/admin/'
 
-# Additional locations of static files
-STATICFILES_DIRS = (
-    os.path.join(SITE_ROOT,'static'),
-    # Put strings here, like "/home/html/static" or "C:/www/django/static".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-)
+
 
 # List of finder classes that know how to find static files in
 # various locations.
@@ -90,15 +84,15 @@ STATICFILES_FINDERS = (
 SECRET_KEY = settings_server.SECRET_KEY
 
 
-MIDDLEWARE_CLASSES = (
+MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
-)
+]
 
-ROOT_URLCONF = 'urls'
+ROOT_URLCONF = 'feedthing.urls'
 
 TEMPLATES = [
         {

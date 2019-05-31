@@ -1,14 +1,16 @@
-from django.conf.urls import include, url
+from django.urls import path, include
+from django.conf.urls import url
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
 admin.autodiscover()
 
+
 from ft.views import *
 
 urlpatterns = [
 
-    url(r'^admin/', include(admin.site.urls)),
+    path('admin/', admin.site.urls),
 
 
     url(r'^$', index, name="home"),

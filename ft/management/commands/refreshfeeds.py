@@ -8,6 +8,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
 
-        update_feeds(self.stdout, "http://ft.xurble.org", 1)
+        update_feeds(self.stdout, "http://ft.xurble.org", 30)
 
         self.stdout.write(self.style.SUCCESS('Finished'))

@@ -127,6 +127,7 @@ def feeds(request):
     return render(request, "feeds.html", vals)
 
 
+
 @login_required
 def managefeeds(request):
     vals = {}

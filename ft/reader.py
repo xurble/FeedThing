@@ -123,7 +123,7 @@ def read_feed(response, source_feed, host_name):
         source_feed.last_result = "The feed could not be found"
     elif ret.status_code == 403 or ret.status_code == 410: #Forbidden or gone
 
-        if "Cloudflare" in ret.content or ("Server" in ret.headers and "cloudflare" in ret.headers["Server"]):
+        if "Cloudflare" in ret.text or ("Server" in ret.headers and "cloudflare" in ret.headers["Server"]):
             if source_feed.needs_proxy and proxy is not None:
                 # we are already proxied - this proxy on cloudflare's shit list too?
                 proxy.delete()

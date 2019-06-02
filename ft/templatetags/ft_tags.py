@@ -32,7 +32,7 @@ def river(value):
 
     if len(ret) > 500:
         ret = ret[:500] 
-        ret = ret[:ret.rfind(" ")] + " ..."
+        ret = ret[:ret.rfind(" ")] + "&hellip;"
 
     return mark_safe(ret)
     

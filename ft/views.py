@@ -465,7 +465,11 @@ def addto(request,sid,tid):
 @login_required
 def readfeed(request, fid):
 
-    POSTS_PER_PAGE = 5
+
+    river_posts_per_page = 40
+    feed_posts_per_page = 10
+    
+    posts_per_page = river_posts_per_page
             
     vals  = {}
         
@@ -489,7 +493,6 @@ def readfeed(request, fid):
     if sub.source == None:  
     
         # if source is None then we are are in a folder 
-    
         posts = []
         
         # so we find all the actual subscriptions parented by this folder
@@ -508,6 +511,7 @@ def readfeed(request, fid):
                 src.last_read = src.source.max_index
                 src.save()
                 posts += srcposts
+            posts_per_page = feed_posts_per_page
             
 
         if len(posts) == 0: 
@@ -515,7 +519,8 @@ def readfeed(request, fid):
             # In either case get the most recent posts and put them in a paginator
             sources = [src.source for src in sources]
             post_list = Post.objects.filter(source__in = sources).order_by("-created")
-            paginator = Paginator(post_list, POSTS_PER_PAGE)
+            
+            paginator = Paginator(post_list, posts_per_page)
 
             try:
                 posts = paginator.page(page)
@@ -537,10 +542,11 @@ def readfeed(request, fid):
 
         if not sub.is_river:
             posts = list(Post.objects.filter(Q(source = sub.source) & Q(index__gt = sub.last_read)).order_by("index"))
+            posts_per_page = feed_posts_per_page
     
         if len(posts) == 0: # No Posts or a river
             post_list = Post.objects.filter(source = sub.source).order_by("-created")
-            paginator = Paginator(post_list, POSTS_PER_PAGE)
+            paginator = Paginator(post_list, posts_per_page)
             try:
                 posts = paginator.page(page)
             except(EmptyPage, InvalidPage):

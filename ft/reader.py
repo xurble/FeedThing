@@ -144,12 +144,14 @@ def read_feed(response, source_feed, host_name):
         #not modified
         interval += 5
         source_feed.last_result = "Not modified"
-        #source_feed.last_success = datetime.datetime.utcnow().replace(tzinfo=utc) #in case we start auto unsubscribing long dead feeds
+        source_feed.last_success = datetime.datetime.utcnow().replace(tzinfo=utc)
         
-        if (datetime.datetime.utcnow().replace(tzinfo=utc) - source_feed.last_success).days > 7:
+        if source_feed.last_success and (datetime.datetime.utcnow().replace(tzinfo=utc) - source_feed.last_success).days > 7:
             source_feed.last_result = "Clearing etag/last modified due to lack of changes"
             source_feed.etag = None
             source_feed.last_modified = None
+        
+        
     
     elif ret.status_code == 301: #permenant redirect
         newURL = ""

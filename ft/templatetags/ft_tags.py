@@ -6,8 +6,6 @@ register = template.Library()
 
 @register.filter(name='hoursmins')
 def hoursmins(value):
-
-    
   
     if value == None or value == "":
         return ""
@@ -35,6 +33,10 @@ def river(value):
     if len(ret) > 500:
         ret = ret[:500] 
         ret = ret[:ret.rfind(" ")] + " ..."
-    
 
     return mark_safe(ret)
+    
+    
+@register.filter(name='subscription_name')
+def subscription_name(post, subscription_map):
+    return subscription_map[post.source.id]

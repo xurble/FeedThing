@@ -25,11 +25,11 @@ Installation
 
 FeedThing is a pretty simple django (2.1) application.  There are a few external dependencies that need pip installing (listed in requirements.txt)
 
-The django `settings.py` file  is not quite complete.  It imports some of its settings from `settings_server.py` which is listed in `.gitignore` because they it is installation specific.  There is an example 
+The django `settings.py` file  is not quite complete.  It imports some of its settings from `settings_server.py` which is listed in `.gitignore` because it is installation specific.  There is an example 
 
-Once it is running, in order to keep it ticking over and reading feeds, something needs to keep hitting /refresh/ or, better still calling the management command `manage.py refreshfeeds`
+Once it is running, in order to keep it ticking over and reading feeds, something needs to keep hitting `/refresh/` or, better still, calling the management command `manage.py refreshfeeds`
 
-I have that set up as a cron job using curl that fires every five minutes.  This is a cheesy way to work around the severe lameness of my current hosting.
+I have that set up as a cron job every five minutes.  This is a cheesy way to work around the severe lameness of my current hosting.
 
 If you were to run it on something sensible, you'd probably want to use Celery or similar.
 

@@ -28,7 +28,7 @@ urlpatterns = [
 
     url(r'^accounts/login/$',loginpage),
     url(r'^accounts/logout/$',logoutpage),
-    url(r'^read/(?P<fid>.*)/(?P<qty>.*)/',readfeed),
+    url(r'^read/(?P<fid>.*)/', readfeed),
 
     url(r'^post/(?P<pid>.*)/save/$',savepost, name="savepost"),
     url(r'^post/(?P<pid>.*)/forgot/$',forgetpost, name="forgetpost"),

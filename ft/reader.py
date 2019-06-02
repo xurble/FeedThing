@@ -34,59 +34,12 @@ def fix_relative(html,url):
     return html
     
     
-def find_proxies():
-    
-    # temp hack because happy-proxy.com signup is borked
-    count = 0
-    ret = "Looking for proxies\n"
-    
-    try:
-        req = requests.get("https://www.proxynova.com/proxy-server-list/",timeout=30, verify=False)
-        if req.status_code == 200:
-            soup = BeautifulSoup(req.content)
-            cells = soup.findAll("td")
-            for cell in cells:
-                scr = str(cell.__next__)
-                if '<script>document.write(\'' in scr:
-                    scr = scr.replace('<script>document.write(\'',"")
-                    scr = scr.replace("'.substr(2) + '","")
-                    scr = scr.replace("');</script>", "")
-                    host = scr[2:]
-            
-                    ip = str(cell.nextSibling.nextSibling.next.next.__next__).strip()
-            
-                    if "<" in ip:
-                        ip = cell.nextSibling.nextSibling.next.strip()
-            
-            
-                    ret += "\nAdding: http://%s:%s" % (host,ip)
-                    WebProxy(address="http://%s:%s" % (host,ip)).save()
-                    count += 1
-        
-                    if count == 3:
-
-                        return ret + "\nDone!"
-            
-                    pass
-    except Exception as ex:
-        ret += str(ex)
-            
-    if count == 0:
-        # something went wrong.
-        # to stop infinite loops we will insert a duff proxy now
-        # which will break the next read, but it would be broken anyway
-        WebProxy(address="http://127.0.0.1:9876").save()
-        ret += "\n\nNo proxies found :("
-    return ret
-            
         
 
 def update_feeds(response, host_name, max_feeds=3):
 
     if  response is None:
         response = io.StringIO()
-
-    WebProxy.objects.all().delete()
 
     todo = Source.objects.filter(Q(due_poll__lt = datetime.datetime.utcnow()) & Q(live = True))
     
@@ -118,7 +71,7 @@ def read_feed(response, source_feed, host_name):
     # "Cache-Control":"no-cache,max-age=0", "Pragma":"no-cache" -- just removed these. Think they were a solution to app-engine and actually counter-productive now
 
 
-    proxies = {}
+    """ proxies = {}
     proxy_list  = None
     proxy = None
     if source_feed.needs_proxy : # Fuck you cloudflare. 
@@ -135,7 +88,7 @@ def read_feed(response, source_feed, host_name):
             # OK so if this works we should start scraping open proxy lists not hardcoding :)
         except:
             pass    
-
+"""
     if source_feed.etag:
         headers["If-None-Match"] = str(source_feed.etag)
     if source_feed.last_modified:
@@ -144,7 +97,7 @@ def read_feed(response, source_feed, host_name):
     ret = None
     response.write("\nFetching %s" % source_feed.feed_url)
     try:
-        ret = requests.get(source_feed.feed_url,headers=headers,allow_redirects=False,verify=False,timeout=20,proxies=proxies)
+        ret = requests.get(source_feed.feed_url,headers=headers,allow_redirects=False,verify=False,timeout=20)
         source_feed.status_code = ret.status_code
         source_feed.last_result = "Unhandled Case"
         response.write("\nResult: %d" % ret.status_code)
@@ -154,13 +107,6 @@ def read_feed(response, source_feed, host_name):
         source_feed.status_code = 0
         response.write("\nFetch error: " + str(ex))
 
-        if proxy is not None:
-            source_feed.last_result = "Proxy failed. Next retry will use new proxy"
-            source_feed.status_code = 1 # this will stop us increasing the interval
-
-            response.write("\nBurning the proxy.")
-            proxy.delete()
-            interval /= 2
 
         
     if ret == None and source_feed.status_code == 1:   
@@ -246,7 +192,7 @@ def read_feed(response, source_feed, host_name):
                 newURL = start + end + newURL
                 
             
-            ret = requests.get(newURL,headers=headers,allow_redirects=True,verify=False, timeout=20,proxies=proxies)
+            ret = requests.get(newURL,headers=headers,allow_redirects=True,verify=False, timeout=20)
             source_feed.status_code = ret.status_code
             source_feed.last_result = "Temporary Redirect to " + newURL
 
@@ -384,15 +330,14 @@ def parse_feed_xml(source_feed, feed_content, interval, response):
         entries.reverse() # Entries are typically in reverse chronological order - put them in right order
         for e in entries:
             try:
+                if e.content[0].type == "text/plain":
+                    raise
                 body = e.content[0].value
             except Exception as ex:
                 try:
-                    body = e.description
+                    body = e.summary                    
                 except Exception as ex:
-                    try:
-                        body = e.summary                    
-                    except Exception as ex:
-                        body = " "
+                    body = " "
 
             body = fix_relative(body, source_feed.site_url)
 

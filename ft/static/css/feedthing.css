@@ -106,6 +106,7 @@ div.feedbutton, .button {
     background-color: #dedede;
     -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
     opacity: 1.0;
+    border-radius:2px;
 }
 
 
@@ -336,4 +337,29 @@ div.droptarget {
 div.location {
     color:#666;
     font-style: italic;
+}
+
+
+
+
+.pagination > li > a,
+.pagination > li > span {
+  color: #7EA02D;
+}
+.pagination > li > a:hover,
+.pagination > li > span:hover,
+.pagination > li > a:focus,
+.pagination > li > span:focus {
+  color: #7EA02D;
+  background-color: #eee;
+}
+.pagination > .active > a,
+.pagination > .active > span,
+.pagination > .active > a:hover,
+.pagination > .active > span:hover,
+.pagination > .active > a:focus,
+.pagination > .active > span:focus {
+  color: #fff;
+  background-color: #7EA02D;
+  border-color: #7EA02D;
 }

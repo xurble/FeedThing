@@ -9,6 +9,7 @@ from django.db.models import F
 from django.contrib.auth.decorators import login_required
 from django.utils.timezone import utc
 from django.core.exceptions import PermissionDenied
+from django.core.paginator import Paginator, EmptyPage, InvalidPage
 
 import datetime
 import hashlib
@@ -120,9 +121,10 @@ def feeds(request):
     vals["sources"] = sources
     vals["all"] = False
     
-    vals["preload"] = request.GET.get("feed","0")
+    vals["preload"] = request.GET.get("feed", "0")
+    vals["page"] = request.GET.get("page", "1")
     
-    return render(request, "feeds.html",vals)
+    return render(request, "feeds.html", vals)
 
 
 @login_required
@@ -170,6 +172,7 @@ def allfeeds(request):
     vals["all"] = True
 
     vals["preload"] = request.GET.get("feed","0")
+    vals["page"] = request.GET.get("page", "1")
 
     
     return render(request, "feeds.html",vals)
@@ -460,73 +463,121 @@ def addto(request,sid,tid):
     
 
 @login_required
-def readfeed(request,fid,qty):
-        
+def readfeed(request, fid):
+
+    POSTS_PER_PAGE = 5
+            
     vals  = {}
-    if qty == "all":
-        qty = 100
+        
+    sub = get_object_or_404(Subscription, id=int(fid))
+    
+    paginator = None
+    
+    try:
+        page = int(request.GET.get("page", "1"))
+    except Exception:
+        page = 1
+        
+    if sub.user != request.user:
+        raise PermissionDenied
+
+    # Since users can rename what a source is called in their subscription
+    # we make a map of source ids to subscription names and pass it to the template
+    # there is a  template tag that sorts this out later
+    sub_map = {}
+
+    if sub.source == None:  
+    
+        # if source is None then we are are in a folder 
+    
+        posts = []
+        
+        # so we find all the actual subscriptions parented by this folder
+        sources = list(Subscription.objects.filter(parent=sub)) 
+
+        for s in sources:
+            sub_map[s.source.id] = s.name
+        
+        if not sub.is_river:
+            # This folder is not a river, it is an actual set of read everything
+            # feeds grouped together by some heathen
+            # Gather the posts now and mark them as read
+            for src in sources:
+                srcposts = list(Post.objects.filter(Q(source = src.source) & Q(index__gt = src.last_read)).order_by("index"))
+    
+                src.last_read = src.source.max_index
+                src.save()
+                posts += srcposts
+            
+
+        if len(posts) == 0: 
+            # Either didn't find any new posts or are a river
+            # In either case get the most recent posts and put them in a paginator
+            sources = [src.source for src in sources]
+            post_list = Post.objects.filter(source__in = sources).order_by("-created")
+            paginator = Paginator(post_list, POSTS_PER_PAGE)
+
+            try:
+                posts = paginator.page(page)
+            except(EmptyPage, InvalidPage):
+                posts = paginator.page(1)
+
+
+
+
+        vals["subscription"] = sub
+    
+                
+        
     else:
-        qty = int(qty)
+        posts = [] 
+
+        sub_map[sub.source.id] = sub.name
+
+
+        if not sub.is_river:
+            posts = list(Post.objects.filter(Q(source = sub.source) & Q(index__gt = sub.last_read)).order_by("index"))
+    
+        if len(posts) == 0: # No Posts or a river
+            post_list = Post.objects.filter(source = sub.source).order_by("-created")
+            paginator = Paginator(post_list, POSTS_PER_PAGE)
+            try:
+                posts = paginator.page(page)
+            except(EmptyPage, InvalidPage):
+                posts = paginator.page(1)
+        #for p in posts:
+        #    p.sub_name = sub.name
+     
+        # since we always read all new posts, mark it off here.
+        sub.last_read = sub.source.max_index
+        sub.save()
+    
+        vals["source"] = sub.source
+        vals["subscription"] = sub
         
-    sub = get_object_or_404(Subscription,id=int(fid))
-    if sub.user == request.user:
-        if sub.source == None:  
-        
-            posts = []
-            
-            sources = list(Subscription.objects.filter(parent=sub))
-            
-            sub_map = {}
-            for s in sources:
-                sub_map[s.source.id] = s
-            
-            
-            if not sub.is_river:
-                for src in sources:
-                    srcposts = list(Post.objects.filter(Q(source = src.source) & Q(index__gt = src.last_read)).order_by("index")[:qty])
-        
-                    src.last_read = src.source.max_index
-                    src.save()
-                    posts += srcposts
+    if paginator is not None:
+        # Stolen from Stack Overflow: https://stackoverflow.com/questions/30864011/display-only-some-of-the-page-numbers-by-django-pagination
                 
-
-            if len(posts) == 0: # Either didn't find any new posts or are a river
-                sources = [src.source for src in sources]
-                posts = list(Post.objects.filter(source__in = sources).order_by("-created")[:20])
-
-            for p in posts:
-                p.sub_name = sub_map[p.source.id].name
-
-            vals["subscription"] = sub
-                    
-            
-        else:
-            posts = [] 
-            if not sub.is_river:
-                posts = list(Post.objects.filter(Q(source = sub.source) & Q(index__gt = sub.last_read)).order_by("index")[:qty])
+        # Get the index of the current page
+        index = posts.number - 1  # edited to something easier without index
+        # This value is maximum index of your pages, so the last page - 1
+        max_index = len(paginator.page_range)
+        # You want a range of 7, so lets calculate where to slice the list
+        start_index = index - 2 if index >= 3 else 0
+        end_index = index + 3 if index <= max_index - 3 else max_index
+        # Get our new page range. In the latest versions of Django page_range returns 
+        # an iterator. Thus pass it to list, to make our slice possible again.
+        vals["page_range"] = list(paginator.page_range)[start_index:end_index]
         
-            if len(posts) == 0: # No Posts or a river
-                posts = list(Post.objects.filter(source = sub.source).order_by("-created")[:10])
-                
-            for p in posts:
-                p.sub_name = sub.name
-         
-            #this assumes that we always read all posts which kind of defeats 
-            #the quantity argument above.  Quantity is vestigial
-            
-            sub.last_read = sub.source.max_index
-            sub.save()
-        
-            vals["source"] = sub.source
-            vals["subscription"] = sub
-        
-        vals["posts"] = posts
-        
-        if sub.is_river:
-            return render(request, 'river.html',vals)
-        else:
-            return render(request, 'feed.html',vals)
-    #else 403
+    
+    vals["posts"] = posts
+    vals["paginator"] = paginator
+    vals["subscription_map"] = sub_map
+    
+    if sub.is_river:
+        return render(request, 'river.html', vals)
+    else:
+        return render(request, 'feed.html', vals)
 
 @login_required
 def revivefeed(request,fid):

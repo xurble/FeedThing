@@ -3,7 +3,7 @@
 <div id="feedcontent">
     <div id="feedscroller">
         <a class="btn btn-sm btn-default backbutton pull-right" href="javascript:history.back()">Back</a>
-
+        
         {% if subscription %}
             <h2 class="ftheader">{{subscription.name}}</h2>
             {% if source %}
@@ -11,6 +11,9 @@
                 <div id="unsub"><a href="javascript:unsub({{subscription.id}})" class="btn btn-xs btn-default">Unsubscribe</a></div>
             {% endif %}
         {% endif %}
+        
+        {% include "paginator.html"%}
+
         <br style="clear:both">
         <div class="posts">
         {% for p in posts %}
@@ -22,7 +25,7 @@
             </div>
 
             {% if not source %}
-            <h2 class="riversource">{{p.sub_name}}</h2>
+            <h2 class="riversource">{{p|subscription_name:subscription_map }}</h2>
             {% endif %}
             <h3 class="posttitle"><a href="{{p.link|escape}}">{{p.title|safe}}</a></h3>
 

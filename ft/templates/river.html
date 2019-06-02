@@ -7,14 +7,16 @@
         {% if subscription %}
         <h2 class="ftheader">{{subscription.name}}</h2>
         {% endif %}
+        
+        {% include "paginator.html" %}
 
         <div class="posts">
         {% for p in posts %}
 
             <br>
-            {% ifchanged p.sub_name %}
+            {% ifchanged p|subscription_name:subscription_map %}
             <hr class="river">
-            <h2 class="riversource">{{p.sub_name}}</h2>
+            <h2 class="riversource">{{p|subscription_name:subscription_map }}</h2>
             {% endifchanged %}
             <div class="buttons">
                 <a href="{{p.link|escape}}"><i class="fa fa-external-link" aria-hidden="true" title="Go to item"></i></a>&nbsp;

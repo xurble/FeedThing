@@ -124,18 +124,11 @@ def read_feed(response, source_feed, host_name):
     elif ret.status_code == 403 or ret.status_code == 410: #Forbidden or gone
 
         if "Cloudflare" in ret.text or ("Server" in ret.headers and "cloudflare" in ret.headers["Server"]):
-            if source_feed.needs_proxy and proxy is not None:
-                # we are already proxied - this proxy on cloudflare's shit list too?
-                proxy.delete()
-                response.write("\Proxy seemed to also be blocked, burning")
-                interval /= 2
-                source_feed.last_result = "Proxy kind of worked but still got cloudflared."
-            else:            
-                source_feed.needs_proxy = True
-                source_feed.last_result = "Blocked by Cloudflare, will try via proxy next time."
+            source_feed.needs_proxy = True
+            source_feed.last_result = "Blocked by Cloudflare (grr)"
         else:
             source_feed.live = False
-            source_feed.last_result = "Feed is no longer accessible (%d)" % ret.status_code
+            source_feed.last_result = "Feed is no longer accessible."
     elif ret.status_code >= 400 and ret.status_code < 500:
         #treat as bad request
         source_feed.live = False

@@ -25,6 +25,12 @@ from xml.dom import minidom
 
 from .models import *
 
+if settings.USE_FEEDS:
+    from feeds.utils import update_feeds
+    from feeds.models import Source, Post
+else:
+    from reader import update_feeds
+
 import time
 import datetime
 
@@ -32,7 +38,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 import requests
 from django.urls import reverse
-from ft .reader import update_feeds
+
 
 
 def index(request):

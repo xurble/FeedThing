@@ -112,7 +112,10 @@ TEMPLATES = [
         },
     ]
 
-INSTALLED_APPS = (
+USE_FEEDS = False
+
+
+INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -124,7 +127,11 @@ INSTALLED_APPS = (
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
     'ft',
-)
+
+]
+
+if USE_FEEDS:
+    INSTALLED_APPS.append('feeds')
 
 AUTH_USER_MODEL = 'ft.User'
 

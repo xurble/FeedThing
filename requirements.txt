@@ -4,12 +4,11 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
---trusted-host zoolibs.zoowebservices.com
 
 beautifulsoup4==4.7.1
 certifi==2019.3.9         # via requests
 chardet==3.0.4            # via requests
-django-feed-reader==0.0.2
+django-feed-reader==0.0.3
 django==2.2.2
 feedparser==5.2.1         # via django-feed-reader
 idna==2.8                 # via requests

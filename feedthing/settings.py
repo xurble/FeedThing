@@ -112,7 +112,7 @@ TEMPLATES = [
         },
     ]
 
-USE_FEEDS = False
+USE_FEEDS = True
 
 
 INSTALLED_APPS = [

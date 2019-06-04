@@ -29,7 +29,7 @@ if settings.USE_FEEDS:
     from feeds.utils import update_feeds
     from feeds.models import Source, Post
 else:
-    from reader import update_feeds
+    from ft.reader import update_feeds
 
 import time
 import datetime

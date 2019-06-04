@@ -133,6 +133,9 @@ INSTALLED_APPS = [
 if USE_FEEDS:
     INSTALLED_APPS.append('feeds')
 
+FEEDS_USER_AGENT = "FeedThing/3.4"
+FEEDS_SERVER = settings_server.FEEDS_SERVER
+
 AUTH_USER_MODEL = 'ft.User'
 
 # A sample logging configuration. The only tangible logging

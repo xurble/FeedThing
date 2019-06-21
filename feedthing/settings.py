@@ -127,11 +127,10 @@ INSTALLED_APPS = [
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
     'ft',
+    'feeds',
 
 ]
 
-if USE_FEEDS:
-    INSTALLED_APPS.append('feeds')
 
 FEEDS_USER_AGENT = "FeedThing/3.4"
 FEEDS_SERVER = settings_server.FEEDS_SERVER

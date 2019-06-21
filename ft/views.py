@@ -25,11 +25,8 @@ from xml.dom import minidom
 
 from .models import *
 
-if settings.USE_FEEDS:
-    from feeds.utils import update_feeds
-    from feeds.models import Source, Post
-else:
-    from ft.reader import update_feeds
+from feeds.utils import update_feeds, test_feed
+from feeds.models import Source, Post
 
 import time
 import datetime
@@ -294,7 +291,7 @@ def addfeed(request):
 
                 # need to start checking feed parser errors here
                 ns = Source()
-                ns.due_poll = datetime.datetime.utcnow().replace(tzinfo=utc)            
+                # ns.due_poll = datetime.datetime.utcnow().replace(tzinfo=utc)            
             
                 #print request.POST["river"]
                 #ns.inRiver = (request.POST["river"] == "yes")
@@ -617,21 +614,12 @@ def testfeed(request,fid): #kill it stone dead (From feedgarden) - need to make 
 
         f = get_object_or_404(Source,id=int(fid))
         
-        headers = { "User-Agent": "FeedThing/3.3 (+http://%s; Updater; %d subscribers)" % (request.META["HTTP_HOST"],f.num_subs),  } #identify ourselves and also stop our requests getting picked up by google's cache
-
-        if request.GET.get("cache","no") == "yes":
-            if f.etag:
-                headers["If-None-Match"] = str(f.etag)
-            if f.last_modified:
-                headers["If-Modified-Since"] = str(f.last_modified)
-        else:
-            headers["Cache-Control"] = "no-cache,max-age=0" 
-            headers["Pragma"] = "no-cache"
-
-
-        ret = requests.get(f.feed_url,headers=headers,allow_redirects=False,verify=False,timeout=20)
         
-        r = HttpResponse("%s\n------------------------------\n\nResponse: %d\n-------------------------\n%s\n--------------------\n%s" % (headers,ret.status_code,ret.headers,ret.content))
+        
+        r = HttpResponse()
+        
+        test_feed(f, cache=request.GET.get("cache","no") == "yes", output=r)
+        
         r["Content-type"] = "text/plain"
         
         return r
@@ -708,7 +696,7 @@ def read_request_listener(request):
 
     response = HttpResponse()
 
-    update_feeds(response, request.META["HTTP_HOST"])
+    update_feeds(3, response)
     
 
     response["Content-Type"] = "text/plain"

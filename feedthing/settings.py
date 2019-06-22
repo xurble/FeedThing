@@ -138,24 +138,42 @@ FEEDS_SERVER = settings_server.FEEDS_SERVER
 AUTH_USER_MODEL = 'ft.User'
 
 # A sample logging configuration. The only tangible logging
-# performed by this configuration is to send an email to
-# the site admins on every HTTP 500 error.
-# See http://docs.djangoproject.com/en/dev/topics/logging for
-# more details on how to customize your logging configuration.
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'mail_admins': {
-            'level': 'ERROR',
-            'class': 'django.utils.log.AdminEmailHandler'
-        }
-    },
-    'loggers': {
-        'django.request': {
-            'handlers': ['mail_admins'],
-            'level': 'ERROR',
-            'propagate': True,
+if hasattr(settings_server, "LOGGING"):
+    LOGGING = settings_server.LOGGING
+else:
+    LOGGING = {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "verbose": {
+                "format": "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+                "datefmt": "%d/%b/%Y %H:%M:%S",
+            },
+            "simple": {"format": "%(levelname)s %(message)s"},
+        },
+        "handlers": {
+            "console": {
+                "level": "DEBUG",
+                "class": "logging.StreamHandler",
+                "formatter": "simple",
+            },
+            "console_verbose": {
+                "level": "DEBUG",
+                "class": "logging.StreamHandler",
+                "formatter": "verbose",
+            },
+            "ignore": {"level": "DEBUG", "class": "logging.NullHandler"},
+        },
+        "loggers": {
+            "": {"handlers": ["console"], "propagate": True, "level": "DEBUG"},
+            "django.security.DisallowedHost": {
+                "handlers": ["ignore"],
+                "propagate": False,
+            },
+            "django": {
+                "propagate": True
+            },
         },
     }
-}
+
+

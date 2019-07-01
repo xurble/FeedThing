@@ -7,7 +7,7 @@
         {% if subscription %}
             <h2 class="ftheader">{{subscription.name}}</h2>
             {% if source %}
-                <div class="meta">{% if source.last_success %}Last read {{source.last_success|timesince}} ago.{% else %}Feed has not been read.{% endif %}</div>
+                <div class="meta">{% if source.last_success %}Last read {{source.last_success|timesince}} ago.{% else %}Feed has not been read.{% endif %} {% if user.is_superuser and source.is_cloudflare %}😬{% endif %}</div>
                 <div id="unsub"><a href="javascript:unsub({{subscription.id}})" class="btn btn-xs btn-default">Unsubscribe</a></div>
             {% endif %}
         {% endif %}
@@ -36,6 +36,25 @@
                 {{p.body|safe}}
             </div>
 
+            <div class="enclosures">
+                {% for e in p.enclosure_set.all %}
+            
+                    {% if "audio/" in e.type %}
+                        <audio controls src="{{e.href}}" preload="metadata"></audio>
+                    {% elif "video/" in e.type %}
+                        <video controls src="{{e.href}}" preload="metadata"></video>
+                    {% elif  "image/" in e.type and e.href not in p.body %}
+                        <img src="{{e.href}}" alt="Enclosure">
+                    {% endif %}
+                
+                {% endfor %}
+                
+                {% if p.image_url %}
+                    <img src="{{p.image_url}}" alt="Enclosure">
+                {% endif %}
+                
+            </div>
+
         {% endfor %}		
 
         </div>
@@ -44,7 +63,7 @@
             {% if posts.has_next %}
                 <br>
                 <a href="javascript:read({{subscription.id}}, {{ posts.next_page_number }})">Read More</a>
-                <br>
+                <br><br><br>
             {% endif %}        
         
         </div>

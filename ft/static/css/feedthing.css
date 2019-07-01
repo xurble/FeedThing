@@ -131,10 +131,16 @@ a.backbutton {
     display:none;
 }
 
-.postbody img {
+.postbody img, .enclosures img {
     max-width: 100%;
     display: block;
     margin: 5px 0px 5px 0px;
+}
+
+.enclosures video, .enclosures audio  {
+    width: 100%;
+    display: block;
+    margin: 10px 0px 5px 0px;
 }
 
 .riverbody, .postbody {

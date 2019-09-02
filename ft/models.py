@@ -80,8 +80,8 @@ class User(AbstractBaseUser, PermissionsMixin):
 # A user subscription
 class Subscription(models.Model):
     user      = models.ForeignKey(User, on_delete=models.CASCADE)
-    source    = models.ForeignKey(Source,blank=True,null=True, on_delete=models.CASCADE) # null source means we are a folder
-    parent    = models.ForeignKey('self',blank=True,null=True, on_delete=models.CASCADE)
+    source    = models.ForeignKey(Source,blank=True,null=True, on_delete=models.CASCADE, related_name='subscriptions') # null source means we are a folder
+    parent    = models.ForeignKey('self',blank=True,null=True, on_delete=models.CASCADE, related_name='subscriptions')
     last_read = models.IntegerField(default=0)
     is_river  = models.BooleanField(default=False)
     name      = models.CharField(max_length=255)

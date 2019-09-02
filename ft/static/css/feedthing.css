@@ -184,11 +184,27 @@ body, html {
 
     .posts img {
         max-width: calc(100% +  30px);
-        margin-left: -15px;
+        
+        -left: -15px;
         margin-right: -15px;
     }
     
 
+}
+
+input[type=search]::-webkit-search-cancel-button {
+    -webkit-appearance: searchfield-cancel-button;
+}
+
+.feed-list-header {
+    margin-bottom:2px;
+    display:flex;
+}
+
+.feed-list-header input {
+     flex-grow: 1;
+     margin-left:4px;
+     min-width:0;
 }
 
 .posts {

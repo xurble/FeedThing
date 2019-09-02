@@ -37,7 +37,7 @@
             </div>
 
             <div class="enclosures">
-                {% for e in p.enclosure_set.all %}
+                {% for e in p.enclosures.all %}
             
                     {% if "audio/" in e.type %}
                         <audio controls src="{{e.href}}" preload="metadata"></audio>

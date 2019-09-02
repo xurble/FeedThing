@@ -167,7 +167,7 @@ def allfeeds(request):
             
             src._undread_count = 0
             
-            for c in src.subscription_set.all():
+            for c in src.subscriptions.all():
                 src._undread_count += c.undread_count
             
         sources.append(src)
@@ -283,7 +283,7 @@ def addfeed(request):
                     
                         us.save()
                     
-                        s.num_subs = s.subscription_set.count()
+                        s.num_subs = s.subscriptions.count()
                         s.save()
                     
                         return HttpResponse("<div>Imported feed %s</div>" % us.name)
@@ -358,7 +358,7 @@ def importopml(request):
                     us.save()
                     count += 1
 
-                ns.num_subs = ns.subscription_set.count()
+                ns.num_subs = ns.subscriptions.count()
                 ns.save()
 
                 
@@ -422,7 +422,7 @@ def promote(request,sid):
         sub.parent = None
         sub.save()
         
-        if parent.subscription_set.count() == 0:
+        if parent.subscriptions.count() == 0:
             parent.delete()
             return HttpResponse("Kill")
         else:
@@ -641,10 +641,10 @@ def unsubscribefeed(request,sid):
                 sub.delete()
     
                 if parent is not None:
-                    if parent.subscription_set.count() == 0:
+                    if parent.subscriptions.count() == 0:
                         parent.delete()
     
-                source.num_subs = source.subscription_set.count()
+                source.num_subs = source.subscriptionss.count()
                 if source.num_subs == 0: # this is the last subscription for this source
                     Post.objects.filter(source=source).delete() # cascading delete would do this I think
                     source.delete()

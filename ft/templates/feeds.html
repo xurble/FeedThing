@@ -11,19 +11,17 @@
 <div class="container fullpage">
     <div class="row fullpage">
 		<div class="col-sm-4" id="feedlist">
-		    <h2 class="ftheader">Feeds</h2>
+		    <h2 class="ftheader">{% if all %}All{% else %}Unread{% endif %} Feeds</h2>
 			<div id="feeds">
 			
-			    {% if all %}
-					<div class="feedbutton">
-						<a href="/feeds/" class="feedbutton">Unread Feeds</a> 
-					</div>
-				{% else %}
-					<div class="feedbutton">
-						<a href="/allfeeds/" class="feedbutton">All Feeds</a> 
-					</div>
-                {% endif %}
-
+                <div class="feed-list-header">
+                    {% if all %}
+                        <a href="/feeds/" class="btn btn-default"><i class="fa fa-sun"></i></a> 
+                    {% else %}
+                        <a href="/allfeeds/" class="btn btn-default"><i class="fa fa-archive"></i></a> 
+                    {% endif %}
+                    <input type="search" id="searchfeeds" class="form-control" placeholder="Filter">
+                </div>
 				{% for s in sources %}
 					<div id="s{{s.id}}" class="feedbutton{% if not s.source %} group{% endif %}"> 
 						<a id="sa{{s.id}}" onclick="read({{s.id}}, 0)" href="#" class="feedbutton">{{s.name}}<span id="uc{{s.id}}" class="unreadcount">{% if s.is_river %}R{% else %}({{s.undread_count}}){% endif %}</span></a> 
@@ -88,6 +86,31 @@ function read(fid, page) {
 
     
     return false;
+}
+
+$("#searchfeeds").on('keyup', function(){
+    filterFeeds();
+});
+$("#searchfeeds").on('search', function(){
+    filterFeeds();
+});
+
+function filterFeeds() {
+
+    var q = $("#searchfeeds").val();
+    
+    $(".feedbutton").each(function(){
+        
+        var title = $(this).text();
+        
+        if (q == '' ||   title.indexOf(q) >= 0) {
+            $(this).show();
+        }
+        else {
+            $(this).hide();
+        }
+    
+    });
 }
 
 

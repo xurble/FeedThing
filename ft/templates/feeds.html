@@ -97,13 +97,13 @@ $("#searchfeeds").on('search', function(){
 
 function filterFeeds() {
 
-    var q = $("#searchfeeds").val();
+    var q = $("#searchfeeds").val().toLowerCase();
     
     $(".feedbutton").each(function(){
         
-        var title = $(this).text();
+        var title = $(this).text().toLowerCase();
         
-        if (q == '' ||   title.indexOf(q) >= 0) {
+        if (q == '' || title.indexOf(q) >= 0) {
             $(this).show();
         }
         else {

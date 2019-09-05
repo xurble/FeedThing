@@ -21,7 +21,7 @@
 
             <div class="buttons">
                 <a href="{{p.link|escape}}"><i class="fa fa-external-link" aria-hidden="true" title="Go to item"></i></a>&nbsp;
-                <a href="javascript:savePost({{p.id}})"><i id="star-{{p.id}}" class="fa fa-star-o" aria-hidden="true"></i></a>
+                <a href="javascript:savePost({{p.id}})"><i id="star-{{p.id}}" class="far fa-star" aria-hidden="true"></i></a>
             </div>
 
             {% if not source %}
@@ -60,11 +60,7 @@
         </div>
         <div class="clearfix">
         
-            {% if posts.has_next %}
-                <br>
-                <a href="javascript:read({{subscription.id}}, {{ posts.next_page_number }})">Read More</a>
-                <br><br><br>
-            {% endif %}        
+        {% include "paginator.html"%}
         
         </div>
     </div>

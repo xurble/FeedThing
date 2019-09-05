@@ -17,7 +17,7 @@
         {% if posts.number|add:"-1" >= 1  %}
         <li><a href="javascript:read({{subscription.id}},{{ posts.number|add:"-1" }})">{{ posts.number|add:"-1" }}</a></li>
         {% endif %}
-        <li class="active"><a href="?page={{ posts.number }})">{{ posts.number }}</a></li>
+        <li class="active"><a href="javascript:read({{subscription.id}}, {{posts.number }})">{{ posts.number }}</a></li>
         {% if posts.number|add:"1" <= paginator.num_pages  %}
         <li><a href="javascript:read({{subscription.id}},{{ posts.number|add:"1" }})">{{ posts.number|add:"1" }}</a></li>
         {% endif %}

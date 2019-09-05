@@ -685,7 +685,24 @@ def savedposts(request):
 
     vals = {}
     
-    vals["posts"] = SavedPost.objects.filter(user=request.user)
+    post_list = SavedPost.objects.filter(user=request.user)
+
+    try:
+        page = int(request.GET.get("page", "1"))
+    except Exception:
+        page = 1
+
+    paginator = Paginator(post_list, 10)
+
+    try:
+        posts = paginator.page(page)
+    except(EmptyPage, InvalidPage):
+        posts = paginator.page(1)
+    
+    vals["posts"] = posts
+    vals["paginator"] = paginator
+
+
     
     return render(request, 'savedposts.html',vals)
     

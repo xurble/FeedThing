@@ -143,9 +143,6 @@ a.backbutton {
     margin: 10px 0px 5px 0px;
 }
 
-.riverbody, .postbody {
-    font-size:14px;
-}
 
 body, html {
     height:100%;
@@ -324,7 +321,7 @@ label {
     padding-top: 5px;
 }
 
-input[type=text],input[type=password],input[type=url] {
+input[type=text], input[type=password], input[type=url], input[type=search] {
     padding:4px;
     border: 1px solid #ccc;
     padding-bottom: 8px;

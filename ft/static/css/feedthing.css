@@ -180,9 +180,8 @@ body, html {
 
 
     .posts img {
-        max-width: calc(100% +  30px);
-        
-        -left: -15px;
+        width: calc(100% +  30px);
+        margin-left: -15px;
         margin-right: -15px;
     }
     

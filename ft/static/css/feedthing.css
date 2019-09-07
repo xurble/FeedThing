@@ -132,7 +132,7 @@ a.backbutton {
 }
 
 .postbody img, .enclosures img {
-    max-width: 100%;
+    width: 100%;
     display: block;
     margin: 5px 0px 5px 0px;
 }
@@ -185,7 +185,10 @@ body, html {
         margin-right: -15px;
     }
     
+}
 
+.blury {
+    filter: blur(5px);
 }
 
 input[type=search]::-webkit-search-cancel-button {

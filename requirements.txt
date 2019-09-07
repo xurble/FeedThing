@@ -8,8 +8,8 @@
 beautifulsoup4==4.7.1
 certifi==2019.6.16        # via requests
 chardet==3.0.4            # via requests
-django-feed-reader==0.2.0
-django==2.2.4
+django-feed-reader==0.2.1
+django==2.2.5
 feedparser==5.2.1         # via django-feed-reader
 idna==2.8                 # via requests
 mysqlclient==1.4.4

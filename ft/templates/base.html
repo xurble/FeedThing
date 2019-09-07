@@ -26,6 +26,14 @@
 
 
         <meta name="viewport" content="width=device-width,initial-scale=1.0">
+        
+          {% if not debug %}
+          <script>
+            if (window.location.protocol != "https:") {
+                window.location.protocol = "https";
+            }
+          </script>
+          {% endif %}
 
             
         {% block head %}

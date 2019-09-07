@@ -80,7 +80,30 @@ function read(fid, page) {
            History.pushState({feed:fid, page:page}, "FeedThing", "?feed=" + fid + "&page=" + page);
         });
     }
+
+    setTimeout(function(){
     
+        $(".posts img").each(function(){
+            var width = this.naturalWidth;
+            
+            if (width == 0) {
+                // not loaded yet
+                this.onload = function(){
+                    var width = this.naturalWidth;
+                    if (width < 150) {
+                        $(this).addClass("blury");
+                    }
+
+                }
+            }
+            else {
+                if (width < 150) {
+                    $(this).addClass("blury");
+                }
+            }
+        });    
+    
+    }, 100);    
 
 
 

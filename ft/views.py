@@ -19,7 +19,6 @@ import traceback
 import json
 import os
 
-import feedparser
 
 from xml.dom import minidom
 
@@ -35,6 +34,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 import requests
 from django.urls import reverse
+import feedparser
 
 
 
@@ -223,7 +223,7 @@ def addfeed(request):
              
             body = ret.text.strip()
             if "xml" in content_type or body[0:1] == "<":
-                ff = feedparser.parse(body) # are we a feed?
+                ff = feedparser.parse(body) # are we a feed?  # imported by django-feed-reader
                 isFeed = (len(ff.entries) > 0) 
                 if isFeed:
                     feed_title = ff.feed.title

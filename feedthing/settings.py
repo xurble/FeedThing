@@ -72,6 +72,11 @@ STATIC_URL = '/static/'
 ADMIN_MEDIA_PREFIX = '/static/admin/'
 
 
+INTERNAL_IPS = (
+    "127.0.0.1",
+)
+
+
 
 # List of finder classes that know how to find static files in
 # various locations.

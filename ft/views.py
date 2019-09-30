@@ -298,7 +298,7 @@ def addfeed(request):
             
             
                     
-                ns.name    = feed_title
+                ns.name     = feed_title
                 ns.feed_url = feed
             
                 ns.save()
@@ -644,7 +644,7 @@ def unsubscribefeed(request,sid):
                     if parent.subscriptions.count() == 0:
                         parent.delete()
     
-                source.num_subs = source.subscriptionss.count()
+                source.num_subs = source.subscriptions.count()
                 if source.num_subs == 0: # this is the last subscription for this source
                     Post.objects.filter(source=source).delete() # cascading delete would do this I think
                     source.delete()

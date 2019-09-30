@@ -384,3 +384,35 @@ div.location {
   background-color: #7EA02D;
   border-color: #7EA02D;
 }
+
+
+@media (prefers-color-scheme: dark) {
+    
+    html, body {
+
+        background-color: #4a525a;
+        color: #eee;
+    }
+    
+    div.feedbutton, .btn-default {
+        background-color: #999;
+        border-color: #777;
+    }
+    
+    input[type=text], input[type=password], input[type=url], input[type=search], #opml {
+        color: #444;
+    }
+        
+    div#feeds div.group {
+        background-color: #aaa;
+    }
+
+    a, a:hover {
+        color: #bCE8a4;
+    }
+    .date, .date a {
+        color:#bbb;
+    }
+
+
+}

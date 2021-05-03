@@ -4,17 +4,40 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
+
 beautifulsoup4==4.7.1
-certifi==2019.6.16        # via requests
-chardet==3.0.4            # via requests
-django-feed-reader==0.2.1
-django==2.2.8
-feedparser==5.2.1         # via django-feed-reader
-idna==2.8                 # via requests
-mysqlclient==1.4.4
-pyrfc3339==1.1            # via django-feed-reader
-pytz==2019.2              # via django, pyrfc3339
-requests==2.22.0
-soupsieve==1.9.3          # via beautifulsoup4
-sqlparse==0.3.0           # via django
-urllib3==1.25.3           # via requests
+    # via
+    #   -r requirements.in
+    #   django-feed-reader
+certifi==2020.12.5
+    # via requests
+chardet==4.0.0
+    # via requests
+django-feed-reader==0.2.5
+    # via -r requirements.in
+django==2.2.20
+    # via
+    #   -r requirements.in
+    #   django-feed-reader
+feedparser==6.0.2
+    # via django-feed-reader
+idna==2.10
+    # via requests
+mysqlclient==2.0.3
+    # via -r requirements.in
+pyrfc3339==1.1
+    # via django-feed-reader
+pytz==2021.1
+    # via django
+requests==2.25.1
+    # via
+    #   -r requirements.in
+    #   django-feed-reader
+sgmllib3k==1.0.0
+    # via django-feed-reader
+soupsieve==2.2.1
+    # via beautifulsoup4
+sqlparse==0.4.1
+    # via django
+urllib3==1.26.4
+    # via requests

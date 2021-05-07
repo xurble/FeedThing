@@ -7,7 +7,9 @@ SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
 ALLOWED_HOSTS = ['localhost'] # change this to your servers domain
 
 FEEDS_SERVER = 'https://example.com/' # change this to where you are running  -  it's in the user agent string used when polling sites
- 
+FEEDS_CLOUDFLARE_WORKER = None   # You will need a cloudflare account with the django-feed-reader cloudflare worker installed to use this setting
+
+
 
 # this is where collectstatic will gather its files
 STATIC_ROOT = os.path.join(SITE_ROOT, "..", "static")

@@ -98,7 +98,12 @@ function removeFromGroup(sid) {
     
     $.post("/subscription/" + sid + "/promote/", function(data) {
     
-        $("#sub" + sid).fadeOut();
+        if ($("#sub" + sid).length == 0) {
+            details(sid);
+        }
+        else {
+            $("#sub" + sid).fadeOut();
+        }   
         refreshFeedList();
         
         if (data == "Kill") {
@@ -109,6 +114,13 @@ function removeFromGroup(sid) {
     
 }
 
+function addToGroup(sid,gid) {
+
+    $.post("/subscription/" + sid + "/addto/" + gid + "/", function(data) {
+        details(data);
+        refreshFeedList();
+    } );
+}
 
 
 
@@ -200,13 +212,7 @@ function handleDrop(evt,ui) {
     addToGroup(dragId, targetId);
 }
 
-function addToGroup(sid,gid) {
 
-    $.post("/subscription/" + sid + "/addto/" + gid + "/", function(data) {
-        details(data);
-        refreshFeedList();
-    } );
-}
 
 function handleOver(evt,ui) {
 

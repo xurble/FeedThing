@@ -257,6 +257,11 @@ a, a:hover {
     font-size:80%;
 }
 
+span.unreadcount i.fa {
+    margin-top:5px;
+    font-size:125%;
+}
+
 .buttons {
 	float: right;
     font-size:22px;
@@ -358,6 +363,7 @@ div.droptarget {
 div.location {
     color:#666;
     font-style: italic;
+    padding:5px 0 10px 0;
 }
 
 

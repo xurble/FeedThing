@@ -42,6 +42,7 @@ urlpatterns = [
     
     url(r'^subscription/(?P<sid>.*)/unsubscribe/$',unsubscribefeed),
     url(r'^subscription/(?P<sid>.*)/details/$',subscriptiondetails),
+    url(r'^subscription/(?P<sid>.*)/rename/$',subscriptionrename),
     url(r'^subscription/(?P<sid>.*)/promote/$',promote),
     url(r'^subscription/(?P<sid>.*)/addto/(?P<tid>.*)/$',addto),
 

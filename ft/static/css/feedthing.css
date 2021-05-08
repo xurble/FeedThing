@@ -152,6 +152,9 @@ body, html {
     height: 100%;
 }
 
+#feedcontent {
+    min-height: 200px;  // for the dropdown menu
+}
 
 #feedlist, #feedpane {
     max-height: 100%;

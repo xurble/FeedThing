@@ -2,13 +2,25 @@
 
 <div id="feedcontent">
     <div id="feedscroller">
-        <a class="btn btn-sm btn-default backbutton pull-right" href="javascript:history.back()">Back</a>
         
         {% if subscription %}
-            <h2 class="ftheader">{{subscription.name}}</h2>
             {% if source %}
+
+
+                <div id="unsub" class="pull-right btn-group" style="padding-top:10px">
+                  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fa fa-cog" title="Settings"></i> <span class="caret"></span>
+                  </button>
+                  <ul class="dropdown-menu">
+                    <li><a href="javascript:rename({{subscription.id}})">Rename</a></li>
+                    <li><a href="/manage/?s={{subscription.id}}">Manage</a></li>
+                    <li role="separator" class="divider"></li>
+                    <li><a href="javascript:unsub({{subscription.id}})">Unsubscribe</a></li>
+                  </ul>
+                </div>
+                <h2 class="ftheader">{{subscription.name}}</h2>
                 <div class="meta">{% if source.last_success %}Last read {{source.last_success|timesince}} ago.{% else %}Feed has not been read.{% endif %} {% if user.is_superuser and source.is_cloudflare %}😬{% endif %}</div>
-                <div id="unsub"><a href="javascript:unsub({{subscription.id}})" class="btn btn-xs btn-default">Unsubscribe</a></div>
+
             {% endif %}
         {% endif %}
         

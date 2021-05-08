@@ -3,7 +3,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.template.loader import render_to_string
 from django.contrib.auth import authenticate, login, get_user, logout
-from django.http import HttpResponseRedirect,HttpResponse
+from django.http import HttpResponseRedirect,HttpResponse, JsonResponse
 from django.db.models import Q
 from django.db.models import F
 from django.contrib.auth.decorators import login_required
@@ -137,6 +137,7 @@ def managefeeds(request):
     subscriptions = list(Subscription.objects.filter(Q(user = request.user) & Q(parent=None)).order_by("source__name"))
     
     vals["subscriptions"] = subscriptions
+    vals["preload"] = request.GET.get("s", "0")
     
     return render(request, "manage.html",vals)
 
@@ -382,6 +383,24 @@ def importopml(request):
     vals["imported"] = imported    
     vals["count"] = count  
     return render(request, 'importopml.html',vals)
+
+
+
+
+@login_required
+def subscriptionrename(request, sid):
+
+    sub = get_object_or_404(Subscription,id=int(sid))
+    
+    if sub.user == request.user:
+        
+ 
+        if request.method == "POST":
+            sub.name = request.POST["name"]
+            sub.save()
+
+        return JsonResponse({"ok":True})
+
 
 
 @login_required

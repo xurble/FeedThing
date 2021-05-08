@@ -79,18 +79,39 @@ function saveSubscription(sid) {
 
 function unsub(sid)
 {
-	if (confirm("Sure?"))
-	{
-		$("#unsub").html('<div id="loader"><img src="/static/images/loader.gif" alt="Working" width="32" height="32"></div>');
-		$.post("/subscription/" + sid +"/unsubscribe/",function(data){
-		
-			$("#loader").fadeOut(function(){
-				$("#loader").html(data);
-				$("#loader").fadeIn();
-			});
-		
-		},'html');
-	}
+
+    bootbox.confirm({
+        message: "Are you sure?",
+        buttons: {
+            confirm: {
+                label: 'Unsubscribe',
+                className: 'btn-primary'
+            
+            },
+            cancel: {
+                label: 'Cancel',
+                className: 'btn-default'
+            
+            }
+        },
+        callback: function(result) {
+            if(result) {
+                $("#unsub").html('<div id="loader"><img src="/static/images/loader.gif" alt="Working" width="32" height="32"></div>');
+                $.post("/subscription/" + sid +"/unsubscribe/",function(data){
+        
+                    $("#loader").fadeOut(function(){
+                        $("#loader").html(data);
+                        $("#loader").fadeIn();
+                    });
+        
+                },'html');            
+            }
+        }
+    });
+    return;
+
+
+
 	
 }
 
@@ -130,6 +151,12 @@ function addToGroup(sid,gid) {
 $(document).ready(function(){
 
     dragDrop();
+    
+    {% if preload != "0" %}
+    
+        details({{preload}});    
+    
+    {% endif %}
 
 });
 

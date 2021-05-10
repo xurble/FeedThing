@@ -245,11 +245,20 @@ function rename(sid) {
 }
 
 function savePost(pid) {
-    $.post("/post/" + pid + "/save/",function(data) {
-        if (data=="OK") {
-            $("#star-" + pid).removeClass("far").addClass("fas");
-        }
-    });
+
+    if ($("#star-" + pid).hasClass("far")) {
+        $.post("/post/" + pid + "/save/",function(data) {
+            if (data=="OK") {
+                $("#star-" + pid).removeClass("far").addClass("fas");
+            }
+        });
+    } else {
+        $.post("/post/" + pid + "/forget/",function(data) {
+            if (data=="OK") {
+                $("#star-" + pid).removeClass("fas").addClass("far");
+            }
+        });
+    }
 }
 
 

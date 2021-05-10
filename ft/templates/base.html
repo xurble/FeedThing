@@ -72,6 +72,7 @@
 	                <li><a href="{% url 'savedposts' %}">Saved</a></li>
 	                {% if user.is_superuser %}
 	                    <li><a href="/feedgarden/">Queue</a></li>
+	                    <li><a href="/admin/">Admin</a></li>
 	                {% endif %}
 	            {% else %}
     	            <li><a href="{% url 'home' %}">Home</a></li>

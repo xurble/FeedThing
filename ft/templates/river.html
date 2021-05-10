@@ -21,7 +21,7 @@
             {% endifchanged %}
             <div class="buttons">
                 <a href="{{p.link|escape}}"><i class="fa fa-external-link" aria-hidden="true" title="Go to item"></i></a>&nbsp;
-                <a href="javascript:savePost({{p.id}})"><i id="star-{{p.id}}" class="far fa-star" aria-hidden="true"></i></a>
+                <a href="javascript:savePost({{p.id}})"><i id="star-{{p.id}}" class="{{p|starstyle:user}} fa-star" aria-hidden="true"></i></a>
             </div>
             <h3 class="posttitle"><a href="{{p.link|escape}}">{{p.title|safe}}</a></h3>
 

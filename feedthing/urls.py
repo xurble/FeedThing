@@ -31,7 +31,7 @@ urlpatterns = [
     url(r'^read/(?P<fid>.*)/', readfeed),
 
     url(r'^post/(?P<pid>.*)/save/$',savepost, name="savepost"),
-    url(r'^post/(?P<pid>.*)/forgot/$',forgetpost, name="forgetpost"),
+    url(r'^post/(?P<pid>.*)/forget/$',forgetpost, name="forgetpost"),
 
     url(r'^saved/$',savedposts, name="savedposts"),
     

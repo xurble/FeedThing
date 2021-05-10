@@ -40,3 +40,12 @@ def river(value):
 @register.filter(name='subscription_name')
 def subscription_name(post, subscription_map):
     return subscription_map[post.source.id]
+    
+    
+@register.filter(name='starstyle')
+def starstyle(post, user):
+
+    if post.savedpost_set.filter(user=user).count() > 0:
+        return "fas"
+    else:
+        return "far"

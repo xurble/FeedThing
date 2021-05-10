@@ -10,6 +10,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils.timezone import utc
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator, EmptyPage, InvalidPage
+from django.views.decorators.csrf import csrf_exempt
 
 import datetime
 import hashlib
@@ -50,7 +51,7 @@ def help(request):
     return render(request, "help.html",{})
     
 
-
+@csrf_exempt
 def loginpage(request):
 
     next = reverse("feeds")
@@ -64,9 +65,6 @@ def loginpage(request):
 
             # The test cookie worked, so delete it.
             request.session.delete_test_cookie()
-
-            # In practice, we'd need some logic to check username/password
-            # here, but since this is an example...
 
             username = request.POST['username']
             password = request.POST['password']
@@ -93,7 +91,6 @@ def loginpage(request):
 
 
 def logoutpage(request):
-    print("logout")
     logout(request)
     return render(request, 'logout.html',{})
     
@@ -689,22 +686,30 @@ def savepost(request,pid):
     
     return HttpResponse("OK")
     
+    
 @login_required
-def forgetpost(request,pid):
+def forgetpost(request, pid):
 
-    post = get_object_or_404(Post,id=int(pid))
+    post = get_object_or_404(Post, id=int(pid))
     
     sp = SavedPost.objects.filter(post=post).filter(user=request.user)[0]
     sp.delete()
     
     return HttpResponse("OK")
     
+
 @login_required
 def savedposts(request):
 
     vals = {}
     
+    q = request.GET.get("q", "")
+    
     post_list = SavedPost.objects.filter(user=request.user)
+
+    if q != "": 
+        post_list = post_list.filter(Q(post__title__icontains=q)|Q(post__body__icontains=q))
+
 
     try:
         page = int(request.GET.get("page", "1"))
@@ -720,6 +725,7 @@ def savedposts(request):
     
     vals["posts"] = posts
     vals["paginator"] = paginator
+    vals["q"] = q
 
 
     

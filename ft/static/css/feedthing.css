@@ -44,6 +44,10 @@ body {
     background-color: #DCE8C4;
 }
 
+.nav>li>a {
+    padding: 14px 8px 6px 10px;
+}
+
 .logo {
     padding-top:10px;
 }

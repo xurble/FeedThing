@@ -309,7 +309,9 @@ def addfeed(request):
 
                 return HttpResponse("<div>Imported feed %s</div>" % ns.name)
     except Exception as xx:
-        return HttpResponse("<div>Error %s: %s</div>" % (xx.__class__.__name__,str(xx)))
+        import traceback
+        traceback_str = ''.join(traceback.format_tb(xx.__traceback__))
+        return HttpResponse("<div>Error %s: %s</div><div style='display:none'>%s</div>" % (xx.__class__.__name__,str(xx),traceback_str))
     
 
 @login_required

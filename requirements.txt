@@ -4,7 +4,6 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
-
 beautifulsoup4==4.7.1
     # via
     #   -r requirements.in
@@ -39,5 +38,5 @@ soupsieve==2.2.1
     # via beautifulsoup4
 sqlparse==0.4.1
     # via django
-urllib3==1.26.4
+urllib3==1.26.5
     # via requests

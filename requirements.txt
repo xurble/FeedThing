@@ -4,7 +4,6 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
-
 beautifulsoup4==4.7.1
     # via
     #   -r requirements.in
@@ -15,7 +14,7 @@ chardet==4.0.0
     # via requests
 django-feed-reader==0.3.2
     # via -r requirements.in
-django==2.2.20
+django==2.2.21
     # via
     #   -r requirements.in
     #   django-feed-reader

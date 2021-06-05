@@ -106,6 +106,9 @@ h2.riversource {
     background-color:#DCE8C4 !important;
 }
 
+div.feedbutton {
+    font-size: 14px;
+}
 
 div.feedbutton, .button {
     text-decoration:none;
@@ -222,12 +225,11 @@ input[type=search]::-webkit-search-cancel-button {
 .posts {
     line-height: 1.3;
     font-family: Helvetica, Arial;
-    font-size: 16px;
+    font-size: 18px;
 }
 
 h3.posttitle {
     margin:0px;
-    font-size:15px;
 }
 
 h3.rivertitle {
@@ -297,19 +299,19 @@ h1 {
 }
 
 h2 {
-    font-size: 17px;
+    font-size: 20px;
 }
 
 h3 {
-    font-size:16px;
+    font-size:18px;
 }
 
 h4,h5,h6 {
-    font-size:15px;
+    font-size:16px;
 }
 
 blockquote {
-    font-size:14px;
+    font-size:16px;
 }
 
 div#feeds div.group {
@@ -412,6 +414,7 @@ div.location {
         background-color: #4a525a;
         color: #eee;
     }
+    
     
     div.feedbutton, .btn-default {
         background-color: #999;

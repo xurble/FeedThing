@@ -8,6 +8,7 @@ from feedthing import  settings_server
 DEBUG = settings_server.DEBUG
 
 
+
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
 )
@@ -19,7 +20,14 @@ DATABASES = settings_server.DATABASES
 ALLOWED_HOSTS = settings_server.ALLOWED_HOSTS
 
 
+INTERNAL_IPS = (
+    '127.0.0.1',
+)
 
+if hasattr(settings_server, "EMAIL_BACKEND"):
+    EMAIL_BACKEND = settings_server.EMAIL_BACKEND
+    
+ADMIN_EMAIL_ADDRESS = settings_server.ADMIN_EMAIL_ADDRESS
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -72,12 +80,6 @@ STATIC_URL = '/static/'
 ADMIN_MEDIA_PREFIX = '/static/admin/'
 
 
-INTERNAL_IPS = (
-    "127.0.0.1",
-)
-
-
-
 # List of finder classes that know how to find static files in
 # various locations.
 STATICFILES_FINDERS = (
@@ -117,8 +119,6 @@ TEMPLATES = [
         },
     ]
 
-USE_FEEDS = True
-
 
 INSTALLED_APPS = [
     'django.contrib.auth',
@@ -136,7 +136,8 @@ INSTALLED_APPS = [
 
 ]
 
-FEEDS_USER_AGENT = "FeedThing/3.5"
+VERSION = "3.6"
+FEEDS_USER_AGENT = f"FeedThing/{VERSION }"
 FEEDS_SERVER = settings_server.FEEDS_SERVER
 FEEDS_CLOUDFLARE_WORKER = settings_server.FEEDS_CLOUDFLARE_WORKER
 

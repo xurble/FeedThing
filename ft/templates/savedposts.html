@@ -10,7 +10,7 @@
 {% if posts.has_other_pages %}        
     <form method="GET">
 
-    <ul class="pagination pagination-sm pull-right" style="margin:0">
+    <ul class="pagination pagination-sm float-end" style="margin:0">
         {% if posts.has_previous %}
           <li><a href="?q={{q}}&page={{ posts.previous_page_number }}">&laquo;</a></li>
         {% else %}
@@ -79,7 +79,7 @@
 
 
 {% if posts.has_other_pages %}
-    <ul class="pagination pagination-sm pull-right">
+    <ul class="pagination pagination-sm float-end">
         {% if posts.has_previous %}
           <li><a href="?q={{q}}&page={{ posts.previous_page_number }}">&laquo;</a></li>
         {% else %}

@@ -42,11 +42,17 @@ body {
 
 .navbar {
     background-color: #DCE8C4;
+    padding: 0 0 4px 0;
 }
 
-.nav>li>a {
-    padding: 14px 8px 6px 10px;
+a.nav-link {
+    color:#777 !important;
 }
+
+a.nav-link:hover {
+    color:#999 !important;
+}
+
 
 .logo {
     padding-top:10px;

@@ -3,6 +3,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.template.loader import render_to_string
 from django.contrib.auth import authenticate, login, get_user, logout
+from django.contrib import messages
 from django.http import HttpResponseRedirect,HttpResponse, JsonResponse
 from django.db.models import Q
 from django.db.models import F
@@ -11,6 +12,10 @@ from django.utils.timezone import utc
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator, EmptyPage, InvalidPage
 from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
+from django.core.mail import send_mail
+
+
 
 import datetime
 import hashlib
@@ -19,7 +24,7 @@ import sys
 import traceback
 import json
 import os
-
+import base64
 
 from xml.dom import minidom
 
@@ -93,6 +98,51 @@ def loginpage(request):
 def logoutpage(request):
     logout(request)
     return render(request, 'logout.html',{})
+    
+
+def recover_password(request):
+    pass
+    
+def forgot_password(request):
+
+    email =""
+
+    if request.method == "POST":
+        email = request.POST["email"]
+        try:
+            user = User.objects.get(email=email)
+            if user.is_active:
+            
+                email_token = base64.b64encode(user.email.encode("UTF-8")).decode("UTF-8")
+
+                body = """
+To reset your FeedThing password, click the following link:
+
+{server}/recovery/?e={email}&t={token}
+
+If clicking doesn't work, you can copy and paste the link straight into your browser.
+
+You can ignore this email if you did not request a password reset.
+
+The FeedThing Team
+
+                """.format(server=settings.FEEDS_SERVER, email=email_token, token=user.new_password_reset_token())
+
+                send_mail("FeedThing password reset request",
+                        body,
+                        settings.ADMIN_EMAIL_ADDRESS,
+                        [user.email,]
+                )
+                
+                messages.success(request, "Password reset requested, check your email.")
+            else:
+                messages.error(request, "There is no account registered to that email address.")
+
+        except Exception as ex:
+            print(ex)
+            messages.error(request, "There is no account registered to that email address.")
+    
+    return render(request, "forgot_password.html", {"email": email})
     
 
 @login_required
@@ -191,21 +241,17 @@ def feedgarden(request):
 def addfeed(request):
 
     try:
-        feed = ""
         if request.method == 'GET':
-            if request.GET.__contains__("feed"):
-                feed = request.GET["feed"]
+            feed = request.GET.get("feed", "")
             groups = Subscription.objects.filter(Q(user=request.user) & Q(source=None))
 
             return render(request, "addfeed.html",{"feed":feed,"groups":groups})
     
         else:
     
-            if request.POST.__contains__("feed"):
-                feed = request.POST["feed"]
+            feed = request.POST.get("feed", "")
                 
-                
-            headers = { "User-Agent": "FeedThing/3.3 (+http://%s; Initial Feed Crawler)" % request.META["HTTP_HOST"], "Cache-Control":"no-cache,max-age=0", "Pragma":"no-cache" } #identify ourselves and also stop our requests getting picked up by google's cache
+            headers = { "User-Agent": "{agent} (+{server}; Initial Feed Crawler)".format(agent=settings.FEEDS_USER_AGENT, server=settings.FEEDS_SERVER), "Cache-Control":"no-cache,max-age=0", "Pragma":"no-cache" } #identify ourselves and also stop our requests getting picked up by google's cache
 
 
             ret = requests.get(feed, headers=headers,verify=False, timeout=15)

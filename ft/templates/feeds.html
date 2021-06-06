@@ -10,7 +10,7 @@
 {% block content %}
 <div class="container fullpage">
     <div class="row fullpage">
-		<div class="col-sm-4 d-sm-block" id="feedlist">
+		<div class="col-sm-4" id="feedlist">
 		    <h2 class="ftheader">{% if all %}All{% else %}Unread{% endif %} Feeds</h2>
 			<div id="feeds">
 			
@@ -65,7 +65,7 @@ function read(fid, page) {
     last_page = page;
     
     $("#s" + last_read).addClass("read");  
-    $("#feedlist").addClass("d-none");
+    $("#feedlist").addClass("hidden-xs");
     $("#feedpane").html('<div id="feedcontent"> <img src="/static/images/FeedThing.png" class="paneplant"></div>');
 
     if (page == 0) {
@@ -162,7 +162,7 @@ $(document).ready(function(){
 	History.pushState(null,null,"#");
 
     {% if preload != "0" %}
-        $("#feedlist").addClass("d-none");
+        $("#feedlist").addClass("hidden-xs");
         read({{preload}}, {{page}});
     {% endif %}
 
@@ -180,7 +180,7 @@ function unRead() {
 
     
         $("#feedcontent").fadeOut("fast",function(){
-            $("#feedlist").removeClass("d-none");
+            $("#feedlist").removeClass("hidden-xs");
             $("#feedpane").html('<img src="/static/images/FeedThing.png" class="paneplant">');            
         });    
     

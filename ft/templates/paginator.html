@@ -1,41 +1,39 @@
 {% if posts.has_other_pages %}
-<nav aria-label="Pagination">
     <ul class="pagination pagination-sm">
         {% if posts.has_previous %}
-          <li class="page-item"><a class="page-link" href="javascript:read({{subscription.id}},{{ posts.previous_page_number }})">&laquo;</a></li>
+          <li><a href="javascript:read({{subscription.id}},{{ posts.previous_page_number }})">&laquo;</a></li>
         {% else %}
-          <li class="page-item disabled"><a class="page-link" href="#">&laquo;</a></li>
+          <li class="disabled"><span>&laquo;</span></li>
         {% endif %}
         {% if posts.number >= 5 %}
-        <li class="page-item"><a class="page-link" href="javascript:read({{subscription.id}},1)">1</a></li>
-        <li class="page-item"><span>...</span></li>
+        <li><a href="javascript:read({{subscription.id}},1)">1</a></li>
+        <li><span>...</span></li>
         {% elif posts.number == 4 %}
-        <li class="page-item"><a class="page-link" href="javascript:read({{subscription.id}},1)">1</a></li>
+        <li><a href="javascript:read({{subscription.id}},1)">1</a></li>
         {% endif %}
         {% if posts.number|add:"-2" >= 1  %}
-        <li class="page-item"><a class="page-link" href="javascript:read({{subscription.id}},{{ posts.number|add:"-2" }})">{{ posts.number|add:"-2" }}</a></li>
+        <li><a href="javascript:read({{subscription.id}},{{ posts.number|add:"-2" }})">{{ posts.number|add:"-2" }}</a></li>
         {% endif %}
         {% if posts.number|add:"-1" >= 1  %}
-        <li class="page-item"><a class="page-link" href="javascript:read({{subscription.id}},{{ posts.number|add:"-1" }})">{{ posts.number|add:"-1" }}</a></li>
+        <li><a href="javascript:read({{subscription.id}},{{ posts.number|add:"-1" }})">{{ posts.number|add:"-1" }}</a></li>
         {% endif %}
-        <li class="active"><a class="page-link" href="javascript:read({{subscription.id}}, {{posts.number }})">{{ posts.number }}</a></li>
+        <li class="active"><a href="javascript:read({{subscription.id}}, {{posts.number }})">{{ posts.number }}</a></li>
         {% if posts.number|add:"1" <= paginator.num_pages  %}
-        <li class="page-item"><a class="page-link" href="javascript:read({{subscription.id}},{{ posts.number|add:"1" }})">{{ posts.number|add:"1" }}</a></li>
+        <li><a href="javascript:read({{subscription.id}},{{ posts.number|add:"1" }})">{{ posts.number|add:"1" }}</a></li>
         {% endif %}
         {% if posts.number|add:"2" <= paginator.num_pages %}
-        <li class="page-item"><a class="page-link" href="javascript:read({{subscription.id}},{{ posts.number|add:"2" }})">{{ posts.number|add:"2" }}</a></li>
+        <li><a href="javascript:read({{subscription.id}},{{ posts.number|add:"2" }})">{{ posts.number|add:"2" }}</a></li>
         {% endif %}
         {% if posts.number|add:"2" <= paginator.num_pages|add:"-2" %}
-        <li class="page-item"><span>...</span></li>
-        <li class="page-item"><a class="page-link" href="javascript:read({{subscription.id}},{{ paginator.num_pages }})">{{ paginator.num_pages }}</a></li>
+        <li><span>...</span></li>
+        <li><a href="javascript:read({{subscription.id}},{{ paginator.num_pages }})">{{ paginator.num_pages }}</a></li>
         {% elif posts.number|add:"1" <= paginator.num_pages|add:"-2" %}
-        <li class="page-item"><a class="page-link" href="javascript:read({{subscription.id}},{{ paginator.num_pages }})">{{ paginator.num_pages }}</a></li>
+        <li><a href="javascript:read({{subscription.id}},{{ paginator.num_pages }})">{{ paginator.num_pages }}</a></li>
         {% endif %}
         {% if posts.has_next %}
-          <li class="page-item"><a class="page-link" href="javascript:read({{subscription.id}},{{ posts.next_page_number }})">&raquo;</a></li>
+          <li><a href="javascript:read({{subscription.id}},{{ posts.next_page_number }})">&raquo;</a></li>
         {% else %}
-          <li class="page-item disabled"><a class="page-link" href="#">&raquo;</a></li>
+          <li class="disabled"><span>&raquo;</span></li>
         {% endif %}
     </ul>
-</nav>
 {% endif %}

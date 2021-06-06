@@ -17,9 +17,7 @@ Feeds can be placed into folders in which case all the feeds in the folder are t
 
 A single FeedThing installation can support multiple users, each with their own settings and list of feeds.  Embarrassingly, there is no UI to create those users just now.
 
-I have used this as my daily RSS reader for over a decade.  It is probably missing features that other readers have, but nothing that I have ever missed.
-
-Except user management of course!
+Altough I have used this as my daily feed reader for years, it is rather unfinished.  Specifically there are features that I feel a feed reader should have that are started but not really done, or done in a half-arsed way.
 
 Enjoy.
 
@@ -28,13 +26,13 @@ Installation
 
 FeedThing is a pretty simple Python 3 / Django 2.2 application.  There are a few external dependencies that need pip installing (listed in requirements.txt)
 
-The django `settings.py` file  is not quite complete.  It imports some of its settings from `settings_server.py` which is listed in `.gitignore` because it is installation specific.  There is an example.
-
-Host it as you would any other django app.  I had it running for years under fastcgi and it was fine.  I currently run it behind gunicorn & nginx which is better.
+The django `settings.py` file  is not quite complete.  It imports some of its settings from `settings_server.py` which is listed in `.gitignore` because it is installation specific.  There is an example 
 
 Once it is running, in order to keep it ticking over and reading feeds, something needs to keep hitting `/refresh/` or, better still, calling the management command `manage.py refreshfeeds`
 
-I have that set up as a cron job every five minutes.  This was a cheesy way to work around the severe lameness of my last hosting, but its working well enough that I still do it that way.  Celery beat would work too.
+I have that set up as a cron job every five minutes.  This is a cheesy way to work around the severe lameness of my current hosting.
+
+If you were to run it on something sensible, you'd probably want to use Celery or similar.
 
 User management is not done yet.  Make yourself a login using `manage.py createsuperuser`
 

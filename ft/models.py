@@ -17,24 +17,21 @@ from django.contrib.auth.models import PermissionsMixin
 from django.contrib.auth.models import BaseUserManager
 from django.utils import timezone
 
-from uuid import uuid4
-
-
-from feeds.models import Post, Source, Enclosure
+if settings.USE_FEEDS:
+    from feeds.models import Post, Source, Enclosure
 
 class FTUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         today = timezone.now()
 
         if not email:
-            raise ValueError('The email address must be set')
+            raise ValueError('The given email address must be set')
 
         email = FTUserManager.normalize_email(email)
         user  = self.model(email=email,
                           is_staff=False, is_active=True, **extra_fields)
 
         user.set_password(password)
-        user.new_password_reset_token(auto_save=False)
         user.save(using=self._db)
         return user
 
@@ -56,16 +53,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     is_active   = models.BooleanField(default=True)
     is_staff    = models.BooleanField(default=False)
-    
-    password_reset_token = models.CharField(max_length=32, blank=True, default='')
-    
-    
-    def new_password_reset_token(self, auto_save=True):
-        
-        self.password_reset_token = uuid4().hex[:32]
-        if auto_save:
-            self.save()
-        return self.password_reset_token
     
 
     USERNAME_FIELD = 'email'

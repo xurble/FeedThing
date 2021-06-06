@@ -7,16 +7,15 @@
             {% if source %}
 
 
-
-                <div id="unsub" class="float-end btn-group" style="padding-top:10px">
-                  <button type="button" class="btn btn-default dropdown-toggle" id="feedDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <div id="unsub" class="pull-right btn-group" style="padding-top:10px">
+                  <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <i class="fa fa-cog" title="Settings"></i> <span class="caret"></span>
                   </button>
-                  <ul class="dropdown-menu" aria-labelledby="feedDropdown">
-                    <li><a class="dropdown-item" href="javascript:rename({{subscription.id}})">Rename</a></li>
-                    <li><a class="dropdown-item" href="/manage/?s={{subscription.id}}">Manage</a></li>
-                    <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" href="javascript:unsub({{subscription.id}})">Unsubscribe</a></li>
+                  <ul class="dropdown-menu">
+                    <li><a href="javascript:rename({{subscription.id}})">Rename</a></li>
+                    <li><a href="/manage/?s={{subscription.id}}">Manage</a></li>
+                    <li role="separator" class="divider"></li>
+                    <li><a href="javascript:unsub({{subscription.id}})">Unsubscribe</a></li>
                   </ul>
                 </div>
                 <h2 class="ftheader">{{subscription.name}}</h2>

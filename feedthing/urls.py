@@ -28,10 +28,6 @@ urlpatterns = [
 
     url(r'^accounts/login/$',loginpage),
     url(r'^accounts/logout/$',logoutpage),
-    url(r'^accounts/forgot-password/$', forgot_password, name="forgot_password"),
-    url(r'^accounts/recover/$', recover_password, name="recover_password"),
-
-
     url(r'^read/(?P<fid>.*)/', readfeed),
 
     url(r'^post/(?P<pid>.*)/save/$',savepost, name="savepost"),

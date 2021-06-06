@@ -42,17 +42,11 @@ body {
 
 .navbar {
     background-color: #DCE8C4;
-    padding: 0 0 4px 0;
 }
 
-a.nav-link {
-    color:#777 !important;
+.nav>li>a {
+    padding: 14px 8px 6px 10px;
 }
-
-a.nav-link:hover {
-    color:#999 !important;
-}
-
 
 .logo {
     padding-top:10px;
@@ -106,9 +100,6 @@ h2.riversource {
     background-color:#DCE8C4 !important;
 }
 
-div.feedbutton {
-    font-size: 14px;
-}
 
 div.feedbutton, .button {
     text-decoration:none;
@@ -225,11 +216,12 @@ input[type=search]::-webkit-search-cancel-button {
 .posts {
     line-height: 1.3;
     font-family: Helvetica, Arial;
-    font-size: 18px;
+    font-size: 16px;
 }
 
 h3.posttitle {
     margin:0px;
+    font-size:15px;
 }
 
 h3.rivertitle {
@@ -299,19 +291,19 @@ h1 {
 }
 
 h2 {
-    font-size: 20px;
+    font-size: 17px;
 }
 
 h3 {
-    font-size:18px;
+    font-size:16px;
 }
 
 h4,h5,h6 {
-    font-size:16px;
+    font-size:15px;
 }
 
 blockquote {
-    font-size:16px;
+    font-size:14px;
 }
 
 div#feeds div.group {
@@ -414,7 +406,6 @@ div.location {
         background-color: #4a525a;
         color: #eee;
     }
-    
     
     div.feedbutton, .btn-default {
         background-color: #999;

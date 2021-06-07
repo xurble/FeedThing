@@ -166,6 +166,53 @@ body, html {
     -webkit-overflow-scrolling: touch;
 }
 
+.alert {
+    margin:0;
+}
+
+table.auth-table td {
+    padding:4px;
+    vertical-align: top;
+}
+
+table.auth-table th {
+    padding: 0 10px 6px 0;
+    text-align:right;
+    vertical-align: bottom;
+}
+
+span.helptext {
+    display:none;
+}
+
+span.helptext ul, ul.errorlist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+span.helptext li, ul.errorlist li {
+    margin:2px 0 2px 0;
+    padding:2px 4px 2px 4px;  
+    border: 1px solid #faebcc;
+    border-radius: 3px;
+}
+
+span.helptext li {      
+    color: #8a6d3b;
+    background-color: #fcf8e3;
+}
+
+ul.errorlist li {      
+    color: #a94442;
+    background-color: #f2dede;
+    border-color: #ebccd1;
+}
+
+
+table.auth-table {
+    margin-bottom: 6px;
+}
 
 /* Extra Small Devices, Phones */ 
 @media only screen and (max-width : 767px) {
@@ -216,12 +263,12 @@ input[type=search]::-webkit-search-cancel-button {
 .posts {
     line-height: 1.3;
     font-family: Helvetica, Arial;
-    font-size: 16px;
+    font-size: 18px;
 }
 
 h3.posttitle {
     margin:0px;
-    font-size:15px;
+    font-size:19px;
 }
 
 h3.rivertitle {
@@ -335,12 +382,12 @@ label {
     padding-top: 5px;
 }
 
-input[type=text], input[type=password], input[type=url], input[type=search] {
-    padding:4px;
+input[type=text], input[type=password], input[type=url], input[type=search], input[type=email] {
+    padding:2px;
     border: 1px solid #ccc;
-    padding-bottom: 8px;
+    padding-bottom: 4px;
     border-radius: 3px;
-    font-size: 16px;
+    font-size: 18px;
 }
 
 

@@ -1,0 +1,17 @@
+
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-xs-12 ftcontent">
+            <h2>Settings</h2>
+    
+            <p><a href="{% url 'password_change' %}">Change Password</a></p>
+            
+            <p><a href="{% url 'logout' %}">Log Out</a></p>
+    
+        </div>
+    </div>
+</div>
+{% endblock %}

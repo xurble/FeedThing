@@ -4,7 +4,7 @@ from django.shortcuts import render, get_object_or_404
 from django.template.loader import render_to_string
 from django.contrib.auth import authenticate, login, get_user, logout
 from django.contrib import messages
-from django.http import HttpResponseRedirect,HttpResponse, JsonResponse
+from django.http import HttpResponseRedirect,HttpResponse, JsonResponse, Http404
 from django.db.models import Q
 from django.db.models import F
 from django.contrib.auth.decorators import login_required
@@ -55,95 +55,27 @@ def index(request):
 def help(request):
     return render(request, "help.html",{})
     
-
-@csrf_exempt
-def loginpage(request):
-
-    next = reverse("feeds")
-    vals = {}
-    msg = ""
-    # If we submitted the form...
-    if request.method == 'POST':
-
-        # Check that the test cookie worked (we set it below):
-        if request.session.test_cookie_worked():
-
-            # The test cookie worked, so delete it.
-            request.session.delete_test_cookie()
-
-            username = request.POST['username']
-            password = request.POST['password']
-            vals["username"] = username
-            user = authenticate(username=username, password=password)
-            if user is not None:
-                if user.is_active:
-                    login(request,user)
-                    return HttpResponseRedirect(next)
-                else:
-                    msg = "Account is disabled"
-            else:
-                msg = "Unknown username / password"
-
-        # The test cookie failed, so display an error message. If this
-        # was a real site we'd want to display a friendlier message.
-        else:
-            msg = "Please enable cookies and try again."
-
-    # If we didn't post, send the test cookie along with the login form.
-    request.session.set_test_cookie()
-    vals["msg"] = msg
-    return render(request, 'login.html',vals)
-
-
-def logoutpage(request):
-    logout(request)
-    return render(request, 'logout.html',{})
     
+def well_known_uris(request, uri):
 
-def recover_password(request):
-    pass
+    """
+        https://www.iana.org/assignments/well-known-uris/well-known-uris.xhtml
+    """
+
+    logging.info("Request for .well-known URI: {}".format(uri))
     
-def forgot_password(request):
-
-    email =""
-
-    if request.method == "POST":
-        email = request.POST["email"]
-        try:
-            user = User.objects.get(email=email)
-            if user.is_active:
-            
-                email_token = base64.b64encode(user.email.encode("UTF-8")).decode("UTF-8")
-
-                body = """
-To reset your FeedThing password, click the following link:
-
-{server}/recovery/?e={email}&t={token}
-
-If clicking doesn't work, you can copy and paste the link straight into your browser.
-
-You can ignore this email if you did not request a password reset.
-
-The FeedThing Team
-
-                """.format(server=settings.FEEDS_SERVER, email=email_token, token=user.new_password_reset_token())
-
-                send_mail("FeedThing password reset request",
-                        body,
-                        settings.ADMIN_EMAIL_ADDRESS,
-                        [user.email,]
-                )
-                
-                messages.success(request, "Password reset requested, check your email.")
-            else:
-                messages.error(request, "There is no account registered to that email address.")
-
-        except Exception as ex:
-            print(ex)
-            messages.error(request, "There is no account registered to that email address.")
     
-    return render(request, "forgot_password.html", {"email": email})
-    
+    if uri == "change-password":
+        # https://twitter.com/rmondello/status/1009495517494173697?lang=en
+        return HttpResponseRedirect(reverse("password_change"))
+        
+    raise Http404  # not implemented
+
+
+@login_required
+def user_settings(request):
+    return render(request, "settings.html",{})
+
 
 @login_required
 def feeds(request):
@@ -175,6 +107,7 @@ def feeds(request):
     vals["page"] = request.GET.get("page", "1")
     
     return render(request, "feeds.html", vals)
+
 
 
 

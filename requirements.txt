@@ -8,13 +8,13 @@ beautifulsoup4==4.7.1
     # via
     #   -r requirements.in
     #   django-feed-reader
-certifi==2020.12.5
+certifi==2021.5.30
     # via requests
 chardet==4.0.0
     # via requests
-django-feed-reader==0.3.2
+django-feed-reader==1.0.0
     # via -r requirements.in
-django==2.2.21
+django==2.2.24
     # via
     #   -r requirements.in
     #   django-feed-reader
@@ -24,6 +24,8 @@ idna==2.10
     # via requests
 mysqlclient==2.0.3
     # via -r requirements.in
+pwned-passwords-django==1.4.1
+    # via -r requirements.in
 pyrfc3339==1.1
     # via django-feed-reader
 pytz==2021.1
@@ -32,6 +34,7 @@ requests==2.25.1
     # via
     #   -r requirements.in
     #   django-feed-reader
+    #   pwned-passwords-django
 sgmllib3k==1.0.0
     # via django-feed-reader
 soupsieve==2.2.1

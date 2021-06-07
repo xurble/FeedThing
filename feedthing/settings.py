@@ -27,7 +27,7 @@ INTERNAL_IPS = (
 if hasattr(settings_server, "EMAIL_BACKEND"):
     EMAIL_BACKEND = settings_server.EMAIL_BACKEND
     
-ADMIN_EMAIL_ADDRESS = settings_server.ADMIN_EMAIL_ADDRESS
+DEFAULT_FROM_EMAIL = settings_server.ADMIN_EMAIL_ADDRESS
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -121,18 +121,17 @@ TEMPLATES = [
 
 
 INSTALLED_APPS = [
-    'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    # Uncomment the next line to enable the admin:
-    'django.contrib.admin',
-    # Uncomment the next line to enable admin documentation:
-    # 'django.contrib.admindocs',
+    
     'ft',
     'feeds',
+
+    'django.contrib.auth',
+    'django.contrib.admin',
 
 ]
 
@@ -142,6 +141,14 @@ FEEDS_SERVER = settings_server.FEEDS_SERVER
 FEEDS_CLOUDFLARE_WORKER = settings_server.FEEDS_CLOUDFLARE_WORKER
 
 AUTH_USER_MODEL = 'ft.User'
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'pwned_passwords_django.validators.PwnedPasswordsValidator',
+    },
+]
+
+LOGIN_REDIRECT_URL = '/feeds/'
 
 # A sample logging configuration. The only tangible logging
 if hasattr(settings_server, "LOGGING"):

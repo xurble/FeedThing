@@ -12,6 +12,8 @@ urlpatterns = [
 
     path('admin/', admin.site.urls),
 
+    path('.well-known/<uri>', well_known_uris, name='well_known'),
+
 
     url(r'^$', index, name="home"),
     url(r'^refresh/$', read_request_listener, name="refresh"),
@@ -25,12 +27,10 @@ urlpatterns = [
 
     url(r'^downloadfeeds/$', downloadfeeds),
 
+    path('settings/', user_settings, name='settings'),
 
-    url(r'^accounts/login/$',loginpage),
-    url(r'^accounts/logout/$',logoutpage),
-    url(r'^accounts/forgot-password/$', forgot_password, name="forgot_password"),
-    url(r'^accounts/recover/$', recover_password, name="recover_password"),
-
+    path('accounts/', include('django.contrib.auth.urls')),
+    
 
     url(r'^read/(?P<fid>.*)/', readfeed),
 

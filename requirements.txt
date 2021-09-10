@@ -12,12 +12,13 @@ certifi==2021.5.30
     # via requests
 chardet==4.0.0
     # via requests
-django-feed-reader==1.0.0
-    # via -r requirements.in
 django==2.2.24
     # via
     #   -r requirements.in
     #   django-feed-reader
+    #   pwned-passwords-django
+django-feed-reader==1.0.0
+    # via -r requirements.in
 feedparser==5.2.1
     # via django-feed-reader
 idna==2.10
@@ -39,7 +40,7 @@ sgmllib3k==1.0.0
     # via django-feed-reader
 soupsieve==2.2.1
     # via beautifulsoup4
-sqlparse==0.4.1
+sqlparse==0.4.2
     # via django
 urllib3==1.26.5
     # via requests

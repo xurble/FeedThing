@@ -135,6 +135,10 @@ INSTALLED_APPS = [
 
 ]
 
+SECURE_SSL_REDIRECT = settings_server.SECURE_SSL_REDIRECT
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
 VERSION = "3.6"
 FEEDS_USER_AGENT = f"FeedThing/{VERSION }"
 FEEDS_SERVER = settings_server.FEEDS_SERVER

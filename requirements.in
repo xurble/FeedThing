@@ -1,6 +1,6 @@
-Django~=3.2
-requests~=2.31
+Django~=4.2
+requests~=2.31.0
 mysqlclient
-beautifulsoup4~=4.11.2
+beautifulsoup4
 django-feed-reader
 pwned-passwords-django

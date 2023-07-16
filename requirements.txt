@@ -23,8 +23,11 @@ django==4.2.3
     # via
     #   -r requirements.in
     #   django-feed-reader
+    #   djangorestframework
     #   pwned-passwords-django
 django-feed-reader==1.0.5
+    # via -r requirements.in
+djangorestframework==3.14.0
     # via -r requirements.in
 exceptiongroup==1.1.2
     # via anyio
@@ -48,7 +51,9 @@ pwned-passwords-django==2.0
 pyrfc3339==1.1
     # via django-feed-reader
 pytz==2023.3
-    # via pyrfc3339
+    # via
+    #   djangorestframework
+    #   pyrfc3339
 requests==2.31.0
     # via
     #   -r requirements.in

@@ -41,7 +41,7 @@ idna==3.4
     #   anyio
     #   httpx
     #   requests
-mysqlclient==2.2.0
+mysqlclient==2.1.1
     # via -r requirements.in
 pwned-passwords-django==2.0
     # via -r requirements.in

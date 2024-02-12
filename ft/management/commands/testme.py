@@ -14,6 +14,8 @@ class Command(BaseCommand):
 
         SavedPost.objects.all().delete()
 
+        NewSubscription.objects.all().delete()
+
         old_subs = list(OldSubscription.objects.all())
         new_subs = []
 
@@ -40,7 +42,7 @@ class Command(BaseCommand):
                         new_parent = n
                     if n.id == o.new_id:
                         new_child = n
-                assert new_parent and old_child
+                assert new_parent and new_child
                 new_child.parent = new_parent
                 new_child.save()
 

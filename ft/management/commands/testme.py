@@ -38,7 +38,7 @@ class Command(BaseCommand):
                 for n in new_subs:
                     if n.old_id == o.parent_id:
                         new_parent = n
-                    if n.id == o.old_id:
+                    if n.id == o.new_id:
                         new_child = n
                 assert new_parent and old_child
                 new_child.parent = new_parent

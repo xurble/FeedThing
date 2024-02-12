@@ -22,6 +22,7 @@ from uuid import uuid4
 
 from feeds.models import Post, Source, Enclosure
 
+
 class FTUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         today = timezone.now()
@@ -55,16 +56,16 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     is_active   = models.BooleanField(default=True)
     is_staff    = models.BooleanField(default=False)
-    
-    
+
+
 
     USERNAME_FIELD = 'email'
 
     objects = FTUserManager()
-    
+
     def __str__(self):
         return self.name
-    
+
     class Meta:
         verbose_name = 'user'
         verbose_name_plural = 'users'
@@ -78,17 +79,17 @@ class User(AbstractBaseUser, PermissionsMixin):
         else:
             return self.salutation
 
-        
+
 
 # A user subscription
 class Subscription(models.Model):
-    user      = models.ForeignKey(User, on_delete=models.CASCADE)
-    source    = models.ForeignKey(Source,blank=True,null=True, on_delete=models.CASCADE, related_name='subscriptions') # null source means we are a folder
-    parent    = models.ForeignKey('self',blank=True,null=True, on_delete=models.CASCADE, related_name='subscriptions')
+    user      = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subscriber')
+    source    = models.ForeignKey(Source,blank=True,null=True, on_delete=models.CASCADE, related_name='subscriptionsx') # null source means we are a folder
+    parent    = models.ForeignKey('self',blank=True,null=True, on_delete=models.CASCADE, related_name='subscriptionsx')
     last_read = models.IntegerField(default=0)
     is_river  = models.BooleanField(default=False)
     name      = models.CharField(max_length=255)
-    
+
     def __str__(self):
         return "'%s' for user %s" % (self.name, self.user.email)
 
@@ -98,21 +99,21 @@ class Subscription(models.Model):
             return self.source.max_index - self.last_read
         else:
             try:
-                return self._undread_count 
+                return self._undread_count
             except:
                 return -666
-                
+
 
 class SavedPost(models.Model):
 
     user         = models.ForeignKey(User, on_delete=models.CASCADE)
     post         = models.ForeignKey(Post, on_delete=models.CASCADE)
     subscription = models.ForeignKey(Subscription, null=True, on_delete=models.CASCADE)
-    
+
     date_saved = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
         ordering = ['-date_saved']
         unique_together = (("post", "user"),)
-        
-        
+
+

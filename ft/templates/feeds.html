@@ -13,28 +13,28 @@
 		<div class="col-sm-4" id="feedlist">
 		    <h2 class="ftheader">{% if all %}All{% else %}Unread{% endif %} Feeds</h2>
 			<div id="feeds">
-			
+
                 <div class="feed-list-header">
                     {% if all %}
-                        <a href="/feeds/" class="btn btn-default"><i class="fa fa-sun"></i></a> 
+                        <a href="/feeds/" class="btn btn-default"><i class="fa fa-sun"></i></a>
                     {% else %}
-                        <a href="/allfeeds/" class="btn btn-default"><i class="fa fa-archive"></i></a> 
+                        <a href="/allfeeds/" class="btn btn-default"><i class="fa fa-archive"></i></a>
                     {% endif %}
                     <input type="search" id="searchfeeds" class="form-control" placeholder="Filter">
                 </div>
 				{% for s in sources %}
-					<div id="s{{s.id}}" class="feedbutton{% if not s.source %} group{% endif %}"> 
-						<a id="sa{{s.id}}" onclick="read({{s.id}}, 0)" href="#" class="feedbutton">{{s.name}}<span id="uc{{s.id}}" class="unreadcount">{% if s.is_river %}<i class="fa fa-water" title="River"></i>{% else %}({{s.undread_count}}){% endif %}</span></a> 
+					<div id="s{{s.id}}" class="feedbutton{% if not s.source %} group{% endif %}">
+						<a id="sa{{s.id}}" onclick="read({{s.id}}, 0)" href="#" class="feedbutton">{{s.name}}<span id="uc{{s.id}}" class="unreadcount">{% if s.is_river %}<i class="fa fa-water" title="River"></i>{% else %}({{s.undread_count}}){% endif %}</span></a>
 					</div>
 				{% endfor %}
 			</div>
 		</div>
-            		
+
         <div class="col-sm-8" id="feedpane">
             <img src="/static/images/FeedThing.png" class="paneplant">
         </div>
     </div>
-</div>	
+</div>
         {% csrf_token %}
 
 <script>
@@ -53,18 +53,18 @@ function read(fid, page) {
 
     {% if all %}
         if (last_read != null) {
-            $("#s" + last_read).removeClass("read");    
+            $("#s" + last_read).removeClass("read");
         }
     {% else %}
         if (last_read != null && last_read != fid) {
-            $("#s" + last_read).fadeOut("fast");    
+            $("#s" + last_read).fadeOut("fast");
         }
     {% endif %}
 
     last_read = fid;
     last_page = page;
-    
-    $("#s" + last_read).addClass("read");  
+
+    $("#s" + last_read).addClass("read");
     $("#feedlist").addClass("hidden-xs");
     $("#feedpane").html('<div id="feedcontent"> <img src="/static/images/FeedThing.png" class="paneplant"></div>');
 
@@ -81,33 +81,33 @@ function read(fid, page) {
         });
     }
 
+
     setTimeout(function(){
-    
+
         $(".posts img").each(function(){
             var width = this.naturalWidth;
-            
+
             if (width == 0) {
                 // not loaded yet
                 this.onload = function(){
                     var width = this.naturalWidth;
                     if (width < 150) {
-                        $(this).addClass("blury");
+                        $(this).attr("style", "display:inline-block;margin-left:5px;max-width: max-content;")
                     }
-
                 }
             }
             else {
                 if (width < 150) {
-                    $(this).addClass("blury");
+                    $(this).attr("style", "display:inline-block;margin-left:5px;max-width: max-content;")
                 }
             }
-        });    
-    
-    }, 100);    
+        });
+
+    }, 100);
 
 
 
-    
+
     return false;
 }
 
@@ -121,18 +121,18 @@ $("#searchfeeds").on('search', function(){
 function filterFeeds() {
 
     var q = $("#searchfeeds").val().toLowerCase();
-    
+
     $(".feedbutton").each(function(){
-        
+
         var title = $(this).text().toLowerCase();
-        
+
         if (q == '' || title.indexOf(q) >= 0) {
             $(this).show();
         }
         else {
             $(this).hide();
         }
-    
+
     });
 }
 
@@ -146,19 +146,19 @@ $(document).ready(function(){
 
 
 		var State = History.getState(); // Note: We are using History.getState() instead of event.state
-		
-		
+
+
 		if (!State.data.hasOwnProperty("feed")) {
 		    //console.log("unreading");
 		    // this is a reset
 		    unRead();
 		} else {
 		    read(State.data.feed, State.data.page);
-		}	
+		}
 		//debugger;
-		
+
 	});
-	
+
 	History.pushState(null,null,"#");
 
     {% if preload != "0" %}
@@ -178,12 +178,12 @@ function unRead() {
             $("#s" + last_read).fadeOut("fast");
         {% endif %}
 
-    
+
         $("#feedcontent").fadeOut("fast",function(){
             $("#feedlist").removeClass("hidden-xs");
-            $("#feedpane").html('<img src="/static/images/FeedThing.png" class="paneplant">');            
-        });    
-    
+            $("#feedpane").html('<img src="/static/images/FeedThing.png" class="paneplant">');
+        });
+
     //}
 
 }
@@ -197,49 +197,49 @@ function unsub(sid) {
             confirm: {
                 label: 'Unsubscribe',
                 className: 'btn-primary'
-            
+
             },
             cancel: {
                 label: 'Cancel',
                 className: 'btn-default'
-            
+
             }
         },
         callback: function(result) {
             if(result) {
-            
+
                 $("#unsub").html('<div id="loader"><img src="/static/images/loader.gif" alt="Working" width="32" height="32"></div>');
                 $.post("/subscription/" + sid +"/unsubscribe/",function(data){
-        
+
                     $("#loader").fadeOut(function(){
                         $("#loader").html(data);
                         $("#loader").fadeIn();
                     });
-        
+
                 },'html');
 
-            
+
             }
         }
     });
     return;
-	
+
 }
 
 function rename(sid) {
 
-    bootbox.prompt("Enter a custom name for this feed.", function(result){ 
+    bootbox.prompt("Enter a custom name for this feed.", function(result){
         if(result != null && result.trim() != "") {
 
 
             $.post("/subscription/" + sid +"/rename/", {name:result}, function(data){
-    
+
                 // TODO Fix up the screen!!
-    
+
             },'json');
 
 
-        } 
+        }
     });
 
 }

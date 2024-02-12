@@ -28,10 +28,10 @@ import base64
 
 from xml.dom import minidom
 
-from .models import *
+from .models import SavedPost, User
 
 from feeds.utils import update_feeds, test_feed
-from feeds.models import Source, Post
+from feeds.models import Source, Post, Subscription
 
 import time
 import datetime
@@ -54,8 +54,8 @@ def index(request):
 
 def help(request):
     return render(request, "help.html",{})
-    
-    
+
+
 def well_known_uris(request, uri):
 
     """
@@ -63,12 +63,12 @@ def well_known_uris(request, uri):
     """
 
     logging.info("Request for .well-known URI: {}".format(uri))
-    
-    
+
+
     if uri == "change-password":
         # https://twitter.com/rmondello/status/1009495517494173697?lang=en
         return HttpResponseRedirect(reverse("password_change"))
-        
+
     raise Http404  # not implemented
 
 
@@ -81,10 +81,10 @@ def user_settings(request):
 def feeds(request):
     vals = {}
     toRead = list(Subscription.objects.filter(Q(user = request.user) & (Q(is_river = True) | Q(last_read__lt = F('source__max_index')))).order_by("source__name"))
-    
+
     sources = []
     groups = {}
-    
+
     for src in toRead:
         if src.parent:
             if src.parent.is_river == False:
@@ -99,13 +99,13 @@ def feeds(request):
                     sources.append(grp)
         else:
             sources.append(src)
-    
+
     vals["sources"] = sources
     vals["all"] = False
-    
+
     vals["preload"] = request.GET.get("feed", "0")
     vals["page"] = request.GET.get("page", "1")
-    
+
     return render(request, "feeds.html", vals)
 
 
@@ -115,10 +115,10 @@ def feeds(request):
 def managefeeds(request):
     vals = {}
     subscriptions = list(Subscription.objects.filter(Q(user = request.user) & Q(parent=None)).order_by("source__name"))
-    
+
     vals["subscriptions"] = subscriptions
     vals["preload"] = request.GET.get("s", "0")
-    
+
     return render(request, "manage.html",vals)
 
 
@@ -127,9 +127,9 @@ def managefeeds(request):
 def subscriptionlist(request):
     vals = {}
     subscriptions = list(Subscription.objects.filter(Q(user = request.user) & Q(parent=None)).order_by("source__name"))
-    
+
     vals["subscriptions"] = subscriptions
-    
+
     return render(request, "sublist.html",vals)
 
 
@@ -139,27 +139,27 @@ def subscriptionlist(request):
 def allfeeds(request):
     vals = {}
     toRead = list(Subscription.objects.filter(Q(user = request.user) & Q(parent=None)).order_by("source__name"))
-    
+
     sources = []
     groups = {}
-    
+
     for src in toRead:
         if src.source == None:
-            
+
             src._undread_count = 0
-            
+
             for c in src.subscriptions.all():
                 src._undread_count += c.undread_count
-            
+
         sources.append(src)
-    
+
     vals["sources"] = sources
     vals["all"] = True
 
     vals["preload"] = request.GET.get("feed","0")
     vals["page"] = request.GET.get("page", "1")
 
-    
+
     return render(request, "feeds.html",vals)
 
 @login_required
@@ -167,7 +167,7 @@ def feedgarden(request):
     vals = {}
     vals["feeds"] = Source.objects.all().order_by("due_poll")
     return render(request, 'feedgarden.html',vals)
-    
+
 
 
 @login_required
@@ -179,29 +179,29 @@ def addfeed(request):
             groups = Subscription.objects.filter(Q(user=request.user) & Q(source=None))
 
             return render(request, "addfeed.html",{"feed":feed,"groups":groups})
-    
+
         else:
-    
+
             feed = request.POST.get("feed", "")
-                
+
             headers = { "User-Agent": "{agent} (+{server}; Initial Feed Crawler)".format(agent=settings.FEEDS_USER_AGENT, server=settings.FEEDS_SERVER), "Cache-Control":"no-cache,max-age=0", "Pragma":"no-cache" } #identify ourselves and also stop our requests getting picked up by google's cache
 
 
             ret = requests.get(feed, headers=headers,verify=False, timeout=15)
             #can I be bothered to check return codes here?  I think not on balance
-        
-            isFeed = False  
+
+            isFeed = False
 
             content_type = "Not Set"
             if "Content-Type" in ret.headers:
                 content_type = ret.headers["Content-Type"]
-                
+
             feed_title = feed
-             
+
             body = ret.text.strip()
             if "xml" in content_type or body[0:1] == "<":
                 ff = feedparser.parse(body) # are we a feed?  # imported by django-feed-reader
-                isFeed = (len(ff.entries) > 0) 
+                isFeed = (len(ff.entries) > 0)
                 if isFeed:
                     feed_title = ff.feed.title
             if "json" in content_type or body[0:1] == "{":
@@ -209,10 +209,10 @@ def addfeed(request):
                 isFeed = "items" in data and len(data["items"]) > 0
                 if isFeed:
                     feed_title = data["title"]
-            
+
 
             if not isFeed:
-            
+
                 soup = BeautifulSoup(body)
                 feedcount = 0
                 rethtml = ""
@@ -229,14 +229,14 @@ def addfeed(request):
                             #TODO: need to accout for relative URLs here
                 #if feedcount == 1:
                     #just 1 feed found, let's import it now
-                
+
                 #   ret = fetch(f)
                 #   isFeed = True
                 if feedcount == 0:
                     return HttpResponse("No feeds found")
                 else:
                     return HttpResponse(rethtml)
-                
+
             if isFeed:
                 parent = None
                 if request.POST["group"] != "0":
@@ -244,7 +244,7 @@ def addfeed(request):
                     if parent.user != request.user:
                         return HttpResponse("<div>Internal error.<!--bad group --></div>")
 
-            
+
                 s = Source.objects.filter(feed_url = feed)
                 if s.count() > 0:
                     #feed already exists
@@ -254,32 +254,32 @@ def addfeed(request):
                         return HttpResponse("<div>Already subscribed to this feed </div>")
                     else:
                         us = Subscription(source=s,user=request.user,name=s.display_name,parent=parent)
-                    
+
                         if s.max_index > 10: #don't flood people with all these old things
                             us.last_read = s.max_index - 10
-                    
+
                         us.save()
-                    
+
                         s.num_subs = s.subscriptions.count()
                         s.save()
-                    
+
                         return HttpResponse("<div>Imported feed %s</div>" % us.name)
 
 
                 # need to start checking feed parser errors here
                 ns = Source()
-                # ns.due_poll = datetime.datetime.utcnow().replace(tzinfo=utc)            
-            
+                # ns.due_poll = datetime.datetime.utcnow().replace(tzinfo=utc)
+
                 #print request.POST["river"]
                 #ns.inRiver = (request.POST["river"] == "yes")
-            
-            
-                    
+
+
+
                 ns.name     = feed_title
                 ns.feed_url = feed
-            
+
                 ns.save()
-            
+
                 us = Subscription(source=ns,user=request.user,name=ns.display_name,parent=parent)
                 us.save()
 
@@ -291,20 +291,20 @@ def addfeed(request):
         import traceback
         traceback_str = ''.join(traceback.format_tb(xx.__traceback__))
         return HttpResponse("<div>Error %s: %s</div><div style='display:none'>%s</div>" % (xx.__class__.__name__,str(xx),traceback_str))
-    
+
 
 @login_required
-def downloadfeeds(request):    
-    
+def downloadfeeds(request):
+
     if not request.user.is_superuser:
         raise PermissionDenied()
-    
+
     opml = render_to_string("opml.xml", {"feeds":Source.objects.all()})
-    
+
     ret =  HttpResponse(opml, content_type="application/xml+opml")
     ret['Content-Disposition'] = 'inline; filename=feedthing-export.xml'
     return ret
-    
+
 
 # TODO: I don't think that this is the most robust import ever :)
 @login_required
@@ -315,7 +315,7 @@ def importopml(request):
     count = 0
     dom = minidom.parseString(theFile)
     imported  = []
-    
+
     sources = dom.getElementsByTagName("outline")
     for s in sources:
 
@@ -323,7 +323,7 @@ def importopml(request):
         if url.strip() != "":
             ns = Source.objects.filter(feed_url = url)
             if ns.count() > 0:
-                
+
                 #feed already exists - so there may already be a user subscription for it
                 ns = ns[0]
                 us = Subscription.objects.filter(source=ns).filter(user=request.user)
@@ -340,7 +340,7 @@ def importopml(request):
                 ns.num_subs = ns.subscriptions.count()
                 ns.save()
 
-                
+
             else:
                 # Feed does not already exist it must also be a new sub
                 ns = Source()
@@ -349,17 +349,17 @@ def importopml(request):
                 ns.feed_url = url #probably best to see that there isn't a match here :)
                 ns.name = s.getAttribute("title")
                 ns.save()
-    
+
                 us = Subscription(source=ns,user=request.user,name = ns.display_name)
                 us.save()
-    
+
                 count += 1
-            
+
             imported.append(ns)
-    
+
     vals = {}
-    vals["imported"] = imported    
-    vals["count"] = count  
+    vals["imported"] = imported
+    vals["count"] = count
     return render(request, 'importopml.html',vals)
 
 
@@ -369,10 +369,10 @@ def importopml(request):
 def subscriptionrename(request, sid):
 
     sub = get_object_or_404(Subscription,id=int(sid))
-    
+
     if sub.user == request.user:
-        
- 
+
+
         if request.method == "POST":
             sub.name = request.POST["name"]
             sub.save()
@@ -385,12 +385,12 @@ def subscriptionrename(request, sid):
 def subscriptiondetails(request,sid):
 
     sub = get_object_or_404(Subscription,id=int(sid))
-    
+
     if sub.user == request.user:
-        
+
         vals = {}
         vals["subscription"] = sub
- 
+
         if request.method == "POST":
             sub.name = request.POST["subname"]
             sub.is_river = "isriver" in request.POST
@@ -398,70 +398,70 @@ def subscriptiondetails(request,sid):
 
         if sub.source == None:
             vals["sources"] = Subscription.objects.filter(parent=sub)
-        
+
         else:
             vals["groups"] = Subscription.objects.filter(Q(user=request.user) & Q(source=None))
- 
+
         return render(request, 'subscription.html',vals)
-        
-        
-    #else 403 ?      
-    
+
+
+    #else 403 ?
+
 @login_required
 def promote(request,sid):
     # Take a subscription out of its group
-    
+
     sub = get_object_or_404(Subscription,id=int(sid))
     if sub.user == request.user:
-    
+
         parent = sub.parent
-    
+
         sub.parent = None
         sub.save()
-        
+
         if parent.subscriptions.count() == 0:
             parent.delete()
             return HttpResponse("Kill")
         else:
             return HttpResponse("OK")
-        
-        
+
+
 @login_required
 def addto(request,sid,tid):
 
 
     toadd  = get_object_or_404(Subscription,id=int(sid))
-    
+
     if tid == "0":
         target = Subscription(user=request.user, name="New Folder")
     else:
         target = get_object_or_404(Subscription,id=int(tid))
-    
+
     if toadd.user == request.user and target.user == request.user and toadd.source is not None:
 
         if tid == "0":
             target.save()
-    
-    
+
+
         if target.source == None:
             toadd.parent = target
             toadd.save()
-            
+
             return HttpResponse(target.id)
         else:
-            
+
             nn = Subscription(user=request.user,name="New Folder")
             nn.save()
             toadd.parent = nn
             toadd.save()
             target.parent = nn
             target.save()
-            
+
             return HttpResponse(nn.id)
-            
-    
-    
-    
+
+
+
+
 
 @login_required
 def readfeed(request, fid):
@@ -469,20 +469,20 @@ def readfeed(request, fid):
 
     river_posts_per_page = 40
     feed_posts_per_page = 10
-    
+
     posts_per_page = river_posts_per_page
-            
+
     vals  = {}
-        
+
     sub = get_object_or_404(Subscription, id=int(fid))
-    
+
     paginator = None
-    
+
     try:
         page = int(request.GET.get("page", "1"))
     except Exception:
         page = 1
-        
+
     if sub.user != request.user:
         raise PermissionDenied
 
@@ -491,36 +491,36 @@ def readfeed(request, fid):
     # there is a  template tag that sorts this out later
     sub_map = {}
 
-    if sub.source == None:  
-    
-        # if source is None then we are are in a folder 
+    if sub.source == None:
+
+        # if source is None then we are are in a folder
         posts = []
-        
+
         # so we find all the actual subscriptions parented by this folder
-        sources = list(Subscription.objects.filter(parent=sub)) 
+        sources = list(Subscription.objects.filter(parent=sub))
 
         for s in sources:
             sub_map[s.source.id] = s.name
-        
+
         if not sub.is_river:
             # This folder is not a river, it is an actual set of read everything
             # feeds grouped together by some heathen
             # Gather the posts now and mark them as read
             for src in sources:
                 srcposts = list(Post.objects.filter(Q(source = src.source) & Q(index__gt = src.last_read)).order_by("index"))
-    
+
                 src.last_read = src.source.max_index
                 src.save()
                 posts += srcposts
             posts_per_page = feed_posts_per_page
-            
 
-        if len(posts) == 0: 
+
+        if len(posts) == 0:
             # Either didn't find any new posts or are a river
             # In either case get the most recent posts and put them in a paginator
             sources = [src.source for src in sources]
             post_list = Post.objects.filter(source__in = sources).order_by("-created")
-            
+
             paginator = Paginator(post_list, posts_per_page)
 
             try:
@@ -532,11 +532,11 @@ def readfeed(request, fid):
 
 
         vals["subscription"] = sub
-    
-                
-        
+
+
+
     else:
-        posts = [] 
+        posts = []
 
         sub_map[sub.source.id] = sub.name
 
@@ -544,7 +544,7 @@ def readfeed(request, fid):
         if not sub.is_river:
             posts = list(Post.objects.filter(Q(source = sub.source) & Q(index__gt = sub.last_read)).order_by("index"))
             posts_per_page = feed_posts_per_page
-    
+
         if len(posts) == 0: # No Posts or a river
             post_list = Post.objects.filter(source = sub.source).order_by("-created")
             paginator = Paginator(post_list, posts_per_page)
@@ -554,17 +554,17 @@ def readfeed(request, fid):
                 posts = paginator.page(1)
         #for p in posts:
         #    p.sub_name = sub.name
-     
+
         # since we always read all new posts, mark it off here.
         sub.last_read = sub.source.max_index
         sub.save()
-    
+
         vals["source"] = sub.source
         vals["subscription"] = sub
-        
+
     if paginator is not None:
         # Stolen from Stack Overflow: https://stackoverflow.com/questions/30864011/display-only-some-of-the-page-numbers-by-django-pagination
-                
+
         # Get the index of the current page
         index = posts.number - 1  # edited to something easier without index
         # This value is maximum index of your pages, so the last page - 1
@@ -572,15 +572,15 @@ def readfeed(request, fid):
         # You want a range of 7, so lets calculate where to slice the list
         start_index = index - 2 if index >= 3 else 0
         end_index = index + 3 if index <= max_index - 3 else max_index
-        # Get our new page range. In the latest versions of Django page_range returns 
+        # Get our new page range. In the latest versions of Django page_range returns
         # an iterator. Thus pass it to list, to make our slice possible again.
         vals["page_range"] = list(paginator.page_range)[start_index:end_index]
-        
-    
+
+
     vals["posts"] = posts
     vals["paginator"] = paginator
     vals["subscription_map"] = sub_map
-    
+
     if sub.is_river:
         return render(request, 'river.html', vals)
     else:
@@ -590,7 +590,7 @@ def readfeed(request, fid):
 def revivefeed(request,fid):
 
     if request.method == "POST":
-        
+
         f = get_object_or_404(Source,id=int(fid))
         f.live = True
         f.due_poll = (datetime.datetime.utcnow().replace(tzinfo=utc) - datetime.timedelta(days=100))
@@ -610,15 +610,15 @@ def revivefeed(request,fid):
 def testfeed(request,fid): #kill it stone dead (From feedgarden) - need to make admin only and clean up Subscriptions
 
         f = get_object_or_404(Source,id=int(fid))
-        
-        
-        
+
+
+
         r = HttpResponse()
-        
+
         test_feed(f, cache=request.GET.get("cache","no") == "yes", output=r)
-        
+
         r["Content-type"] = "text/plain"
-        
+
         return r
 
 
@@ -627,27 +627,27 @@ def unsubscribefeed(request,sid):
 
 
     if request.method == "POST":
-        
+
         sub = get_object_or_404(Subscription,id=int(sid))
-        
+
         if sub.user == request.user:
 
             if sub.source:
                 source = sub.source
                 parent = sub.parent
                 sub.delete()
-    
+
                 if parent is not None:
                     if parent.subscriptions.count() == 0:
                         parent.delete()
-    
+
                 source.num_subs = source.subscriptions.count()
                 if source.num_subs == 0: # this is the last subscription for this source
                     Post.objects.filter(source=source).delete() # cascading delete would do this I think
                     source.delete()
                 else:
                     source.save()
-    
+
                 return HttpResponse("OK")
             else:
                 return HttpResponse("Can't unsubscribe from groups")
@@ -659,36 +659,36 @@ def unsubscribefeed(request,sid):
 def savepost(request,pid):
 
     post = get_object_or_404(Post,id=int(pid))
-    
+
     sub = Subscription.objects.filter(source=post.source).filter(user=request.user)[0]
-    
+
     sp = SavedPost(post=post, user=request.user, subscription=sub)
     sp.save()
-    
+
     return HttpResponse("OK")
-    
-    
+
+
 @login_required
 def forgetpost(request, pid):
 
     post = get_object_or_404(Post, id=int(pid))
-    
+
     sp = SavedPost.objects.filter(post=post).filter(user=request.user)[0]
     sp.delete()
-    
+
     return HttpResponse("OK")
-    
+
 
 @login_required
 def savedposts(request):
 
     vals = {}
-    
+
     q = request.GET.get("q", "")
-    
+
     post_list = SavedPost.objects.filter(user=request.user)
 
-    if q != "": 
+    if q != "":
         post_list = post_list.filter(Q(post__title__icontains=q)|Q(post__body__icontains=q))
 
 
@@ -703,15 +703,15 @@ def savedposts(request):
         posts = paginator.page(page)
     except(EmptyPage, InvalidPage):
         posts = paginator.page(1)
-    
+
     vals["posts"] = posts
     vals["paginator"] = paginator
     vals["q"] = q
 
 
-    
+
     return render(request, 'savedposts.html',vals)
-    
+
 
 
 def read_request_listener(request):
@@ -720,9 +720,9 @@ def read_request_listener(request):
     response = HttpResponse()
 
     update_feeds(3, response)
-    
+
 
     response["Content-Type"] = "text/plain"
 
     return response
-    
+

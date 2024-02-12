@@ -2,7 +2,7 @@
 
 <div id="feedcontent">
     <div id="feedscroller">
-        
+
         {% if subscription %}
             {% if source %}
 
@@ -23,7 +23,7 @@
 
             {% endif %}
         {% endif %}
-        
+
         {% include "paginator.html"%}
 
         <br style="clear:both">
@@ -50,30 +50,32 @@
 
             <div class="enclosures">
                 {% for e in p.enclosures.all %}
-            
-                    {% if "audio/" in e.type %}
+
+                    {% if e.is_image %}
+                        {% if e.href not in p.body %}
+                            <img src="{{e.href}}" alt="Enclosure">
+                        {% endif %}
+                    {% elif e.is_audio %}
                         <audio controls src="{{e.href}}" preload="metadata"></audio>
-                    {% elif "video/" in e.type %}
-                        <video controls src="{{e.href}}" preload="metadata"></video>
-                    {% elif  "image/" in e.type and e.href not in p.body %}
-                        <img src="{{e.href}}" alt="Enclosure">
+                    {% elif e.is_video %}
+                        <video controls src="{{e.href}}#t=0.1" preload="metadata"></video>
                     {% endif %}
-                
+
                 {% endfor %}
-                
+
                 {% if p.image_url %}
                     <img src="{{p.image_url}}" alt="Enclosure">
                 {% endif %}
-                
+
             </div>
 
-        {% endfor %}		
+        {% endfor %}
 
         </div>
         <div class="clearfix">
-        
+
         {% include "paginator.html"%}
-        
+
         </div>
     </div>
 </div>

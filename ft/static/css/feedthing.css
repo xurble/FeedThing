@@ -44,6 +44,11 @@ body {
     background-color: #DCE8C4;
 }
 
+span.invisible {
+    /* mastodon shit */
+    display:none;
+}
+
 .nav>li>a {
     padding: 14px 8px 6px 10px;
 }
@@ -64,7 +69,7 @@ a.logo {
 	font-family: Junction, Futura, Helvetica, Arial , sans-serif;
 	text-decoration: none;	/* this must be within this class to work */
 	color:#999 !important;
-    font-size:22px; 
+    font-size:22px;
     font-weight: normal;
 }
 
@@ -84,7 +89,7 @@ h2.ftheader, .ftcontent h2, h2.riversource {
 	padding: 8px 8px 2px 0px;
 	margin: 2px 2px 2px 0px;
 	color:#999;
-	text-decoration: none;	
+	text-decoration: none;
 }
 
 h2.riversource {
@@ -138,13 +143,20 @@ a.backbutton {
 .postbody img, .enclosures img {
     width: 100%;
     display: block;
-    margin: 5px 0px 5px 0px;
+    margin: 5px auto 5px auto;
 }
 
-.enclosures video, .enclosures audio  {
+.enclosures video {
+    width: 100%;
+    max-width: max-content;
+    display: block;
+    margin: 10px auto 5px auto;
+}
+
+.enclosures audio  {
     width: 100%;
     display: block;
-    margin: 10px 0px 5px 0px;
+    margin: 10px auto 5px auto;
 }
 
 
@@ -193,17 +205,17 @@ span.helptext ul, ul.errorlist {
 
 span.helptext li, ul.errorlist li {
     margin:2px 0 2px 0;
-    padding:2px 4px 2px 4px;  
+    padding:2px 4px 2px 4px;
     border: 1px solid #faebcc;
     border-radius: 3px;
 }
 
-span.helptext li {      
+span.helptext li {
     color: #8a6d3b;
     background-color: #fcf8e3;
 }
 
-ul.errorlist li {      
+ul.errorlist li {
     color: #a94442;
     background-color: #f2dede;
     border-color: #ebccd1;
@@ -214,13 +226,13 @@ table.auth-table {
     margin-bottom: 6px;
 }
 
-/* Extra Small Devices, Phones */ 
+/* Extra Small Devices, Phones */
 @media only screen and (max-width : 767px) {
 
     html, body, .fullpage {
         height:auto;
     }
-    
+
     div.logo {
         margin-left:15px
     }
@@ -232,13 +244,13 @@ table.auth-table {
         right: 3px;
     }
 
-
     .posts img {
-        width: calc(100% +  30px);
+        width: calc(100% + 30px);
+        max-width: max-content;
         margin-left: -15px;
         margin-right: -15px;
     }
-    
+
 }
 
 .blury {
@@ -283,7 +295,7 @@ div.read,div.read:hover {
 
 
 a img {
-	border:none;	
+	border:none;
 }
 
 
@@ -350,7 +362,7 @@ h4,h5,h6 {
 }
 
 blockquote {
-    font-size:14px;
+    font-size:16px;
 }
 
 div#feeds div.group {
@@ -447,22 +459,22 @@ div.location {
 
 
 @media (prefers-color-scheme: dark) {
-    
+
     html, body {
 
         background-color: #4a525a;
         color: #eee;
     }
-    
+
     div.feedbutton, .btn-default {
         background-color: #999;
         border-color: #777;
     }
-    
+
     input[type=text], input[type=password], input[type=url], input[type=search], #opml {
         color: #444;
     }
-        
+
     div#feeds div.group {
         background-color: #aaa;
     }

@@ -20,7 +20,7 @@ from django.utils import timezone
 from uuid import uuid4
 
 
-from feeds.models import Post, Source, Enclosure
+from feeds.models import Post, Source, Enclosure, Subscription
 
 
 class FTUserManager(BaseUserManager):
@@ -80,28 +80,6 @@ class User(AbstractBaseUser, PermissionsMixin):
             return self.salutation
 
 
-
-# A user subscription
-class Subscription(models.Model):
-    user      = models.ForeignKey(User, on_delete=models.CASCADE, related_name='subscriber')
-    source    = models.ForeignKey(Source,blank=True,null=True, on_delete=models.CASCADE, related_name='subscriptionsx') # null source means we are a folder
-    parent    = models.ForeignKey('self',blank=True,null=True, on_delete=models.CASCADE, related_name='subscriptionsx')
-    last_read = models.IntegerField(default=0)
-    is_river  = models.BooleanField(default=False)
-    name      = models.CharField(max_length=255)
-
-    def __str__(self):
-        return "'%s' for user %s" % (self.name, self.user.email)
-
-    @property
-    def undread_count(self):
-        if self.source:
-            return self.source.max_index - self.last_read
-        else:
-            try:
-                return self._undread_count
-            except:
-                return -666
 
 
 class SavedPost(models.Model):

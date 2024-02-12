@@ -19,13 +19,15 @@ certifi==2023.7.22
     #   requests
 charset-normalizer==3.2.0
     # via requests
-django==4.2.3
+django==4.2.10
     # via
     #   -r requirements.in
     #   django-feed-reader
     #   pwned-passwords-django
-django-feed-reader==1.1.0-beta.1
+django-feed-reader==1.1.0b1
     # via -r requirements.in
+exceptiongroup==1.2.0
+    # via anyio
 feedparser==6.0.10
     # via django-feed-reader
 h11==0.14.0
@@ -64,5 +66,7 @@ soupsieve==2.4.1
     # via beautifulsoup4
 sqlparse==0.4.4
     # via django
+typing-extensions==4.9.0
+    # via asgiref
 urllib3==2.0.3
     # via requests

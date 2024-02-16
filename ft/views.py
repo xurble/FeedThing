@@ -364,14 +364,14 @@ def addto(request, sid, tid):
 
     toadd = get_object_or_404(Subscription, id=int(sid))
 
-    if tid == "0":
+    if tid == 0:
         target = Subscription(user=request.user, name="New Folder")
     else:
         target = get_object_or_404(Subscription, id=int(tid))
 
     if toadd.user == request.user and target.user == request.user and toadd.source is not None:
 
-        if tid == "0":
+        if tid == 0:
             target.save()
 
         if target.source is None:

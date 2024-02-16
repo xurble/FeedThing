@@ -4,39 +4,39 @@
 #
 #    pip-compile --output-file=requirements.txt requirements.in
 #
-anyio==3.7.1
-    # via httpcore
+anyio==4.2.0
+    # via httpx
 asgiref==3.7.2
     # via django
-beautifulsoup4==4.12.2
+beautifulsoup4==4.12.3
     # via
     #   -r requirements.in
     #   django-feed-reader
-certifi==2023.7.22
+certifi==2024.2.2
     # via
     #   httpcore
     #   httpx
     #   requests
-charset-normalizer==3.2.0
+charset-normalizer==3.3.2
     # via requests
 django==4.2.10
     # via
     #   -r requirements.in
     #   django-feed-reader
     #   pwned-passwords-django
-django-feed-reader==1.1.0b1
+django-feed-reader==1.1.0
     # via -r requirements.in
 exceptiongroup==1.2.0
     # via anyio
-feedparser==6.0.10
+feedparser==6.0.11
     # via django-feed-reader
 h11==0.14.0
     # via httpcore
-httpcore==0.17.3
+httpcore==1.0.3
     # via httpx
-httpx==0.24.1
+httpx==0.26.0
     # via pwned-passwords-django
-idna==3.4
+idna==3.6
     # via
     #   anyio
     #   httpx
@@ -47,7 +47,7 @@ pwned-passwords-django==2.0
     # via -r requirements.in
 pyrfc3339==1.1
     # via django-feed-reader
-pytz==2023.3
+pytz==2024.1
     # via pyrfc3339
 requests==2.31.0
     # via
@@ -60,13 +60,14 @@ sgmllib3k==1.0.0
 sniffio==1.3.0
     # via
     #   anyio
-    #   httpcore
     #   httpx
-soupsieve==2.4.1
+soupsieve==2.5
     # via beautifulsoup4
 sqlparse==0.4.4
     # via django
 typing-extensions==4.9.0
-    # via asgiref
-urllib3==2.0.7
+    # via
+    #   anyio
+    #   asgiref
+urllib3==2.2.0
     # via requests

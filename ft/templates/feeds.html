@@ -24,7 +24,7 @@
                 </div>
 				{% for s in sources %}
 					<div id="s{{s.id}}" class="feedbutton{% if not s.source %} group{% endif %}">
-						<a id="sa{{s.id}}" onclick="read({{s.id}}, 0)" href="#" class="feedbutton">{{s.name}}<span id="uc{{s.id}}" class="unreadcount">{% if s.is_river %}<i class="fa fa-water" title="River"></i>{% else %}({{s.unread_count}}){% endif %}</span></a>
+						<a id="sa{{s.id}}" onclick="read({{s.id}}, 0)" href="#" class="feedbutton">{{s.name}}<span id="{% if s.is_river %}r{% endif %}uc{{s.id}}" class="unreadcount">{% if s.is_river %}<i class="fa fa-water" title="River"></i>{% else %}({{s.unread_count}}){% endif %}</span></a>
 					</div>
 				{% endfor %}
 			</div>

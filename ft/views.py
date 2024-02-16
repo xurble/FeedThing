@@ -4,7 +4,6 @@ from django.shortcuts import render, get_object_or_404
 from django.template.loader import render_to_string
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, Http404
 from django.db.models import Q
-from django.db.models import F
 from django.contrib.auth.decorators import login_required
 from django.utils.timezone import utc
 from django.core.exceptions import PermissionDenied
@@ -20,7 +19,12 @@ from xml.dom import minidom
 
 from .models import SavedPost
 
-from feeds.utils import update_feeds, test_feed
+from feeds.utils import (
+    update_feeds,
+    test_feed,
+    get_unread_subscription_list_for_user,
+    get_subscription_list_for_user
+)
 from feeds.models import Source, Post, Subscription
 
 from bs4 import BeautifulSoup
@@ -65,28 +69,8 @@ def user_settings(request):
 @login_required
 def feeds(request):
     vals = {}
-    toRead = list(Subscription.objects.filter(
-                    Q(user=request.user) &
-                    (Q(is_river=True) | Q(last_read__lt=F('source__max_index')))
-                ).order_by("source__name"))
 
-    sources = []
-    groups = {}
-
-    for src in toRead:
-        if src.parent:
-            if not src.parent.is_river:
-                # this is a group
-                if src.parent.id in groups:
-                    grp = groups[src.parent.id]
-                    grp._undread_count += src.undread_count
-                else:
-                    grp = src.parent
-                    grp._undread_count = src.undread_count
-                    groups[grp.id] = grp
-                    sources.append(grp)
-        else:
-            sources.append(src)
+    sources = get_unread_subscription_list_for_user(request.user)
 
     vals["sources"] = sources
     vals["all"] = False
@@ -121,19 +105,8 @@ def subscriptionlist(request):
 @login_required
 def allfeeds(request):
     vals = {}
-    toRead = list(Subscription.objects.filter(Q(user=request.user) & Q(parent=None)).order_by("source__name"))
 
-    sources = []
-
-    for src in toRead:
-        if src.source is None:
-
-            src._undread_count = 0
-
-            for c in src.subscriptions.all():
-                src._undread_count += c.undread_count
-
-        sources.append(src)
+    sources = get_subscription_list_for_user(request.user)
 
     vals["sources"] = sources
     vals["all"] = True

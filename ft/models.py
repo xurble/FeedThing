@@ -1,38 +1,25 @@
 from django.db import models
-
-# Create your models here.
-
-import time
-import datetime
-from urllib.parse import urlencode
-import logging
-import sys
-from django.utils.timezone import utc
-
-from django.conf import settings
-
 from django.contrib.auth.models import AbstractBaseUser
 from django.contrib.auth.models import PermissionsMixin
 
 from django.contrib.auth.models import BaseUserManager
-from django.utils import timezone
 
-from uuid import uuid4
-
-
-from feeds.models import Post, Source, Enclosure, Subscription
+from feeds.models import Post, Subscription
 
 
 class FTUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
-        today = timezone.now()
 
         if not email:
             raise ValueError('The email address must be set')
 
         email = FTUserManager.normalize_email(email)
-        user  = self.model(email=email,
-                          is_staff=False, is_active=True, **extra_fields)
+        user = self.model(
+                        email=email,
+                        is_staff=False,
+                        is_active=True,
+                        **extra_fields
+                    )
 
         user.set_password(password)
         user.save(using=self._db)
@@ -49,15 +36,12 @@ class FTUserManager(BaseUserManager):
 
 class User(AbstractBaseUser, PermissionsMixin):
 
-    email       = models.EmailField(unique=True, blank=False)
-    name        = models.CharField(max_length=128, verbose_name="Full Name")
-    salutation  = models.CharField(max_length=128, null=True,blank=True, verbose_name="What should we call you?")
+    email = models.EmailField(unique=True, blank=False)
+    name = models.CharField(max_length=128, verbose_name="Full Name")
+    salutation = models.CharField(max_length=128, null=True, blank=True, verbose_name="What should we call you?")
 
-
-    is_active   = models.BooleanField(default=True)
-    is_staff    = models.BooleanField(default=False)
-
-
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
 
     USERNAME_FIELD = 'email'
 
@@ -80,12 +64,10 @@ class User(AbstractBaseUser, PermissionsMixin):
             return self.salutation
 
 
-
-
 class SavedPost(models.Model):
 
-    user         = models.ForeignKey(User, on_delete=models.CASCADE)
-    post         = models.ForeignKey(Post, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
     subscription = models.ForeignKey(Subscription, null=True, on_delete=models.CASCADE)
 
     date_saved = models.DateTimeField(auto_now_add=True)
@@ -93,5 +75,3 @@ class SavedPost(models.Model):
     class Meta:
         ordering = ['-date_saved']
         unique_together = (("post", "user"),)
-
-

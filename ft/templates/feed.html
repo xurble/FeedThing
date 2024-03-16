@@ -42,7 +42,7 @@
             <h3 class="posttitle"><a href="{{p.link|escape}}">{{p.title|safe}}</a></h3>
 
 
-            <div class="date">{{p.created }} - {{p.created|timesince}} ago.</div>
+            <div class="date"><a href="{{p.link|escape}}">{{p.created }} - {{p.created|timesince}} ago.</a></div>
 
             <div class="postbody">
                 {{p.body|safe}}

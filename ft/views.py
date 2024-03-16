@@ -207,9 +207,6 @@ def addfeed(request):
 
                         us.save()
 
-                        s.num_subs = s.subscriptions.count()
-                        s.save()
-
                         return HttpResponse("<div>Imported feed %s</div>" % us.name)
 
                 # need to start checking feed parser errors here
@@ -274,9 +271,6 @@ def importopml(request):
 
                     us.save()
                     count += 1
-
-                ns.num_subs = ns.subscriptions.count()
-                ns.save()
 
             else:
                 # Feed does not already exist it must also be a new sub
@@ -554,12 +548,8 @@ def unsubscribefeed(request, sid):
                     if parent.subscriptions.count() == 0:
                         parent.delete()
 
-                source.num_subs = source.subscriptions.count()
-                if source.num_subs == 0:  # this is the last subscription for this source
-                    Post.objects.filter(source=source).delete()  # cascading delete would do this I think
+                if source.subscriber_count == 0:  # this is the last subscription for this source
                     source.delete()
-                else:
-                    source.save()
 
                 return HttpResponse("OK")
             else:

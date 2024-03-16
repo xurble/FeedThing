@@ -23,11 +23,11 @@
                 </tr>
                 {% for f in feeds %}
                     <tr style="{{f.garden_style}}">
-                        <td style="text-align:center">{{f.num_subs}}</td>
+                        <td style="text-align:center">{{f.subscriber_count}}</td>
                         <td>
                             <a href="{{f.feed_url|escape}}"><img src="/static/images/feed.png" alt="Feed"></a>
-                            <a href="{{f.best_link|escape}}">{{f.display_name}}</a> 
-                            [<a href="/feed/{{f.id}}/test/">Test</a>] 
+                            <a href="{{f.best_link|escape}}">{{f.display_name}}</a>
+                            [<a href="/feed/{{f.id}}/test/">Test</a>]
                             [<a href="/feed/{{f.id}}/test/?cache=yes">Cache?</a>]
                             {% if f.is_cloudflare %}(😬){% endif %}
                         </td>
@@ -47,24 +47,24 @@
     </div>
 </div>
 		<script>
-		
+
 
 function refresh(fid)
 {
 	$("#r" + fid).html('<div id="loader' + fid +'"><img src="/static/images/loader.gif" alt="Working" width="32" height="32"></div>');
 
 	$.post("/feed/" + fid + "/revive/",function(data){
-	
+
 		$("#loader" + fid).fadeOut(function(){
 			$("#loader" + fid).html(data);
 			$("#loader" + fid).fadeIn();
 		});
-	
+
 	},'html');
 }
 
-		
-		
+
+
 		</script>
 
 

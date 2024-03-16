@@ -27,7 +27,7 @@ def river(value):
         if ">" in part:
             ret += "".join(part.split(">")[1:])
         else:
-            ret += part
+            ret += part + " "
 
     if len(ret) > 500:
         ret = ret[:500]

@@ -20,14 +20,17 @@ def hoursmins(value):
 
 @register.filter(name='river')
 def river(value):
-
     ret = ""
     parts = value.split("<")
     for part in parts:
         if ">" in part:
+            # Guardian sub-head in feed fixer :)
+            if part == "/p>" and not ret.strip()[-1:] in ".,\"'!?:;…)]}&*>":
+                ret = ret.strip() + ". "
             ret += "".join(part.split(">")[1:])
         else:
-            ret += part + " "
+            ret += part
+        ret += " "
 
     if len(ret) > 500:
         ret = ret[:500]

@@ -1,13 +1,22 @@
 # Django settings for feedthing project.
 
 import os
+import sys
+
+from feedthing import settings_server
 
 SITE_ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..")
 
-from feedthing import  settings_server
+# Detect if running locally
+RUNNING_LOCAL = 'runserver' in sys.argv
+
 DEBUG = settings_server.DEBUG
+LOG_LOCATION = settings_server.LOG_LOCATION
+DATABASES = settings_server.DATABASES
+if hasattr(settings_server, "EMAIL_BACKEND"):
+    EMAIL_BACKEND = settings_server.EMAIL_BACKEND
 
-
+DEFAULT_FROM_EMAIL = settings_server.ADMIN_EMAIL_ADDRESS
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
@@ -15,19 +24,12 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
-DATABASES = settings_server.DATABASES
 
 ALLOWED_HOSTS = settings_server.ALLOWED_HOSTS
-
 
 INTERNAL_IPS = (
     '127.0.0.1',
 )
-
-if hasattr(settings_server, "EMAIL_BACKEND"):
-    EMAIL_BACKEND = settings_server.EMAIL_BACKEND
-    
-DEFAULT_FROM_EMAIL = settings_server.ADMIN_EMAIL_ADDRESS
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -83,10 +85,9 @@ ADMIN_MEDIA_PREFIX = '/static/admin/'
 # List of finder classes that know how to find static files in
 # various locations.
 STATICFILES_FINDERS = (
-    'django.contrib.staticfiles.finders.FileSystemFinder',
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-#    'django.contrib.staticfiles.finders.DefaultStorageFinder',
-)
+        'django.contrib.staticfiles.finders.FileSystemFinder',
+        'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    )
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = settings_server.SECRET_KEY
@@ -98,7 +99,24 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+
+    # Add the account middleware:
+    "allauth.account.middleware.AccountMiddleware",
 ]
+
+AUTHENTICATION_BACKENDS = [
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+
+    # `allauth` specific authentication methods, such as login by email
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+
 
 ROOT_URLCONF = 'feedthing.urls'
 
@@ -114,7 +132,7 @@ TEMPLATES = [
                     'django.contrib.auth.context_processors.auth',
                     'django.contrib.messages.context_processors.messages',
                 ],
-                'debug' : DEBUG,
+                'debug': DEBUG,
             },
         },
     ]
@@ -126,12 +144,19 @@ INSTALLED_APPS = [
     'django.contrib.sites',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    
+
     'ft',
+    'web',
+
     'feeds',
 
     'django.contrib.auth',
     'django.contrib.admin',
+
+    'allauth',
+    'allauth.account',
+    # 'allauth.socialaccount',
+    # 'allauth.socialaccount.providers.github',
 
 ]
 
@@ -140,7 +165,7 @@ SECURE_SSL_REDIRECT = settings_server.SECURE_SSL_REDIRECT
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 VERSION = "3.6"
-FEEDS_USER_AGENT = f"FeedThing/{VERSION }"
+FEEDS_USER_AGENT = f"FeedThing/{VERSION}"
 FEEDS_SERVER = settings_server.FEEDS_SERVER
 FEEDS_CLOUDFLARE_WORKER = settings_server.FEEDS_CLOUDFLARE_WORKER
 
@@ -154,43 +179,54 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LOGIN_REDIRECT_URL = '/feeds/'
 
-# A sample logging configuration. The only tangible logging
-if hasattr(settings_server, "LOGGING"):
-    LOGGING = settings_server.LOGGING
-else:
-    LOGGING = {
-        "version": 1,
-        "disable_existing_loggers": False,
-        "formatters": {
-            "verbose": {
-                "format": "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
-                "datefmt": "%d/%b/%Y %H:%M:%S",
-            },
-            "simple": {"format": "%(levelname)s %(message)s"},
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "root": {
+        "level": "INFO",
+        "handlers": ["console" if RUNNING_LOCAL else "file"]
+    },
+    "handlers": {
+        "file": {
+            "level": "INFO",
+            'class': 'logging.handlers.RotatingFileHandler',
+            "filename": LOG_LOCATION,
+            'maxBytes': 1024*1024*5,  # 5 MB
+            'backupCount': 5,
+            "formatter": "colored" if RUNNING_LOCAL else "app",
         },
-        "handlers": {
-            "console": {
-                "level": "DEBUG",
-                "class": "logging.StreamHandler",
-                "formatter": "simple",
-            },
-            "console_verbose": {
-                "level": "DEBUG",
-                "class": "logging.StreamHandler",
-                "formatter": "verbose",
-            },
-            "ignore": {"level": "DEBUG", "class": "logging.NullHandler"},
+        "console": {
+            "level": "INFO",
+            "class": "logging.StreamHandler",
+            "formatter": "colored",
         },
-        "loggers": {
-            "": {"handlers": ["console"], "propagate": True, "level": "DEBUG"},
-            "django.security.DisallowedHost": {
-                "handlers": ["ignore"],
-                "propagate": False,
-            },
-            "django": {
-                "propagate": True
+    },
+    "loggers": {
+        "django": {
+            "handlers": [],
+            "level": "INFO",
+            "propagate": True
+        },
+    },
+    "formatters": {
+        "app": {
+            "format": (
+                u"%(asctime)s [%(levelname)-8s] "
+                "(%(module)s.%(funcName)s) %(message)s"
+            ),
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+        },
+        "colored": {
+            "()": "colorlog.ColoredFormatter",
+            "format": "%(log_color)s%(asctime)s [%(levelname)-8s] %(message)s",
+            "datefmt": "%Y-%m-%d %H:%M:%S",
+            "log_colors": {
+                "DEBUG": "cyan",
+                "INFO": "green",
+                "WARNING": "yellow",
+                "ERROR": "red",
+                "CRITICAL": "red",
             },
         },
-    }
-
-
+    },
+}

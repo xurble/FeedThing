@@ -5,7 +5,6 @@ from django.template.loader import render_to_string
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, Http404
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
-from django.utils.timezone import utc
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator, EmptyPage, InvalidPage
 from django.conf import settings
@@ -14,6 +13,7 @@ import datetime
 import logging
 import json
 import traceback
+import pytz
 
 from xml.dom import minidom
 
@@ -275,7 +275,7 @@ def importopml(request):
             else:
                 # Feed does not already exist it must also be a new sub
                 ns = Source()
-                ns.due_poll = datetime.datetime.utcnow().replace(tzinfo=utc)
+                ns.due_poll = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
                 ns.site_url = s.getAttribute("htmlUrl")
                 ns.feed_url = url  # probably best to see that there isn't a match here :)
                 ns.name = s.getAttribute("title")

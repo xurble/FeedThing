@@ -1,57 +1,50 @@
 from django.urls import path, include
+from ft import views
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
 admin.autodiscover()
 
-
-from ft.views import *
-
 urlpatterns = [
 
     path('admin/', admin.site.urls),
 
-    path('.well-known/<uri>', well_known_uris, name='well_known'),
+    path('.well-known/<uri>', views.well_known_uris, name='well_known'),
 
+    path('accounts/', include('allauth.urls')),
 
-    path('', index, name="home"),
-    path('refresh/', read_request_listener, name="refresh"),
-    path('help/', help, name="help"),
-    path('feeds/', feeds, name="feeds"),
-    path('allfeeds/', allfeeds, name="allfeeds"),
+    path('', views.index, name="home"),
+    path('refresh/', views.read_request_listener, name="refresh"),
+    path('help/', views.help, name="help"),
+    path('feeds/', views.feeds, name="feeds"),
+    path('allfeeds/', views.allfeeds, name="allfeeds"),
 
-    path('addfeed/', addfeed, name="addfeed"),
-    path('importopml/', importopml),
-    path('feedgarden/', feedgarden),
+    path('addfeed/', views.addfeed, name="addfeed"),
+    path('importopml/', views.importopml),
+    path('feedgarden/', views.feedgarden),
 
-    path('downloadfeeds/', downloadfeeds),
+    path('downloadfeeds/', views.downloadfeeds),
 
-    path('settings/', user_settings, name='settings'),
+    path('settings/', views.user_settings, name='settings'),
 
-    path('accounts/', include('django.contrib.auth.urls')),
-    
+    path('read/<int:fid>/', views.readfeed),
 
-    path('read/<int:fid>/', readfeed),
+    path('post/<int:pid>/save/', views.savepost, name="savepost"),
+    path('post/<int:pid>/forget/', views.forgetpost, name="forgetpost"),
 
-    path('post/<int:pid>/save/',savepost, name="savepost"),
-    path('post/<int:pid>/forget/',forgetpost, name="forgetpost"),
+    path('saved/', views.savedposts, name="savedposts"),
 
-    path('saved/',savedposts, name="savedposts"),
-    
+    path('manage/', views.managefeeds),
+    path('subscription/list/', views.subscriptionlist),
 
+    path('subscription/<int:sid>/unsubscribe/', views.unsubscribefeed),
+    path('subscription/<int:sid>/details/', views.subscriptiondetails),
+    path('subscription/<int:sid>/rename/', views.subscriptionrename),
+    path('subscription/<int:sid>/promote/', views.promote),
+    path('subscription/<int:sid>/addto/<int:tid>/', views.addto),
 
-    path('manage/',managefeeds),
-    path('subscription/list/',subscriptionlist),
-    
-    path('subscription/<int:sid>/unsubscribe/',unsubscribefeed),
-    path('subscription/<int:sid>/details/',subscriptiondetails),
-    path('subscription/<int:sid>/rename/',subscriptionrename),
-    path('subscription/<int:sid>/promote/',promote),
-    path('subscription/<int:sid>/addto/<int:tid>/',addto),
+    path('feed/<int:fid>/revive/', views.revivefeed),
+    # (r'^feed/<int:fid>/kill/',killfeed),
+    path('feed/<int:fid>/test/', views.testfeed),
 
-
-    path('feed/<int:fid>/revive/',revivefeed),
-    #(r'^feed/<int:fid>/kill/',killfeed),
-    path('feed/<int:fid>/test/',testfeed),
-    
 ]

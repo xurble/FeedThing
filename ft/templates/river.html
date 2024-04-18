@@ -8,16 +8,16 @@
         <h2 class="ftheader">{{subscription.name}}</h2>
         {% endif %}
         <div>{% if user.is_superuser and subscription.source.is_cloudflare %}😬{% endif %}</div>
-        
+
         {% include "paginator.html" %}
 
         <div class="posts">
         {% for p in posts %}
 
             <br>
-            {% ifchanged p|subscription_name:subscription_map %}
+            {% ifchanged p.subscription.name %}
             <hr class="river">
-            <h2 class="riversource">{{p|subscription_name:subscription_map }}</h2>
+            <h2 class="riversource">{{p.subscription.name}}</h2>
             {% endifchanged %}
             <div class="buttons">
                 <a href="{{p.link|escape}}"><i class="fa fa-external-link" aria-hidden="true" title="Go to item"></i></a>&nbsp;
@@ -32,17 +32,17 @@
                 {{p.body|river}}
             </div>
 
-        {% endfor %}		
+        {% endfor %}
 
         </div>
         <div class="clearfix">
-        
+
         {% if posts.has_next %}
             <br>
             <a href="javascript:read({{subscription.id}}, {{ posts.next_page_number }})">Read More</a>
             <br><br><br>
-        {% endif %}        
-        
+        {% endif %}
+
         </div>
     </div>
 </div>

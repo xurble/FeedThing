@@ -1,5 +1,5 @@
 """
-WSGI config for dogthing project.
+WSGI config for feedthing project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 

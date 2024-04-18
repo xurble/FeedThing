@@ -37,7 +37,7 @@
             </div>
 
             {% if not source %}
-            <h2 class="riversource">{{p|subscription_name:subscription_map }}</h2>
+            <h2 class="riversource">{{p.subscription.name }}</h2>
             {% endif %}
             <h3 class="posttitle"><a href="{{p.link|escape}}">{{p.title|safe}}</a></h3>
 

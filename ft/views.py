@@ -14,6 +14,7 @@ import logging
 import json
 import traceback
 import pytz
+from pytz import utc
 
 from xml.dom import minidom
 
@@ -388,14 +389,9 @@ def addto(request, sid, tid):
 @login_required
 def readfeed(request, fid):
 
-    river_posts_per_page = 40
-    feed_posts_per_page = 10
-
-    posts_per_page = river_posts_per_page
-
     vals = {}
 
-    sub = get_object_or_404(Subscription, id=int(fid))
+    sub: Subscription = get_object_or_404(Subscription, id=int(fid))
 
     paginator = None
 
@@ -407,78 +403,23 @@ def readfeed(request, fid):
     if sub.user != request.user:
         raise PermissionDenied
 
-    # Since users can rename what a source is called in their subscription
-    # we make a map of source ids to subscription names and pass it to the template
-    # there is a  template tag that sorts this out later
-    sub_map = {}
-
-    if sub.source is None:
-
-        # if source is None then we are are in a folder
-        posts = []
-
-        # so we find all the actual subscriptions parented by this folder
-        sources = list(Subscription.objects.filter(parent=sub))
-
-        for s in sources:
-            sub_map[s.source.id] = s.name
-
-        if not sub.is_river:
-            # This folder is not a river, it is an actual set of read everything
-            # feeds grouped together by some heathen
-            # Gather the posts now and mark them as read
-            for src in sources:
-                srcposts = list(Post.objects.filter(Q(source=src.source) & Q(index__gt=src.last_read)).order_by("index"))
-
-                src.last_read = src.source.max_index
-                src.save()
-                posts += srcposts
-            posts_per_page = feed_posts_per_page
-
-        if len(posts) == 0:
-            # Either didn't find any new posts or are a river
-            # In either case get the most recent posts and put them in a paginator
-            sources = [src.source for src in sources]
-            post_list = Post.objects.filter(source__in=sources).order_by("-created")
-
-            paginator = Paginator(post_list, posts_per_page)
-
-            try:
-                posts = paginator.page(page)
-            except (EmptyPage, InvalidPage):
-                posts = paginator.page(1)
-
-        vals["subscription"] = sub
-
+    if sub.is_river:
+        (posts, paginator) = sub.get_paginated_posts(page=page, posts_per_page=40)
     else:
-        posts = []
+        posts = sub.get_unread_posts(oldest_first=True)
+        if len(posts) == 0:
+            (posts, paginator) = sub.get_paginated_posts(page=page, posts_per_page=10)
+        else:
+            sub.mark_read()
 
-        sub_map[sub.source.id] = sub.name
-
-        if not sub.is_river:
-            posts = list(Post.objects.filter(Q(source=sub.source) & Q(index__gt=sub.last_read)).order_by("index"))
-            posts_per_page = feed_posts_per_page
-
-        if len(posts) == 0:  # No Posts or a river
-            post_list = Post.objects.filter(source=sub.source).order_by("-created")
-            paginator = Paginator(post_list, posts_per_page)
-            try:
-                posts = paginator.page(page)
-            except (EmptyPage, InvalidPage):
-                posts = paginator.page(1)
-
-        # since we always read all new posts, mark it off here.
-        sub.last_read = sub.source.max_index
-        sub.save()
-
-        vals["source"] = sub.source
-        vals["subscription"] = sub
+    vals["source"] = sub.source
+    vals["subscription"] = sub
 
     if paginator is not None:
         # Stolen from Stack Overflow: https://stackoverflow.com/questions/30864011/display-only-some-of-the-page-numbers-by-django-pagination
 
         # Get the index of the current page
-        index = posts.number - 1  # edited to something easier without index
+        index = page - 1  # edited to something easier without index
         # This value is maximum index of your pages, so the last page - 1
         max_index = len(paginator.page_range)
         # You want a range of 7, so lets calculate where to slice the list
@@ -490,7 +431,6 @@ def readfeed(request, fid):
 
     vals["posts"] = posts
     vals["paginator"] = paginator
-    vals["subscription_map"] = sub_map
 
     if sub.is_river:
         return render(request, 'river.html', vals)

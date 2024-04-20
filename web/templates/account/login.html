@@ -31,6 +31,10 @@
             {% endelement %}
               <div></div><div></div>
             </div>
+            <div>
+              <p></p>
+              <p><a href="{% url 'account_reset_password' %}">Forgot your password?</a></p>
+            </div>
         {% endslot %}
     {% endelement %}
     {% if SOCIALACCOUNT_ENABLED %}

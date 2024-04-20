@@ -15,6 +15,12 @@ LOG_LOCATION = settings_server.LOG_LOCATION
 DATABASES = settings_server.DATABASES
 if hasattr(settings_server, "EMAIL_BACKEND"):
     EMAIL_BACKEND = settings_server.EMAIL_BACKEND
+    EMAIL_HOST = settings_server.EMAIL_HOST
+    EMAIL_PORT = settings_server.EMAIL_PORT
+    EMAIL_HOST_USER = settings_server.EMAIL_HOST_USER
+    EMAIL_HOST_PASSWORD = settings_server.EMAIL_HOST_PASSWORD
+    # EMAIL_USE_TLS = settings_server.EMAIL_USE_TLS
+
 
 DEFAULT_FROM_EMAIL = settings_server.ADMIN_EMAIL_ADDRESS
 
@@ -159,6 +165,7 @@ INSTALLED_APPS = [
     # 'allauth.socialaccount.providers.github',
 
 ]
+
 
 SECURE_SSL_REDIRECT = settings_server.SECURE_SSL_REDIRECT
 

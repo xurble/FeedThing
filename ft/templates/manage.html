@@ -2,6 +2,7 @@
 
 {% block head %}
     <script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+    <script src="/static/js/history.js"></script>
 {% endblock %}
 
 {% block content %}
@@ -11,14 +12,14 @@
 		    <h2 class="ftheader">Manage Feeds</h2>
 			<div id="feeds">
 
-                {% include "sublist.html" %}			
+                {% include "sublist.html" %}
 			</div>
 		</div>
-            
+
         <div class="col-sm-8" id="feedpane">
             <img src="/static/images/FeedThing.png" class="paneplant">
         </div>
-            		
+
         {% csrf_token %}
     </div>
 </div>
@@ -39,35 +40,28 @@ function details(sid){
 
     $(".read").removeClass("read");
     $("#s" + sid).addClass("read");
-    
+    $("#feedlist").addClass("hidden-xs");
+
+
     $("#feedpane").html('<img src="/static/images/FeedThing.png" class="paneplant">');
 
 
-	$.get("/subscription/" + sid + "/details/",function(data){
-	   $("#feedpane").html(data);
-	   
-	});
+  	$.get("/subscription/" + sid + "/details/",function(data){
+       $("#feedpane").html(data);
+       History.pushState({feed:sid}, "FeedThing", "?feed=" + sid);
+    });
 
+    //if($(window).width() > PHONE_WIDTH) {
+	  //  $(window).scrollTop(0);
+    //}
 
-    if($(window).width() > PHONE_WIDTH) {
-    
-	    $(window).scrollTop(0);
-	    positionFeedList();
-    }
-    else {
-        $("#feedlist").fadeOut(function(){
-            $("#feedpane").show()        
-        });
-
-    }
-    
     return false;
 }
 
 
 function saveSubscription(sid) {
 
-    var vals = $("#subform").serializeObject(); 
+    var vals = $("#subform").serializeObject();
 
     $.post("/subscription/" + sid + "/details/", vals ,function(data){
         $("#feedpane").html(data);
@@ -86,25 +80,25 @@ function unsub(sid)
             confirm: {
                 label: 'Unsubscribe',
                 className: 'btn-primary'
-            
+
             },
             cancel: {
                 label: 'Cancel',
                 className: 'btn-default'
-            
+
             }
         },
         callback: function(result) {
             if(result) {
                 $("#unsub").html('<div id="loader"><img src="/static/images/loader.gif" alt="Working" width="32" height="32"></div>');
                 $.post("/subscription/" + sid +"/unsubscribe/",function(data){
-        
+
                     $("#loader").fadeOut(function(){
                         $("#loader").html(data);
                         $("#loader").fadeIn();
                     });
-        
-                },'html');            
+
+                },'html');
             }
         }
     });
@@ -112,27 +106,27 @@ function unsub(sid)
 
 
 
-	
+
 }
 
 function removeFromGroup(sid) {
-    
+
     $.post("/subscription/" + sid + "/promote/", function(data) {
-    
+
         if ($("#sub" + sid).length == 0) {
             details(sid);
         }
         else {
             $("#sub" + sid).fadeOut();
-        }   
+        }
         refreshFeedList();
-        
+
         if (data == "Kill") {
             $("#feedpane").html('<img src="/static/images/FeedThing.png" class="paneplant">')
         }
-    
+
     });
-    
+
 }
 
 function addToGroup(sid,gid) {
@@ -144,21 +138,56 @@ function addToGroup(sid,gid) {
 }
 
 
-
-
-
-
 $(document).ready(function(){
 
     dragDrop();
-    
+
+
+	// Bind to StateChange Event
+	History.Adapter.bind(window,'statechange',function(){ // Note: We are using statechange instead of popstate
+		//console.log("statechange");
+
+
+		var State = History.getState(); // Note: We are using History.getState() instead of event.state
+
+
+		if (!State.data.hasOwnProperty("feed")) {
+		    console.log("unreading");
+		    // this is a reset
+		    unRead();
+		} else {
+		    details(State.data.feed);
+		}
+		//debugger;
+
+	});
+
+	History.pushState(null,null,"#");
+
     {% if preload != "0" %}
-    
-        details({{preload}});    
-    
+        $("#feedlist").addClass("hidden-xs");
+        details({{preload}});
     {% endif %}
 
 });
+
+
+
+function unRead() {
+    //window.history.back();
+    //if(event.state) {
+        debugger
+        $(".read").removeClass("read");
+        $("#feedcontent").fadeOut("fast",function(){
+            $("#feedlist").removeClass("hidden-xs");
+            $("#feedpane").html('<img src="/static/images/FeedThing.png" class="paneplant">');
+        });
+
+    //}
+
+}
+
+
 
 function dragDrop() {
 
@@ -166,9 +195,9 @@ function dragDrop() {
         cursor:'move',
         start:handleDragStart,
         stop: handleDragStop,
-    
+
     }).removeClass("makedraggable");
-    
+
     $(".makedroppable").droppable({
         drop:handleDrop,
         over:handleOver,
@@ -183,12 +212,12 @@ function dragDrop() {
 jQuery.fn.serializeObject = function() {
   var arrayData, objectData;
   arrayData = this.serializeArray();
-  
+
   objectData = {};
 
   $.each(arrayData, function() {
     var value;
-    
+
 
     if (this.value != null) {
       value = this.value;
@@ -223,14 +252,14 @@ function handleDragStart( evt, ui ) {
 }
 
 function handleDragStop(evt,ui) {
-   // $(this).top(dragPos.top).left(dragPos.left);  
+   // $(this).top(dragPos.top).left(dragPos.left);
 
     if (dragPos) {
         $(this).offset(dragPos).css("z-index","0");
     }
-    
+
     dragging = false;
-}   
+}
 
 function handleDrop(evt,ui) {
 
@@ -248,8 +277,8 @@ function handleOver(evt,ui) {
     console.log(idx);
 
     if($(this).hasClass("feedbutton") ) {
-        $(this).addClass("droptarget");  
-    } 
+        $(this).addClass("droptarget");
+    }
 }
 
 function handleOut(evt,ui) {
@@ -259,10 +288,10 @@ function handleOut(evt,ui) {
 function refreshFeedList() {
 
     $.get("/subscription/list/",function(data){
-        
+
         $("#feeds").html(data);
         dragDrop();
-        
+
     },"html");
 }
 

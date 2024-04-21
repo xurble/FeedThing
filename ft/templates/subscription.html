@@ -1,97 +1,97 @@
 {% load ft_tags %}
 
+<div id="feedcontent">
+  <h2 class="ftheader">{{subscription.name}}</h2>
+  {% if subscription.source %}
+      <div class="meta">{% if subscription.source.last_success %}Last read {{subscription.source.last_success|timesince}} ago.{% else %}Feed has not been read.{% endif %}</div>
+  {% endif %}
 
-            <h2 class="ftheader">{{subscription.name}}</h2>
-            {% if subscription.source %}
-                <div class="meta">{% if subscription.source.last_success %}Last read {{subscription.source.last_success|timesince}} ago.{% else %}Feed has not been read.{% endif %}</div>
-            {% endif %}
-
-            <br style="clear:both">
-
-
-            <form method="POST" id="subform" onsubmit="saveSubscription({{subscription.id}}); return false;">
-            <label for="subname">Name:</label><br>
-            <input type="text" name="subname" id="subname" value="{{subscription.name}}" style="width:90%">
-            <br><br>
-            <input type="checkbox" name="isriver" id="isriver" value="True" {% if subscription.is_river %}checked="checked"{% endif %}> <label for="isriver">Is River</label>            
-            <br><br>
-
-            {% if subscription.source %}
-                <div id="unsub" class="pull-right"><a href="javascript:unsub({{subscription.id}})" class="btn btn-default">Unsubscribe</a></div>
-            {% endif %}
-
-            <button type="submit" class="btn btn-default">Save</button>
-            {% csrf_token %}
-            </form>
-            <hr style="clear:both">
-            {% if subscription.source %}
-                <h2>Source Details</h2>
-            
-                <table>
-                    <tr>
-                        <th>Name:</th>
-                        <td>{{subscription.source.display_name}}</td>
-                    </tr>
-                    <tr>
-                        <th>Link:</th>
-                        <td><a href="{{subscription.source.best_link}}">{{subscription.source.best_link}}</a></td>
-                    </tr>                
-                    <tr>
-                        <th>Feed:</th>
-                        <td><a href="{{subscription.source.feed_url}}">{{subscription.source.feed_url}}</a></td>
-                    </tr>
-                    <tr>
-                        <th>Interval:</th>
-                        <td>{{subscription.source.interval|hoursmins}}</td>
-                    </tr>
-                    <tr>
-                        <th>Last Successful Read:</th>
-                        <td>{% if subscription.source.last_success %}{{subscription.source.last_success|timesince}} ago{% else %}Never{% endif %}</td>
-                    </tr>
-                    <tr>
-                        <th>Next Read:</th>
-                        <td>{{subscription.source.due_poll|timeuntil}}</td>
-                    </tr>
-                    <tr>
-                        <th>Last Updated:</th>
-                        <td>{% if subscription.source.last_change %}{{subscription.source.last_change|timesince}} ago{% else %}Never{% endif %}</td>
-                    </tr>
-                    <tr>
-                        <th>Last Result:</th>
-                        <td>{{subscription.source.last_result}}</td>
-                    </tr>
-
-                </table>
+  <br style="clear:both">
 
 
-                
-                <hr>
-                
-                {% if subscription.parent %}
-                    
-                    <div class="location">
-                        <a href="javascript:removeFromGroup({{subscription.id}})" class="btn btn-danger btn-xs" style="display:inline-block"><i class="fa fa-trash" title="Remove"> </i></a> 
-                        Currently in “{{subscription.parent.name}}”
-                    </div>
-                {% endif %}                
-                <h2 style="margin-bottom:3px">Move To Folder</h2>
-                
-                <a class="btn btn-default" style="margin-right:8px" href="javascript:addToGroup({{subscription.id}},0)">New Folder</a>
-                
-                {% for g in groups %}
-                    <a class="btn btn-default" style="margin-right:8px" href="javascript:addToGroup({{subscription.id}},{{g.id}})">{{g.name}}</a>
-                {% endfor %}
-                
-                
-            {% else %}
-                <h2>Sources</h2>
-                {% for s in sources %}
-                    <div id="sub{{s.id}}" class="feedbutton" style="display:inline-block;padding:8px;width:60%"> 
-                        <a href="javascript:removeFromGroup({{s.id}})" class="btn btn-danger btn-xs" style="display:inline-block;color:white"><i class="fa fa-trash" title="Remove"></i></a> 
-                        <div class="healthbox" style="float:right;{{s.source.garden_style }}"> </div>
-                        <a href="#" onclick="details({{s.id}})">{{s.name}}</a> 
-                    </div><br>
-                {% endfor %}
-            
-            {% endif %}
-            
+  <form method="POST" id="subform" onsubmit="saveSubscription({{subscription.id}}); return false;">
+  <label for="subname">Name:</label><br>
+  <input type="text" name="subname" id="subname" value="{{subscription.name}}" style="width:90%">
+  <br><br>
+  <input type="checkbox" name="isriver" id="isriver" value="True" {% if subscription.is_river %}checked="checked"{% endif %}> <label for="isriver">Is River</label>
+  <br><br>
+
+  {% if subscription.source %}
+      <div id="unsub" class="pull-right"><a href="javascript:unsub({{subscription.id}})" class="btn btn-default">Unsubscribe</a></div>
+  {% endif %}
+
+  <button type="submit" class="btn btn-default">Save</button>
+  {% csrf_token %}
+  </form>
+  <hr style="clear:both">
+  {% if subscription.source %}
+      <h2>Source Details</h2>
+
+      <table>
+          <tr>
+              <th>Name:</th>
+              <td>{{subscription.source.display_name}}</td>
+          </tr>
+          <tr>
+              <th>Link:</th>
+              <td><a href="{{subscription.source.best_link}}">{{subscription.source.best_link}}</a></td>
+          </tr>
+          <tr>
+              <th>Feed:</th>
+              <td><a href="{{subscription.source.feed_url}}">{{subscription.source.feed_url}}</a></td>
+          </tr>
+          <tr>
+              <th>Interval:</th>
+              <td>{{subscription.source.interval|hoursmins}}</td>
+          </tr>
+          <tr>
+              <th>Last Successful Read:</th>
+              <td>{% if subscription.source.last_success %}{{subscription.source.last_success|timesince}} ago{% else %}Never{% endif %}</td>
+          </tr>
+          <tr>
+              <th>Next Read:</th>
+              <td>{{subscription.source.due_poll|timeuntil}}</td>
+          </tr>
+          <tr>
+              <th>Last Updated:</th>
+              <td>{% if subscription.source.last_change %}{{subscription.source.last_change|timesince}} ago{% else %}Never{% endif %}</td>
+          </tr>
+          <tr>
+              <th>Last Result:</th>
+              <td>{{subscription.source.last_result}}</td>
+          </tr>
+
+      </table>
+
+
+
+      <hr>
+
+      {% if subscription.parent %}
+
+          <div class="location">
+              <a href="javascript:removeFromGroup({{subscription.id}})" class="btn btn-danger btn-xs" style="display:inline-block"><i class="fa fa-trash" title="Remove"> </i></a>
+              Currently in “{{subscription.parent.name}}”
+          </div>
+      {% endif %}
+      <h2 style="margin-bottom:3px">Move To Folder</h2>
+
+      <a class="btn btn-default" style="margin-right:8px" href="javascript:addToGroup({{subscription.id}},0)">New Folder</a>
+
+      {% for g in groups %}
+          <a class="btn btn-default" style="margin-right:8px" href="javascript:addToGroup({{subscription.id}},{{g.id}})">{{g.name}}</a>
+      {% endfor %}
+
+
+  {% else %}
+      <h2>Sources</h2>
+      {% for s in sources %}
+          <div id="sub{{s.id}}" class="feedbutton" style="display:inline-block;padding:8px;width:60%">
+              <a href="javascript:removeFromGroup({{s.id}})" class="btn btn-danger btn-xs" style="display:inline-block;color:white"><i class="fa fa-trash" title="Remove"></i></a>
+              <div class="healthbox" style="float:right;{{s.source.garden_style }}"> </div>
+              <a href="#" onclick="details({{s.id}})">{{s.name}}</a>
+          </div><br>
+      {% endfor %}
+
+  {% endif %}
+</div>

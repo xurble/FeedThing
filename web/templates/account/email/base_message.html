@@ -1,0 +1,13 @@
+{% load i18n %}{% autoescape off %}
+<html>
+  <body>
+    <p>
+      {% blocktrans with site_name=current_site.name %}Hello from {{ site_name }}!{% endblocktrans %}
+    </p>
+    {% block content %}{% endblock content %}
+    <p>
+      {% blocktrans with site_name=current_site.name site_domain=current_site.domain %}Thank you for using <a href="{{ site_domain }}">{{ site_name }}</a>!{% endblocktrans %}
+    </p>
+  </html>
+</body>
+{% endautoescape %}

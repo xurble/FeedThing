@@ -15,17 +15,13 @@ LOG_LOCATION = settings_server.LOG_LOCATION
 DATABASES = settings_server.DATABASES
 if hasattr(settings_server, "EMAIL_BACKEND"):
     EMAIL_BACKEND = settings_server.EMAIL_BACKEND
-    EMAIL_HOST = settings_server.EMAIL_HOST
-    EMAIL_PORT = settings_server.EMAIL_PORT
-    EMAIL_HOST_USER = settings_server.EMAIL_HOST_USER
-    EMAIL_HOST_PASSWORD = settings_server.EMAIL_HOST_PASSWORD
-    # EMAIL_USE_TLS = settings_server.EMAIL_USE_TLS
+    ANYMAIL = settings_server.ANYMAIL
 
-
-DEFAULT_FROM_EMAIL = settings_server.ADMIN_EMAIL_ADDRESS
+ADMIN_EMAIL_ADDRESS = settings_server.ADMIN_EMAIL_ADDRESS
+DEFAULT_FROM_EMAIL = f"FeedThing <{ADMIN_EMAIL_ADDRESS}>"
 
 ADMINS = (
-    # ('Your Name', 'your_email@example.com'),
+    ('Admin', ADMIN_EMAIL_ADDRESS),
 )
 
 MANAGERS = ADMINS
@@ -122,7 +118,10 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
-
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_FORMS = {
+    'signup': 'ft.forms.FTSignupForm',
+}
 
 ROOT_URLCONF = 'feedthing.urls'
 
@@ -171,7 +170,7 @@ SECURE_SSL_REDIRECT = settings_server.SECURE_SSL_REDIRECT
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
-VERSION = "3.6"
+VERSION = "3.7"
 FEEDS_USER_AGENT = f"FeedThing/{VERSION}"
 FEEDS_SERVER = settings_server.FEEDS_SERVER
 FEEDS_CLOUDFLARE_WORKER = settings_server.FEEDS_CLOUDFLARE_WORKER

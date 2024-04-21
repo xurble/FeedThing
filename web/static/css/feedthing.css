@@ -397,6 +397,11 @@ label {
     display: block;
 }
 
+label[for=id_remember] {
+    display: inline-block;
+}
+
+
 input[type=text], input[type=password], input[type=url], input[type=search], input[type=email] {
     padding:2px;
     border: 1px solid #ccc;

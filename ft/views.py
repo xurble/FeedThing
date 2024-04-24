@@ -321,7 +321,7 @@ def subscriptiondetails(request, sid):
 
         if request.method == "POST":
             sub.name = request.POST["subname"]
-            sub.is_river = "isriver" in request.POST
+            sub.is_river = "is_river" in request.POST
             sub.save()
 
         if sub.source is None:

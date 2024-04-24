@@ -12,10 +12,9 @@
                     <i class="fa fa-cog" title="Settings"></i> <span class="caret"></span>
                   </button>
                   <ul class="dropdown-menu">
-                    <li><a href="javascript:rename({{subscription.id}})">Rename</a></li>
-                    <li><a href="/manage/?s={{subscription.id}}">Manage</a></li>
-                    <li role="separator" class="divider"></li>
-                    <li><a href="javascript:unsub({{subscription.id}})">Unsubscribe</a></li>
+                    <li><a href="javascript:rename({{subscription.id}})"><span class="fa fa-edit"></span> Rename</a></li>
+                    <li><a href="/manage/?s={{subscription.id}}"><i class="fas fa-folder"></i> Manage</a></li>
+                    <li><a href="javascript:unsub({{subscription.id}})"><i class="fas fa-trash"></i> Unsubscribe</a></li>
                   </ul>
                 </div>
                 <h2 class="ftheader">{{subscription.name}}</h2>

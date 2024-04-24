@@ -397,7 +397,9 @@ label {
     display: block;
 }
 
-label[for=id_remember], label.inline {
+label[for=id_remember],
+label[for=id_is_river],
+label.inline {
     display: inline-block;
 }
 
@@ -495,6 +497,9 @@ button {
     border-radius: 4px;
 }
 
+th,td {
+    padding:3px;
+}
 
 
 

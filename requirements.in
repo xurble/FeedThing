@@ -5,6 +5,7 @@ beautifulsoup4
 django-feed-reader
 pwned-passwords-django
 django-allauth
+django-anymail
 pytz
 
 python-lsp-server

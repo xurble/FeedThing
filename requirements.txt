@@ -34,23 +34,22 @@ click==8.1.7
 colorlog==6.8.2
     # via -r requirements.in
 cryptography==42.0.5
-    # via
-    #   authlib
-    #   pyjwt
-defusedxml==0.7.1
-    # via python3-openid
+    # via authlib
 django==5.0.4
     # via
     #   -r requirements.in
     #   django-allauth
+    #   django-anymail
     #   django-debug-toolbar
     #   django-feed-reader
     #   pwned-passwords-django
-django-allauth==0.61.1
+django-allauth==0.62.1
+    # via -r requirements.in
+django-anymail==10.3
     # via -r requirements.in
 django-debug-toolbar==4.3.0
     # via -r requirements.in
-django-feed-reader==2.0.1-beta.1
+django-feed-reader==2.0.0
     # via -r requirements.in
 docstring-to-markdown==0.15
     # via python-lsp-server
@@ -89,8 +88,6 @@ mdurl==0.1.2
     # via markdown-it-py
 mysqlclient==2.2.4
     # via -r requirements.in
-oauthlib==3.2.2
-    # via requests-oauthlib
 packaging==24.0
     # via
     #   dparse
@@ -105,9 +102,9 @@ pbr==6.0.0
     # via stevedore
 pdbbbeditsupport==1.0.1
     # via -r requirements.in
-platformdirs==4.2.0
+platformdirs==4.2.1
     # via pytoolconfig
-pluggy==1.4.0
+pluggy==1.5.0
     # via python-lsp-server
 pwned-passwords-django==2.1
     # via -r requirements.in
@@ -115,26 +112,22 @@ pycodestyle==2.11.1
     # via -r requirements.in
 pycparser==2.22
     # via cffi
-pydantic==2.7.0
+pydantic==2.7.1
     # via
     #   safety
     #   safety-schemas
-pydantic-core==2.18.1
+pydantic-core==2.18.2
     # via pydantic
 pyflakes==3.2.0
     # via -r requirements.in
 pygments==2.17.2
     # via rich
-pyjwt[crypto]==2.8.0
-    # via django-allauth
 pyrfc3339==1.1
     # via django-feed-reader
 python-lsp-jsonrpc==1.1.2
     # via python-lsp-server
 python-lsp-server==1.11.0
     # via -r requirements.in
-python3-openid==3.2.0
-    # via django-allauth
 pytoolconfig[global]==1.3.1
     # via rope
 pytz==2024.1
@@ -146,13 +139,10 @@ pyyaml==6.0.1
 requests==2.31.0
     # via
     #   -r requirements.in
-    #   django-allauth
+    #   django-anymail
     #   django-feed-reader
     #   dripfeed-client
-    #   requests-oauthlib
     #   safety
-requests-oauthlib==2.0.0
-    # via django-allauth
 rich==13.7.1
     # via
     #   bandit
@@ -205,6 +195,7 @@ ujson==5.9.0
     #   python-lsp-server
 urllib3==2.2.1
     # via
+    #   django-anymail
     #   requests
     #   safety
 wheel==0.43.0

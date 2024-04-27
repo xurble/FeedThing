@@ -34,7 +34,7 @@ urlpatterns = [
 
     path('saved/', views.savedposts, name="savedposts"),
 
-    path('manage/', views.managefeeds),
+    path('manage/', views.managefeeds, name="manage"),
     path('subscription/list/', views.subscriptionlist),
 
     path('subscription/<int:sid>/unsubscribe/', views.unsubscribefeed),

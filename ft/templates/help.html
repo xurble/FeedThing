@@ -3,23 +3,85 @@
 {% block content %}
 <div class="container">
   <div class="row">
-    <div class="col-xs-12 ftcontent">
+    <div class="col-sm-8 ftcontent">
       <h2>Help</h2>
 
+      <p>
+        FeedThing is a personal, web-based feed reader with an emphasis on simplicity and
+        preventing information overload.
+      </p>
 
+      <p>
+        FeedThing can track the posts you have read in each feed and make sure you never
+        miss a post, or it can act as a <a href="http://scripting.com/2014/06/02/whatIsARiverOfNewsAggregator.html">
+        River of News</a> aggregor.  Or you can mix the two.
+      </p>
 
+      <h2>Reading Feeds</h2>
+      <p>
+        For tracked feeds, FeedThing does things a bit differently than most 3-pane agregators
+        in an effort to make catching-up with feeds natural and low-friction.  Specifically:
+        <ul>
+          <li>There are only two panes - clicking on an unread feed loads all unread posts.</li>
+          <li>Unread posts are presented in <i>chronological order</i> so you can catch-up by
+          reading downwards like a human being.</li>
+          <li>Reading a feed automatically marks all posts as read so there so it's low effort
+          to declare unread-post bankruptcy and bring yourself up to date.
+        </ul>
+      </p>
 
+      <h2>Adding Feeds</h2>
+      <p>
+        You can add feeds via the "<a href="{% url 'addfeed' %}">Add Feed</a>" menu item or with this bookmarklet.
+      <p>
+        Simply drag this button onto your bookmark bar:
+        <a class="btn btn-default btn-sm" href="javascript:document.location.href='https://feedthing.net/addfeed/?feed=' + encodeURIComponent(document.location.href);">Subscribe in FeedThing</a>
+      </p>
+      <p>
+        <a href="http://www.howtogeek.com/189358/beginner-geek-how-to-use-bookmarklets-on-any-device/">Find out more about bookmarklets</a>
+      </p>
+      <p>
+        If you want to import your subscription list from another service, you can do that in
+        <a href="{% url 'addfeed' %}">Add Feed</a> page as well, if you have your feeds in <a href="http://opml.org/spec2.opml">OPML</a>
+        format.
+      </p>
 
-
-      <p>FeedThing is a personal, web-based feed reader.<p/>
-
-
-
+      <h2>Organising Feeds</h2>
+      <p>
+        From the "<a href="{% url 'manage' %}">Manage Feeds</a>" menu item, you can
+        see details about all your subscriptions.  Feeds can be put into Folders
+        e.g. by topic and both Feeds and Folders can be set to display as a River.
+      </p>
+      <p>
+        There is (deliberately) only one level of hierarchy.  No folders inside folders.
+      </p>
+      <p>
+        As an example I have my FeedThing set up as follows:
+        <ul>
+          <li>
+            Two River Folders - Fast Feeds (containing the feeds so some very prolific bloggers
+            that such as <a href="https://kottke.org">kottke.org</a> and
+            <a href="https://waxy.org">waxy.org</a> that I will never keep up with) and
+            News (containing, well, news).
+          </li>
+          <li>
+            All my other feeds at the root level with the exception of one or two
+            authors that write in multiple places.  They get a folder each to group
+            them, but not in river mode.  I still read every post.
+          </li>
+        </ul>
+      </p>
+      <p>
+        By default feeds will get the clever-clever name that is published in their
+        RSS. You can override this to remind you what an infrequently-updated feed
+        actually is in the Manage Feeds page and also by clicking the settings button
+        at the top of reading pane when you load a feed.
+      </p>
 
       <h2>About</h2>
 
       <p>
-        FeedThing is written by Gareth Simpson.  You
+        FeedThing is written by me, Gareth Simpson.  You
         can keep up to date with it's development in a couple of ways.
         <ul>
           <li><a href="https://xurble.org">Gareth's blog</a> (<a href="https://xurble.org/media/www.xurble.org/rss.xml">feed</a>)</li>

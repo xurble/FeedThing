@@ -61,7 +61,7 @@
 	            {% if user.is_authenticated %}
 	                <li><a href="{% url 'feeds' %}">Feeds</a></li>
 	                <li><a href="{% url 'addfeed' %}">Add Feed</a></li>
-	                <li><a href="/manage/">Manage Feeds</a></li>
+	                <li><a href="{% url 'manage' %}">Manage Feeds</a></li>
 	                <li><a href="{% url 'savedposts' %}">Saved</a></li>
 	                {% if user.is_superuser %}
 	                    <li><a href="/feedgarden/">Queue</a></li>

@@ -7,25 +7,26 @@
       <h2>Help</h2>
 
       <p>
-        FeedThing is a personal, web-based feed reader with an emphasis on simplicity and
+        FeedThing is a web-based feed reader with an emphasis on simplicity and
         preventing information overload.
       </p>
 
       <p>
         FeedThing can track the posts you have read in each feed and make sure you never
         miss a post, or it can act as a <a href="http://scripting.com/2014/06/02/whatIsARiverOfNewsAggregator.html">
-        River of News</a> aggregor.  Or you can mix the two.
+        River of News</a> aggregator.  Or you can mix the two.
       </p>
 
       <h2>Reading Feeds</h2>
       <p>
-        For tracked feeds, FeedThing does things a bit differently than most 3-pane agregators
+        For tracked feeds, FeedThing does things a bit differently than most 3-pane aggregators
         in an effort to make catching-up with feeds natural and low-friction.  Specifically:
         <ul>
           <li>There are only two panes - clicking on an unread feed loads all unread posts.</li>
+          <li>Feeds with no unread items are hidden by default so your feed list doesn't get overwhelming.</li>
           <li>Unread posts are presented in <i>chronological order</i> so you can catch-up by
           reading downwards like a human being.</li>
-          <li>Reading a feed automatically marks all posts as read so there so it's low effort
+          <li>Reading a feed automatically marks all posts as read so it's low effort
           to declare unread-post bankruptcy and bring yourself up to date.
         </ul>
       </p>
@@ -41,15 +42,20 @@
         <a href="http://www.howtogeek.com/189358/beginner-geek-how-to-use-bookmarklets-on-any-device/">Find out more about bookmarklets</a>
       </p>
       <p>
-        If you want to import your subscription list from another service, you can do that in
-        <a href="{% url 'addfeed' %}">Add Feed</a> page as well, if you have your feeds in <a href="http://opml.org/spec2.opml">OPML</a>
+        You should be able to subscribe from to any website with a feed with the the bookmarklet
+        or by entering the page url into FeedThing.  In some cases you may need to hunt for, and copy,
+        the URL of the actual feed.
+      </p>
+      <p>
+        If you want to import your subscription list from another service, you can do that in the
+        <a href="{% url 'addfeed' %}">Add Feed</a> page as well but importing feeds in <a href="http://opml.org/spec2.opml">OPML</a>
         format.
       </p>
 
       <h2>Organising Feeds</h2>
       <p>
         From the "<a href="{% url 'manage' %}">Manage Feeds</a>" menu item, you can
-        see details about all your subscriptions.  Feeds can be put into Folders
+        see details about all your subscriptions.  Feeds can be put into folders
         e.g. by topic and both Feeds and Folders can be set to display as a River.
       </p>
       <p>
@@ -59,23 +65,23 @@
         As an example I have my FeedThing set up as follows:
         <ul>
           <li>
-            Two River Folders - Fast Feeds (containing the feeds so some very prolific bloggers
-            that such as <a href="https://kottke.org">kottke.org</a> and
+            Two River Folders - Fast Feeds (containing feeds from some very prolific bloggers
+            such as <a href="https://kottke.org">kottke.org</a> and
             <a href="https://waxy.org">waxy.org</a> that I will never keep up with) and
             News (containing, well, news).
           </li>
           <li>
-            All my other feeds at the root level with the exception of one or two
+            All my other feeds are at the root level, with the exception of one or two
             authors that write in multiple places.  They get a folder each to group
             them, but not in river mode.  I still read every post.
           </li>
         </ul>
       </p>
       <p>
-        By default feeds will get the clever-clever name that is published in their
-        RSS. You can override this to remind you what an infrequently-updated feed
-        actually is in the Manage Feeds page and also by clicking the settings button
-        at the top of reading pane when you load a feed.
+        By default feeds be assigned the clever-clever name that is published in their
+        RSS. You can override this to something memorable so that you know where posts from
+        infrequently-updated feeds are actually from.  Do this either in the Manage Feeds page
+        or by clicking the settings button at the top of the reading pane when you load a feed.
       </p>
 
       <h2>About</h2>

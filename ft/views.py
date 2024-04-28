@@ -121,7 +121,7 @@ def user_river(request):
     except Exception:
         page = 1
 
-    paginator = Paginator(post_list, 10)
+    paginator = Paginator(post_list, 100)
 
     try:
         posts = paginator.page(page)

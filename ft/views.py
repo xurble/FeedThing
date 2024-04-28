@@ -114,6 +114,8 @@ def user_river(request):
     if q != "":
         post_list = post_list.filter(Q(post__title__icontains=q) | Q(post__body__icontains=q))
 
+    post_list = post_list.order_by("-created")
+
     try:
         page = int(request.GET.get("page", "1"))
     except Exception:

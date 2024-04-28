@@ -18,6 +18,7 @@ urlpatterns = [
     path('help/', views.help, name="help"),
     path('feeds/', views.feeds, name="feeds"),
     path('allfeeds/', views.allfeeds, name="allfeeds"),
+    path('feeds/river/', views.user_river, name="userriver"),
 
     path('addfeed/', views.addfeed, name="addfeed"),
     path('importopml/', views.importopml),
@@ -35,7 +36,7 @@ urlpatterns = [
     path('saved/', views.savedposts, name="savedposts"),
 
     path('manage/', views.managefeeds, name="manage"),
-    path('subscription/list/', views.subscriptionlist),
+    # path('subscription/list/', views.subscriptionlist),
 
     path('subscription/<int:sid>/unsubscribe/', views.unsubscribefeed),
     path('subscription/<int:sid>/details/', views.subscriptiondetails),

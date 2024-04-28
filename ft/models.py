@@ -43,6 +43,8 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
+    default_to_river = models.BooleanField(default=False, help_text="Set your default home to be a river of all your feeds.")
+
     USERNAME_FIELD = 'email'
 
     objects = FTUserManager()

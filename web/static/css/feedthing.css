@@ -397,15 +397,26 @@ div#feeds div.group {
 
 label {
     font-weight: bold;
-    padding-top: 5px;
+    padding-top: 10px;
+    padding-bottom:2px;
     display: block;
+    margin:0;
 }
 
 label[for=id_remember],
+label[for=id_default_to_river],
 label[for=id_is_river],
 label.inline {
     display: inline-block;
 }
+
+#id_remember,
+#id_default_to_river,
+#id_is_river {
+    margin: 0 5px 0 5px;
+
+}
+
 
 
 input[type=text], input[type=password], input[type=url], input[type=search], input[type=email] {

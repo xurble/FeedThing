@@ -1,24 +1,28 @@
 # Create your views here.
 
+import datetime
+import logging
+import json
+import traceback
+from urllib.parse import urljoin
+
+
 from django.shortcuts import render, get_object_or_404
 from django.template.loader import render_to_string
 from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, Http404
 from django.db.models import Q
 from django.contrib.auth.decorators import login_required
+from django.contrib import messages
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator, EmptyPage, InvalidPage
 from django.conf import settings
-
-import datetime
-import logging
-import json
-import traceback
+from django.urls import reverse
 import pytz
 from pytz import utc
-
 from xml.dom import minidom
-
-from .models import SavedPost
+from bs4 import BeautifulSoup
+import requests
+import feedparser
 
 from feeds.utils import (
     update_feeds,
@@ -28,17 +32,17 @@ from feeds.utils import (
 )
 from feeds.models import Source, Post, Subscription
 
-from bs4 import BeautifulSoup
-from urllib.parse import urljoin
-import requests
-from django.urls import reverse
-import feedparser
+from .models import SavedPost
+from .forms import SettingsForm
 
 
 def index(request):
 
     if request.user.is_authenticated:
-        return HttpResponseRedirect(reverse("feeds"))
+        if request.user.default_to_river:
+            return HttpResponseRedirect(reverse("userriver"))
+        else:
+            return HttpResponseRedirect(reverse("feeds"))
     else:
         return render(request, "index.html", {})
 
@@ -57,14 +61,27 @@ def well_known_uris(request, uri):
 
     if uri == "change-password":
         # https://twitter.com/rmondello/status/1009495517494173697?lang=en
-        return HttpResponseRedirect(reverse("password_change"))
+        return HttpResponseRedirect(reverse("account_change_password"))
 
     raise Http404  # not implemented
 
 
 @login_required
 def user_settings(request):
-    return render(request, "settings.html", {})
+
+    if request.method == "POST":
+        form = SettingsForm(instance=request.user, data=request.POST)
+        if form.is_valid():
+            request.user = form.save()
+            messages.success(request, "Settings saved.")
+    else:
+        form = SettingsForm(instance=request.user)
+
+    vals = {
+        "settings_form": form
+    }
+
+    return render(request, "settings.html", vals)
 
 
 @login_required
@@ -83,9 +100,51 @@ def feeds(request):
 
 
 @login_required
+def user_river(request):
+
+    vals = {}
+    q = request.GET.get("q", "")
+
+    sub_list = list(Subscription.objects.filter(user=request.user).filter(source__isnull=False))
+
+    sources = [sub.source_id for sub in sub_list]
+
+    post_list = Post.objects.filter(source__in=sources)
+
+    if q != "":
+        post_list = post_list.filter(Q(post__title__icontains=q) | Q(post__body__icontains=q))
+
+    try:
+        page = int(request.GET.get("page", "1"))
+    except Exception:
+        page = 1
+
+    paginator = Paginator(post_list, 10)
+
+    try:
+        posts = paginator.page(page)
+    except (EmptyPage, InvalidPage):
+        posts = paginator.page(1)
+
+    # assign subscriptions
+    for p in posts:
+        for s in sub_list:
+            if p.source == s.source:
+                p.subscription = s
+                break
+
+    vals["posts"] = posts
+    vals["paginator"] = paginator
+    vals["q"] = q
+    vals["subscription"] = {"id": 0}
+
+    return render(request, 'user_river.html', vals)
+
+
+@login_required
 def managefeeds(request):
     vals = {}
-    subscriptions = list(Subscription.objects.filter(Q(user=request.user) & Q(parent=None)).order_by("source__name"))
+    subscriptions = get_subscription_list_for_user(request.user)
 
     vals["subscriptions"] = subscriptions
     vals["preload"] = request.GET.get("s", "0")
@@ -93,14 +152,14 @@ def managefeeds(request):
     return render(request, "manage.html", vals)
 
 
-@login_required
-def subscriptionlist(request):
-    vals = {}
-    subscriptions = list(Subscription.objects.filter(Q(user=request.user) & Q(parent=None)).order_by("source__name"))
-
-    vals["subscriptions"] = subscriptions
-
-    return render(request, "sublist.html", vals)
+# @login_required
+# def subscriptionlist(request):
+#     vals = {}
+#     subscriptions = list(Subscription.objects.filter(Q(user=request.user) & Q(parent=None)).order_by("source__name"))
+#
+#     vals["subscriptions"] = subscriptions
+#
+#     return render(request, "sublist.html", vals)
 
 
 @login_required

@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block head %}
+
+    <script src="/static/js/history.js"></script>
+
+{% endblock %}
+
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-sm-8">
+            {% include "river.html" %}
+        </div>
+    </div>
+</div>
+        {% csrf_token %}
+
+<script>
+
+//console.log('yo!');
+
+var last_read = null;
+var last_page = null
+
+function read(fid, page) {
+
+    document.location.href='?page=' + page;
+
+    return false;
+}
+
+
+$(document).ready(function(){
+
+    setTimeout(function(){
+
+        $(".posts img").each(function(){
+            var width = this.naturalWidth;
+
+            if (width == 0) {
+                // not loaded yet
+
+                this.onload = function() {
+                    var width = this.naturalWidth;
+                    if (width < 150) {
+                        $(this).attr("style", "display:inline-block;margin-left:5px;max-width: max-content;")
+                    }
+                }
+            }
+            else {
+                if (width < 150) {
+                    $(this).attr("style", "display:inline-block;margin-left:5px;max-width: max-content;")
+                }
+            }
+        });
+
+    }, 100);
+
+
+});
+
+
+function savePost(pid) {
+
+    if ($("#star-" + pid).hasClass("far")) {
+        $.post("/post/" + pid + "/save/",function(data) {
+            if (data=="OK") {
+                $("#star-" + pid).removeClass("far").addClass("fas");
+            }
+        });
+    } else {
+        $.post("/post/" + pid + "/forget/",function(data) {
+            if (data=="OK") {
+                $("#star-" + pid).removeClass("fas").addClass("far");
+            }
+        });
+    }
+}
+
+
+
+
+</script>
+
+
+
+{% endblock %}
+
+

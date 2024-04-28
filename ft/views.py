@@ -112,7 +112,7 @@ def user_river(request):
     post_list = Post.objects.filter(source__in=sources)
 
     if q != "":
-        post_list = post_list.filter(Q(post__title__icontains=q) | Q(post__body__icontains=q))
+        post_list = post_list.filter(Q(title__icontains=q) | Q(body__icontains=q))
 
     post_list = post_list.order_by("-created")
 

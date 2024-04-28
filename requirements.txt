@@ -49,7 +49,7 @@ django-anymail==10.3
     # via -r requirements.in
 django-debug-toolbar==4.3.0
     # via -r requirements.in
-django-feed-reader==2.0.0
+django-feed-reader==2.0.1b1
     # via -r requirements.in
 docstring-to-markdown==0.15
     # via python-lsp-server

@@ -146,12 +146,15 @@ a.backbutton {
     display:none;
 }
 
-.postbody img, .enclosures img {
+.postbody img,
+.enclosures img,
+{
     width: 100%;
     display: block;
     margin: 5px auto 5px auto;
 }
 
+.postbody video,
 .enclosures video {
     width: 100%;
     max-width: max-content;

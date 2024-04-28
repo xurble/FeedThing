@@ -1,5 +1,6 @@
 from allauth.account.forms import SignupForm
 from django import forms
+from .models import User
 
 
 class FTSignupForm(SignupForm):
@@ -11,3 +12,10 @@ class FTSignupForm(SignupForm):
         user.salutation = self.cleaned_data['name']
         user.save()
         return user
+
+
+class SettingsForm(forms.ModelForm):
+
+    class Meta:
+        model = User
+        fields = ["name", "salutation", "default_to_river"]

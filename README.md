@@ -19,8 +19,6 @@ A single FeedThing installation can support multiple users, each with their own 
 
 I have used this as my daily RSS reader for over a decade.  It is probably missing features that other readers have, but nothing that I have ever missed.
 
-Except user management of course!
-
 Enjoy.
 
 Installation
@@ -36,7 +34,7 @@ Once it is running, in order to keep it ticking over and reading feeds, somethin
 
 I have that set up as a cron job every five minutes.  This was a cheesy way to work around the severe lameness of my last hosting, but its working well enough that I still do it that way.  Celery beat would work too.
 
-User management is not done yet.  Make yourself a login using `manage.py createsuperuser`
+Make yourself the first login using `manage.py createsuperuser`
 
 And that's it.
 

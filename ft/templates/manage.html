@@ -6,12 +6,11 @@
 {% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row">
+<div class="container fullpage">
+    <div class="row fullpage">
 		<div class="col-sm-4" id="feedlist">
 		    <h2 class="ftheader">Manage Feeds</h2>
 			<div id="feeds">
-
                 {% include "sublist.html" %}
 			</div>
 		</div>
@@ -19,10 +18,10 @@
         <div class="col-sm-8" id="feedpane">
             <img src="/static/images/FeedThing.png" class="paneplant">
         </div>
-
         {% csrf_token %}
     </div>
 </div>
+
 
 <script>
 

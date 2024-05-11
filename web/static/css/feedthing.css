@@ -146,8 +146,9 @@ a.backbutton {
     display:none;
 }
 
+
 .postbody img,
-.enclosures img,
+.enclosures img
 {
     width: 100%;
     display: block;
@@ -520,8 +521,6 @@ th,td {
 }
 
 
-
-
 @media (prefers-color-scheme: dark) {
 
     html, body {
@@ -550,5 +549,10 @@ th,td {
         color:#bbb;
     }
 
+}
 
+img.wp-smiley {
+    height: 1em;
+    max-height: 1em;
+    width: 1em;
 }

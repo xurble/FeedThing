@@ -44,6 +44,13 @@ def subscription_name(post, subscription_map):
     return subscription_map[post.source.id]
 
 
+@register.filter(name='fix_body')
+def fix_body(body):
+
+    body = body.replace("<iframe", "<iframe allowfullscreen frameborder='0' sandbox='allow-same-origin allow-scripts' ")
+
+    return mark_safe(body)
+
 @register.filter(name='starstyle')
 def starstyle(post, user):
 

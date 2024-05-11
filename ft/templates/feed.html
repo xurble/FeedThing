@@ -44,7 +44,7 @@
             <div class="date"><a href="{{p.link|escape}}">{{p.created }} - {{p.created|timesince}} ago.</a></div>
 
             <div class="postbody">
-                {{p.body|safe}}
+                {{p.body|fix_body}}
             </div>
 
             <div class="enclosures">

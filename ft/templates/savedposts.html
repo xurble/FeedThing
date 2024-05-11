@@ -4,10 +4,10 @@
 {% block content %}
 <div class="container">
     <div class="row topmargin">
-        <div class="col-xs-12 ftcontent posts">
+        <div class="col-sm-8 ftcontent posts">
             <h2>Saved Posts</h2>
 
-{% if posts.has_other_pages %}        
+{% if posts.has_other_pages %}
     <form method="GET">
 
     <ul class="pagination pagination-sm pull-right" style="margin:0">
@@ -50,7 +50,7 @@
 
         <input type="search" name="q" value="{{q}}" placeholder="Search">
     </form>
-            
+
 {% endif %}
 
             {% for p in posts %}
@@ -73,7 +73,7 @@
                     </div>
                 </div>
 
-            {% endfor %}		
+            {% endfor %}
 
             <div class="clearfix"></div>
 
@@ -116,10 +116,10 @@
           <li class="disabled"><span>&raquo;</span></li>
         {% endif %}
     </ul>
-    
+
     <br style="clear:both">
 {% endif %}
-        
+
         </div>
     </div>
 </div>
@@ -147,4 +147,4 @@ function savePost(pid) {
 
 </script>
 
-{% endblock %}  
+{% endblock %}

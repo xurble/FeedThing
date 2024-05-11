@@ -115,6 +115,14 @@
         $(this).alert('close');
     });
 
+    $(document).ready(function() {
+      visibleAudio();
+    })
+
+    function visibleAudio() {
+      $("audio").attr("controls", "controls");
+    }
+
 
         </script>
 

@@ -43,7 +43,12 @@
             <h3 class="posttitle"><a href="{{p.link|escape}}">{{p.title|safe}}</a></h3>
 
 
-            <div class="date"><a class="post-link" href="{{p.link|escape}}">{{p.created }} - {{p.created|timesince}} ago.</a></div>
+            <div class="date">
+              <a class="post-link" href="{{p.link|escape}}">
+                Published {{p.created }} - {{p.created|timesince}} ago{% if p.author %}
+                  by {{ p.author }}{% endif %}.
+              </a>
+            </div>
 
             <div class="postbody">
                 {{p.body|fix_body}}

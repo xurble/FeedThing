@@ -134,9 +134,17 @@
             // Find the anchor tag with class 'post-link' inside the post container
             var postLink = postContainer.querySelector('.post-link');
             if (postLink) {
-                // Extract the domain from the href attribute
+
                 var domainURL = new URL(postLink.href);
-                var path = new URL(image.src).pathname;
+                var pathURL = new URL(image.src)
+
+                if (domainURL.origin == pathURL.origin) {
+                  // already on the right server, probably hotlinking protection
+                  image.src = '/static/images/bar.png'
+                  return true;
+                }
+
+                var path = pathURL.pathname
 
                 // fix feeds that have completely spoofed the absolutizing
                 // and still come out relative to a page on feedthing.

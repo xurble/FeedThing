@@ -555,7 +555,9 @@ img.wp-smiley { /* wordpress */
     width: 1em;
 }
 
-div.kg-audio-player { /* relatively common audio player */
+div.kg-audio-player, /* relatively common audio player */
+div.subscribe /* Subscribe form seen here and there e.g. 404 media */
+{
     display:none;
 }
 

@@ -127,7 +127,10 @@
         // fix images in feeds like feedly that
         // pass us relative image urls but relative
         // to the linked article not to the feedly feed
+
+
         image.onerror = "";
+        image.style = "width:auto"  // stops us making massive square empty images if we fail to fix this
         // Get the parent div with class 'post-container'
         var postContainer = image.closest('.post-container');
         if (postContainer) {

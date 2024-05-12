@@ -124,7 +124,9 @@
     }
 
     function imgError(image) {
-
+        // fix images in feeds like feedly that
+        // pass us relative image urls but relative
+        // to the linked article not to the feedly feed
         image.onerror = "";
         // Get the parent div with class 'post-container'
         var postContainer = image.closest('.post-container');
@@ -136,6 +138,15 @@
                 var domainURL = new URL(postLink.href);
                 var path = new URL(image.src).pathname;
 
+                // fix feeds that have completely spoofed the absolutizing
+                // and still come out relative to a page on feedthing.
+                const prefixes = ['/saved/', '/feeds/', '/allfeeds/'];
+                for (var i =0; i < prefixes.length; i++) {
+                  if (path.startsWith(prefixes[i])) {
+                    path = path.replace(prefixes[i], domainURL.pathname);
+                    break;
+                  }
+                }
                 // Construct the image source URL based on the domain
                 image.src = domainURL.origin + path;
             }

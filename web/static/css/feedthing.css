@@ -158,7 +158,6 @@ a.backbutton {
 .postbody video,
 .enclosures video {
     width: 100%;
-    max-width: max-content;
     display: block;
     margin: 10px auto 5px auto;
 }
@@ -256,7 +255,6 @@ table.auth-table {
 
     .posts img {
         width: calc(100% + 30px);
-        max-width: max-content;
         margin-left: -15px;
         margin-right: -15px;
     }

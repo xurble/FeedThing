@@ -54,7 +54,7 @@
 {% endif %}
 
             {% for p in posts %}
-
+              <div class="post-container">
                 <div>
                     <br style="clear:both">
                     <hr class="river">
@@ -66,13 +66,13 @@
                     <h3 class="posttitle"><a href="{{p.post.link|escape}}">{{p.post.title|safe}}</a></h3>
 
 
-                    <div class="date"><a href="{{p.post.link|escape}}">{{p.post.created }} - {{p.post.created|timesince}} ago.</a></div>
+                    <div class="date"><a class="post-link" href="{{p.post.link|escape}}">{{p.post.created }} - {{p.post.created|timesince}} ago.</a></div>
 
                     <div class="postbody">
-                        {{p.post.body|safe}}
+                        {{p.post.body|fix_body}}
                     </div>
                 </div>
-
+              </div>
             {% endfor %}
 
             <div class="clearfix"></div>

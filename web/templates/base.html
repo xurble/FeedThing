@@ -123,6 +123,26 @@
       $("audio").attr("controls", "controls");
     }
 
+    function imgError(image) {
+
+        image.onerror = "";
+        // Get the parent div with class 'post-container'
+        var postContainer = image.closest('.post-container');
+        if (postContainer) {
+            // Find the anchor tag with class 'post-link' inside the post container
+            var postLink = postContainer.querySelector('.post-link');
+            if (postLink) {
+                // Extract the domain from the href attribute
+                var domainURL = new URL(postLink.href);
+                var path = new URL(image.src).pathname;
+
+                // Construct the image source URL based on the domain
+                image.src = domainURL.origin + path;
+            }
+        }
+        return true;
+    }
+
 
         </script>
 

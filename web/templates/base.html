@@ -151,6 +151,14 @@
                 const prefixes = ['/saved/', '/feeds/', '/allfeeds/'];
                 for (var i =0; i < prefixes.length; i++) {
                   if (path.startsWith(prefixes[i])) {
+
+                    if (path.startsWith(prefixes[i] + "null")) {
+                      // feedle
+                      image.src = '/static/images/bar.png'
+                      return true;
+                    }
+
+
                     path = path.replace(prefixes[i], domainURL.pathname);
                     break;
                   }

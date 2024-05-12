@@ -48,8 +48,10 @@ def subscription_name(post, subscription_map):
 def fix_body(body):
 
     body = body.replace("<iframe", "<iframe allowfullscreen frameborder='0' sandbox='allow-same-origin allow-scripts' ")
+    body = body.replace("<img", "<img onerror='imgError(this);' ")
 
     return mark_safe(body)
+
 
 @register.filter(name='starstyle')
 def starstyle(post, user):

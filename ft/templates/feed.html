@@ -28,6 +28,8 @@
         <br style="clear:both">
         <div class="posts">
         {% for p in posts %}
+
+          <div class="post-container">
             <hr style="clear:both;">
 
             <div class="buttons">
@@ -36,12 +38,12 @@
             </div>
 
             {% if not source %}
-            <h2 class="riversource">{{p.subscription.name }}</h2>
+              <h2 class="riversource">{{p.subscription.name }}</h2>
             {% endif %}
             <h3 class="posttitle"><a href="{{p.link|escape}}">{{p.title|safe}}</a></h3>
 
 
-            <div class="date"><a href="{{p.link|escape}}">{{p.created }} - {{p.created|timesince}} ago.</a></div>
+            <div class="date"><a class="post-link" href="{{p.link|escape}}">{{p.created }} - {{p.created|timesince}} ago.</a></div>
 
             <div class="postbody">
                 {{p.body|fix_body}}
@@ -67,6 +69,7 @@
                 {% endif %}
 
             </div>
+          </div>
 
         {% endfor %}
 

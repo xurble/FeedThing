@@ -65,8 +65,12 @@
                     </div>
                     <h3 class="posttitle"><a href="{{p.post.link|escape}}">{{p.post.title|safe}}</a></h3>
 
-
-                    <div class="date"><a class="post-link" href="{{p.post.link|escape}}">Published {{p.post.created }} - {{p.post.created|timesince}} ago.</a></div>
+                    <div class="date">
+                      <a class="post-link" href="{{p.post.link|escape}}">
+                        Published {{ p.post.created }} - {{ p.post.created|timesince}} ago{% if p.post.author %}
+                          by {{ p.post.author }}{% endif %}.
+                      </a>
+                    </div>
 
                     <div class="postbody">
                         {{p.post.body|fix_body}}

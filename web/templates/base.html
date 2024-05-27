@@ -126,11 +126,9 @@
     function imgError(image) {
         // fix images in feeds like feedly that
         // pass us relative image urls but relative
-        // to the linked article not to the feedly feed
-
-
-        image.onerror = "";
+        // to the linked article not to
         image.style = "width:auto"  // stops us making massive square empty images if we fail to fix this
+
         // Get the parent div with class 'post-container'
         var postContainer = image.closest('.post-container');
         if (postContainer) {
@@ -144,6 +142,7 @@
                 if (domainURL.origin == pathURL.origin) {
                   // already on the right server, probably hotlinking protection
                   image.src = '/static/images/bar.png'
+                  image.onerror = null;
                   return true;
                 }
 
@@ -158,6 +157,7 @@
                     if (path.startsWith(prefixes[i] + "null")) {
                       // feedle
                       image.src = '/static/images/bar.png'
+                      image.onerror = null;
                       return true;
                     }
 

@@ -193,7 +193,7 @@ ujson==5.9.0
     # via
     #   python-lsp-jsonrpc
     #   python-lsp-server
-urllib3==2.2.1
+urllib3==2.2.2
     # via
     #   django-anymail
     #   requests

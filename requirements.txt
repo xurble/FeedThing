@@ -18,7 +18,7 @@ beautifulsoup4==4.12.3
     # via
     #   -r requirements.in
     #   django-feed-reader
-certifi==2024.2.2
+certifi==2024.7.4
     # via
     #   httpcore
     #   httpx

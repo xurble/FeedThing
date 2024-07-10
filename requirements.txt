@@ -35,7 +35,7 @@ colorlog==6.8.2
     # via -r requirements.in
 cryptography==42.0.5
     # via authlib
-django==5.0.4
+django==5.0.7
     # via
     #   -r requirements.in
     #   django-allauth

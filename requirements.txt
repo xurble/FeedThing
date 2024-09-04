@@ -33,7 +33,7 @@ click==8.1.7
     #   typer
 colorlog==6.8.2
     # via -r requirements.in
-cryptography==42.0.5
+cryptography==43.0.1
     # via authlib
 django==5.0.4
     # via

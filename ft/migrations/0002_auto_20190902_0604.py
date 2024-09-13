@@ -5,20 +5,31 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('ft', '0001_initial'),
+        ("ft", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='subscription',
-            name='parent',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='subscriptions', to='ft.Subscription'),
+            model_name="subscription",
+            name="parent",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="subscriptions",
+                to="ft.Subscription",
+            ),
         ),
         migrations.AlterField(
-            model_name='subscription',
-            name='source',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='subscriptions', to='feeds.Source'),
+            model_name="subscription",
+            name="source",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="subscriptions",
+                to="feeds.Source",
+            ),
         ),
     ]

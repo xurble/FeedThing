@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('ft', '0006_alter_savedpost_subscription_delete_subscription'),
+        ("ft", "0006_alter_savedpost_subscription_delete_subscription"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='user',
-            name='default_to_river',
+            model_name="user",
+            name="default_to_river",
             field=models.BooleanField(default=False),
         ),
     ]

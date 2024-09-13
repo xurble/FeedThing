@@ -28,7 +28,7 @@ from feeds.utils import (
     update_feeds,
     test_feed,
     get_unread_subscription_list_for_user,
-    get_subscription_list_for_user
+    get_subscription_list_for_user,
 )
 from feeds.models import Source, Post, Subscription
 
@@ -37,7 +37,6 @@ from .forms import SettingsForm
 
 
 def index(request):
-
     if request.user.is_authenticated:
         if request.user.default_to_river:
             return HttpResponseRedirect(reverse("userriver"))
@@ -52,9 +51,8 @@ def help(request):
 
 
 def well_known_uris(request, uri):
-
     """
-        https://www.iana.org/assignments/well-known-uris/well-known-uris.xhtml
+    https://www.iana.org/assignments/well-known-uris/well-known-uris.xhtml
     """
 
     logging.info("Request for .well-known URI: {}".format(uri))
@@ -68,7 +66,6 @@ def well_known_uris(request, uri):
 
 @login_required
 def user_settings(request):
-
     if request.method == "POST":
         form = SettingsForm(instance=request.user, data=request.POST)
         if form.is_valid():
@@ -77,9 +74,7 @@ def user_settings(request):
     else:
         form = SettingsForm(instance=request.user)
 
-    vals = {
-        "settings_form": form
-    }
+    vals = {"settings_form": form}
 
     return render(request, "settings.html", vals)
 
@@ -101,11 +96,12 @@ def feeds(request):
 
 @login_required
 def user_river(request):
-
     vals = {}
     q = request.GET.get("q", "")
 
-    sub_list = list(Subscription.objects.filter(user=request.user).filter(source__isnull=False))
+    sub_list = list(
+        Subscription.objects.filter(user=request.user).filter(source__isnull=False)
+    )
 
     sources = [sub.source_id for sub in sub_list]
 
@@ -140,7 +136,7 @@ def user_river(request):
     vals["q"] = q
     vals["subscription"] = {"id": 0}
 
-    return render(request, 'user_river.html', vals)
+    return render(request, "user_river.html", vals)
 
 
 @login_required
@@ -183,25 +179,29 @@ def allfeeds(request):
 def feedgarden(request):
     vals = {}
     vals["feeds"] = Source.objects.all().order_by("due_poll")
-    return render(request, 'feedgarden.html', vals)
+    return render(request, "feedgarden.html", vals)
 
 
 @login_required
 def addfeed(request):
-
     try:
-        if request.method == 'GET':
+        if request.method == "GET":
             feed = request.GET.get("feed", "")
             groups = Subscription.objects.filter(Q(user=request.user) & Q(source=None))
 
             return render(request, "addfeed.html", {"feed": feed, "groups": groups})
 
         else:
-
             feed = request.POST.get("feed", "")
 
             # identify ourselves and also stop our requests getting picked up by google's cache
-            headers = {"User-Agent": "{agent} (+{server}; Initial Feed Crawler)".format(agent=settings.FEEDS_USER_AGENT, server=settings.FEEDS_SERVER), "Cache-Control": "no-cache,max-age=0", "Pragma": "no-cache"}
+            headers = {
+                "User-Agent": "{agent} (+{server}; Initial Feed Crawler)".format(
+                    agent=settings.FEEDS_USER_AGENT, server=settings.FEEDS_SERVER
+                ),
+                "Cache-Control": "no-cache,max-age=0",
+                "Pragma": "no-cache",
+            }
 
             ret = requests.get(feed, headers=headers, verify=False, timeout=15)
             # can I be bothered to check return codes here?  I think not on balance
@@ -216,8 +216,10 @@ def addfeed(request):
 
             body = ret.text.strip()
             if "xml" in content_type or body[0:1] == "<":
-                ff = feedparser.parse(body)  # are we a feed?  # imported by django-feed-reader
-                isFeed = (len(ff.entries) > 0)
+                ff = feedparser.parse(
+                    body
+                )  # are we a feed?  # imported by django-feed-reader
+                isFeed = len(ff.entries) > 0
                 if isFeed:
                     feed_title = ff.feed.title
             if "json" in content_type or body[0:1] == "{":
@@ -227,20 +229,33 @@ def addfeed(request):
                     feed_title = data["title"]
 
             if not isFeed:
-
                 soup = BeautifulSoup(body)
                 feedcount = 0
                 rethtml = ""
-                for lnk in soup.findAll(name='link'):
+                for lnk in soup.findAll(name="link"):
                     if lnk.has_attr("rel") and lnk.has_attr("type"):
-                        if lnk['rel'][0] == "alternate" and (lnk['type'] == 'application/atom+xml' or lnk['type'] == 'application/rss+xml' or lnk['type'] == 'application/json'):
+                        if lnk["rel"][0] == "alternate" and (
+                            lnk["type"] == "application/atom+xml"
+                            or lnk["type"] == "application/rss+xml"
+                            or lnk["type"] == "application/json"
+                        ):
                             feedcount += 1
                             try:
-                                name = lnk['title']
+                                name = lnk["title"]
                             except Exception:
                                 name = "Feed %d" % feedcount
-                            rethtml += '<li><form method="post" onsubmit="return false;"> <input type="hidden" name="feed" id="feed-%d" value="%s"><a href="#" onclick="addFeed(%d)" class="btn btn-xs btn-default">Subscribe</a> - %s</form></li>' % (feedcount, urljoin(feed, lnk['href']), feedcount, name)
-                            feed = urljoin(feed, lnk['href'])  # store this in case there is only one feed and we wind up importing it
+                            rethtml += (
+                                '<li><form method="post" onsubmit="return false;"> <input type="hidden" name="feed" id="feed-%d" value="%s"><a href="#" onclick="addFeed(%d)" class="btn btn-xs btn-default">Subscribe</a> - %s</form></li>'
+                                % (
+                                    feedcount,
+                                    urljoin(feed, lnk["href"]),
+                                    feedcount,
+                                    name,
+                                )
+                            )
+                            feed = urljoin(
+                                feed, lnk["href"]
+                            )  # store this in case there is only one feed and we wind up importing it
                             # TODO: need to accout for relative URLs here
                 if feedcount == 0:
                     return HttpResponse("No feeds found")
@@ -250,9 +265,13 @@ def addfeed(request):
             if isFeed:
                 parent = None
                 if request.POST["group"] != "0":
-                    parent = get_object_or_404(Subscription, id=int(request.POST["group"]))
+                    parent = get_object_or_404(
+                        Subscription, id=int(request.POST["group"])
+                    )
                     if parent.user != request.user:
-                        return HttpResponse("<div>Internal error.<!--bad group --></div>")
+                        return HttpResponse(
+                            "<div>Internal error.<!--bad group --></div>"
+                        )
 
                 s = Source.objects.filter(feed_url=feed)
                 if s.count() > 0:
@@ -260,11 +279,20 @@ def addfeed(request):
                     s = s[0]
                     us = Subscription.objects.filter(Q(user=request.user) & Q(source=s))
                     if us.count() > 0:
-                        return HttpResponse("<div>Already subscribed to this feed </div>")
+                        return HttpResponse(
+                            "<div>Already subscribed to this feed </div>"
+                        )
                     else:
-                        us = Subscription(source=s, user=request.user, name=s.display_name, parent=parent)
+                        us = Subscription(
+                            source=s,
+                            user=request.user,
+                            name=s.display_name,
+                            parent=parent,
+                        )
 
-                        if s.max_index > 10:  # don't flood people with all these old things
+                        if (
+                            s.max_index > 10
+                        ):  # don't flood people with all these old things
                             us.last_read = s.max_index - 10
 
                         us.save()
@@ -279,7 +307,9 @@ def addfeed(request):
 
                 ns.save()
 
-                us = Subscription(source=ns, user=request.user, name=ns.display_name, parent=parent)
+                us = Subscription(
+                    source=ns, user=request.user, name=ns.display_name, parent=parent
+                )
                 us.save()
 
                 # you see really, I could parse out the items here and insert them rather than
@@ -287,27 +317,28 @@ def addfeed(request):
 
                 return HttpResponse("<div>Imported feed %s</div>" % ns.name)
     except Exception as xx:
-        traceback_str = ''.join(traceback.format_tb(xx.__traceback__))
-        return HttpResponse("<div>Error %s: %s</div><div style='display:none'>%s</div>" % (xx.__class__.__name__, str(xx), traceback_str))
+        traceback_str = "".join(traceback.format_tb(xx.__traceback__))
+        return HttpResponse(
+            "<div>Error %s: %s</div><div style='display:none'>%s</div>"
+            % (xx.__class__.__name__, str(xx), traceback_str)
+        )
 
 
 @login_required
 def downloadfeeds(request):
-
     if not request.user.is_superuser:
         raise PermissionDenied()
 
     opml = render_to_string("opml.xml", {"feeds": Source.objects.all()})
 
     ret = HttpResponse(opml, content_type="application/xml+opml")
-    ret['Content-Disposition'] = 'inline; filename=feedthing-export.xml'
+    ret["Content-Disposition"] = "inline; filename=feedthing-export.xml"
     return ret
 
 
 # TODO: I don't think that this is the most robust import ever :)
 @login_required
 def importopml(request):
-
     theFile = request.FILES["opml"].read()
 
     count = 0
@@ -316,19 +347,21 @@ def importopml(request):
 
     sources = dom.getElementsByTagName("outline")
     for s in sources:
-
         url = s.getAttribute("xmlUrl")
         if url.strip() != "":
             ns = Source.objects.filter(feed_url=url)
             if ns.count() > 0:
-
                 # feed already exists - so there may already be a user subscription for it
                 ns = ns[0]
                 us = Subscription.objects.filter(source=ns).filter(user=request.user)
                 if us.count() == 0:
-                    us = Subscription(source=ns, user=request.user, name=ns.display_name)
+                    us = Subscription(
+                        source=ns, user=request.user, name=ns.display_name
+                    )
 
-                    if ns.max_index > 10:  # don't flood people with all these old things
+                    if (
+                        ns.max_index > 10
+                    ):  # don't flood people with all these old things
                         us.last_read = ns.max_index - 10
 
                     us.save()
@@ -339,7 +372,9 @@ def importopml(request):
                 ns = Source()
                 ns.due_poll = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
                 ns.site_url = s.getAttribute("htmlUrl")
-                ns.feed_url = url  # probably best to see that there isn't a match here :)
+                ns.feed_url = (
+                    url  # probably best to see that there isn't a match here :)
+                )
                 ns.name = s.getAttribute("title")
                 ns.save()
 
@@ -353,16 +388,14 @@ def importopml(request):
     vals = {}
     vals["imported"] = imported
     vals["count"] = count
-    return render(request, 'importopml.html', vals)
+    return render(request, "importopml.html", vals)
 
 
 @login_required
 def subscriptionrename(request, sid):
-
     sub = get_object_or_404(Subscription, id=int(sid))
 
     if sub.user == request.user:
-
         if request.method == "POST":
             sub.name = request.POST["name"]
             sub.save()
@@ -372,11 +405,9 @@ def subscriptionrename(request, sid):
 
 @login_required
 def subscriptiondetails(request, sid):
-
     sub = get_object_or_404(Subscription, id=int(sid))
 
     if sub.user == request.user:
-
         vals = {}
         vals["subscription"] = sub
 
@@ -389,9 +420,11 @@ def subscriptiondetails(request, sid):
             vals["sources"] = Subscription.objects.filter(parent=sub)
 
         else:
-            vals["groups"] = Subscription.objects.filter(Q(user=request.user) & Q(source=None))
+            vals["groups"] = Subscription.objects.filter(
+                Q(user=request.user) & Q(source=None)
+            )
 
-        return render(request, 'subscription.html', vals)
+        return render(request, "subscription.html", vals)
 
     # else 403 ?
 
@@ -402,7 +435,6 @@ def promote(request, sid):
 
     sub = get_object_or_404(Subscription, id=int(sid))
     if sub.user == request.user:
-
         parent = sub.parent
 
         sub.parent = None
@@ -417,7 +449,6 @@ def promote(request, sid):
 
 @login_required
 def addto(request, sid, tid):
-
     toadd = get_object_or_404(Subscription, id=int(sid))
 
     if tid == 0:
@@ -425,8 +456,11 @@ def addto(request, sid, tid):
     else:
         target = get_object_or_404(Subscription, id=int(tid))
 
-    if toadd.user == request.user and target.user == request.user and toadd.source is not None:
-
+    if (
+        toadd.user == request.user
+        and target.user == request.user
+        and toadd.source is not None
+    ):
         if tid == 0:
             target.save()
 
@@ -436,7 +470,6 @@ def addto(request, sid, tid):
 
             return HttpResponse(target.id)
         else:
-
             nn = Subscription(user=request.user, name="New Folder")
             nn.save()
             toadd.parent = nn
@@ -449,7 +482,6 @@ def addto(request, sid, tid):
 
 @login_required
 def readfeed(request, fid):
-
     vals = {}
 
     sub: Subscription = get_object_or_404(Subscription, id=int(fid))
@@ -494,19 +526,19 @@ def readfeed(request, fid):
     vals["paginator"] = paginator
 
     if sub.is_river:
-        return render(request, 'river.html', vals)
+        return render(request, "river.html", vals)
     else:
-        return render(request, 'feed.html', vals)
+        return render(request, "feed.html", vals)
 
 
 @login_required
 def revivefeed(request, fid):
-
     if request.method == "POST":
-
         f = get_object_or_404(Source, id=int(fid))
         f.live = True
-        f.due_poll = (datetime.datetime.utcnow().replace(tzinfo=utc) - datetime.timedelta(days=100))
+        f.due_poll = datetime.datetime.utcnow().replace(
+            tzinfo=utc
+        ) - datetime.timedelta(days=100)
         f.etag = None
         f.last_modified = None
         # f.last_success = None
@@ -519,7 +551,6 @@ def revivefeed(request, fid):
 
 @login_required
 def testfeed(request, fid):
-
     f = get_object_or_404(Source, id=int(fid))
 
     r = HttpResponse()
@@ -533,13 +564,10 @@ def testfeed(request, fid):
 
 @login_required
 def unsubscribefeed(request, sid):
-
     if request.method == "POST":
-
         sub = get_object_or_404(Subscription, id=int(sid))
 
         if sub.user == request.user:
-
             if sub.source:
                 source = sub.source
                 parent = sub.parent
@@ -549,7 +577,9 @@ def unsubscribefeed(request, sid):
                     if parent.subscriptions.count() == 0:
                         parent.delete()
 
-                if source.subscriber_count == 0:  # this is the last subscription for this source
+                if (
+                    source.subscriber_count == 0
+                ):  # this is the last subscription for this source
                     source.delete()
 
                 return HttpResponse("OK")
@@ -561,7 +591,6 @@ def unsubscribefeed(request, sid):
 
 @login_required
 def savepost(request, pid):
-
     post = get_object_or_404(Post, id=int(pid))
 
     sub = Subscription.objects.filter(source=post.source).filter(user=request.user)[0]
@@ -574,7 +603,6 @@ def savepost(request, pid):
 
 @login_required
 def forgetpost(request, pid):
-
     post = get_object_or_404(Post, id=int(pid))
 
     sp = SavedPost.objects.filter(post=post).filter(user=request.user)[0]
@@ -585,7 +613,6 @@ def forgetpost(request, pid):
 
 @login_required
 def savedposts(request):
-
     vals = {}
 
     q = request.GET.get("q", "")
@@ -593,7 +620,9 @@ def savedposts(request):
     post_list = SavedPost.objects.filter(user=request.user)
 
     if q != "":
-        post_list = post_list.filter(Q(post__title__icontains=q) | Q(post__body__icontains=q))
+        post_list = post_list.filter(
+            Q(post__title__icontains=q) | Q(post__body__icontains=q)
+        )
 
     try:
         page = int(request.GET.get("page", "1"))
@@ -611,11 +640,10 @@ def savedposts(request):
     vals["paginator"] = paginator
     vals["q"] = q
 
-    return render(request, 'savedposts.html', vals)
+    return render(request, "savedposts.html", vals)
 
 
 def read_request_listener(request):
-
     response = HttpResponse()
 
     update_feeds(3, response)

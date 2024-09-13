@@ -5,19 +5,22 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('feeds', '0012_source_last_read_subscription'),
-        ('ft', '0005_alter_subscription_parent_alter_subscription_source_and_more'),
+        ("feeds", "0012_source_last_read_subscription"),
+        ("ft", "0005_alter_subscription_parent_alter_subscription_source_and_more"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='savedpost',
-            name='subscription',
-            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='feeds.subscription'),
+            model_name="savedpost",
+            name="subscription",
+            field=models.ForeignKey(
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="feeds.subscription",
+            ),
         ),
         migrations.DeleteModel(
-            name='Subscription',
+            name="Subscription",
         ),
     ]

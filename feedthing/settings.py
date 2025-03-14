@@ -117,6 +117,8 @@ ACCOUNT_FORMS = {
     "signup": "ft.forms.FTSignupForm",
 }
 
+ACCOUNT_ADAPTER = "ft.adapters.NoNewUsersAccountAdapter"
+
 ROOT_URLCONF = "feedthing.urls"
 
 TEMPLATES = [
@@ -199,7 +201,7 @@ LOGGING = {
     "formatters": {
         "app": {
             "format": (
-                "%(asctime)s [%(levelname)-8s] " "(%(module)s.%(funcName)s) %(message)s"
+                "%(asctime)s [%(levelname)-8s] (%(module)s.%(funcName)s) %(message)s"
             ),
             "datefmt": "%Y-%m-%d %H:%M:%S",
         },

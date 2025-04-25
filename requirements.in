@@ -1,6 +1,6 @@
 Django
 requests
-mysqlclient
+# mysqlclient
 beautifulsoup4
 django-feed-reader
 pwned-passwords-django

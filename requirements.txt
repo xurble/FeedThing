@@ -40,7 +40,7 @@ colorlog==6.9.0
     # via -r requirements.in
 cryptography==44.0.2
     # via authlib
-django==5.2
+django==5.2.1
     # via
     #   -r requirements.in
     #   django-allauth
@@ -101,8 +101,6 @@ marshmallow==4.0.0
     # via safety
 mdurl==0.1.2
     # via markdown-it-py
-mysqlclient==2.2.4
-    # via -r requirements.in
 nltk==3.9.1
     # via safety
 packaging==25.0

@@ -48,7 +48,7 @@ django==5.2.9
     #   django-debug-toolbar
     #   django-feed-reader
     #   pwned-passwords-django
-django-allauth==65.13.0
+django-allauth==65.14.1
     # via -r requirements.in
 django-anymail==13.0
     # via -r requirements.in

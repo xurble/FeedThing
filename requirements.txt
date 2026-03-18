@@ -101,7 +101,7 @@ marshmallow==4.0.0
     # via safety
 mdurl==0.1.2
     # via markdown-it-py
-nltk==3.9.1
+nltk==3.9.3
     # via safety
 packaging==25.0
     # via

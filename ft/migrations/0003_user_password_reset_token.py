@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('ft', '0002_auto_20190902_0604'),
+        ("ft", "0002_auto_20190902_0604"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='user',
-            name='password_reset_token',
-            field=models.CharField(blank=True, default='', max_length=32),
+            model_name="user",
+            name="password_reset_token",
+            field=models.CharField(blank=True, default="", max_length=32),
         ),
     ]

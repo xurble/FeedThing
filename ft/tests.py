@@ -1,6 +1,7 @@
 from unittest.mock import Mock, patch
 
 import pytest
+from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 
@@ -141,6 +142,46 @@ def test_addfeed_get_and_post_imports_new_feed(parse_mock, requests_get_mock, cl
     assert "Imported feed" in response.content.decode()
     assert Source.objects.count() == 1
     assert Subscription.objects.filter(user=user).count() == 1
+    requests_get_mock.assert_called_once()
+    _, kwargs = requests_get_mock.call_args
+    assert kwargs["timeout"] == 15
+    assert kwargs["headers"]["Cache-Control"] == "no-cache,max-age=0"
+    assert kwargs["headers"]["Pragma"] == "no-cache"
+    assert kwargs["headers"]["User-Agent"] == (
+        f"{settings.FEEDS_USER_AGENT} (+{settings.FEEDS_SERVER}; Initial Feed Crawler)"
+    )
+
+
+@patch("ft.views.requests.get")
+def test_addfeed_rejects_localhost_urls_before_network(requests_get_mock, client, user):
+    client.force_login(user)
+
+    response = client.post(
+        "/addfeed/",
+        {"feed": "http://localhost/feed.xml", "group": "0"},
+    )
+
+    assert response.status_code == 200
+    body = response.content.decode()
+    assert "ValueError" in body
+    assert "Localhost feed URLs are not allowed." in body
+    requests_get_mock.assert_not_called()
+
+
+@patch("ft.views.requests.get")
+def test_addfeed_rejects_private_ip_urls_before_network(requests_get_mock, client, user):
+    client.force_login(user)
+
+    response = client.post(
+        "/addfeed/",
+        {"feed": "http://127.0.0.1/feed.xml", "group": "0"},
+    )
+
+    assert response.status_code == 200
+    body = response.content.decode()
+    assert "ValueError" in body
+    assert "Private and local feed URLs are not allowed." in body
+    requests_get_mock.assert_not_called()
 
 
 def test_importopml_creates_subscriptions(client, user):

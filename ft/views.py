@@ -1,10 +1,12 @@
 # Create your views here.
 
 import datetime
+import ipaddress
 import logging
 import json
+import socket
 import traceback
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse
 
 
 from django.shortcuts import render, get_object_or_404
@@ -33,6 +35,53 @@ from feeds.models import Source, Post, Subscription
 
 from .models import SavedPost
 from .forms import SettingsForm
+
+
+def _is_blocked_ip(ip_text):
+    ip = ipaddress.ip_address(ip_text)
+    return (
+        ip.is_private
+        or ip.is_loopback
+        or ip.is_link_local
+        or ip.is_multicast
+        or ip.is_reserved
+        or ip.is_unspecified
+    )
+
+
+def _is_ip_literal(value):
+    try:
+        ipaddress.ip_address(value)
+        return True
+    except ValueError:
+        return False
+
+
+def _validate_feed_url(feed_url):
+    parsed = urlparse(feed_url.strip())
+    if parsed.scheme not in ("http", "https"):
+        raise ValueError("Feed URL must use http or https.")
+
+    if not parsed.hostname:
+        raise ValueError("Feed URL must include a hostname.")
+
+    hostname = parsed.hostname.lower()
+    if hostname in ("localhost", "localhost.localdomain"):
+        raise ValueError("Localhost feed URLs are not allowed.")
+
+    # Block direct private IPs.
+    if _is_ip_literal(hostname) and _is_blocked_ip(hostname):
+        raise ValueError("Private and local feed URLs are not allowed.")
+
+    try:
+        addr_info = socket.getaddrinfo(hostname, parsed.port or 80, type=socket.SOCK_STREAM)
+    except socket.gaierror:
+        raise ValueError("Feed hostname could not be resolved.")
+
+    for info in addr_info:
+        resolved_ip = info[4][0]
+        if _is_blocked_ip(resolved_ip):
+            raise ValueError("Feed URL resolves to a private or local address.")
 
 
 def index(request):
@@ -191,7 +240,8 @@ def addfeed(request):
             return render(request, "addfeed.html", {"feed": feed, "groups": groups})
 
         else:
-            feed = request.POST.get("feed", "")
+            feed = request.POST.get("feed", "").strip()
+            _validate_feed_url(feed)
 
             # identify ourselves and also stop our requests getting picked up by google's cache
             headers = {
@@ -202,7 +252,7 @@ def addfeed(request):
                 "Pragma": "no-cache",
             }
 
-            ret = requests.get(feed, headers=headers, verify=False, timeout=15)
+            ret = requests.get(feed, headers=headers, timeout=15)
             # can I be bothered to check return codes here?  I think not on balance
 
             isFeed = False

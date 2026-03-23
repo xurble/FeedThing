@@ -17,6 +17,8 @@ bandit
 django-debug-toolbar
 PdbBBEditSupport
 colorlog
+pytest
+pytest-django
 
 
 wheel

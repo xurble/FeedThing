@@ -4,3 +4,4 @@
 _staticfiles
 
 settings_server.py
+db.sqlite3

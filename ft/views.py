@@ -17,8 +17,7 @@ from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator, EmptyPage, InvalidPage
 from django.conf import settings
 from django.urls import reverse
-import pytz
-from pytz import utc
+from django.utils import timezone
 from xml.dom import minidom
 from bs4 import BeautifulSoup
 import requests
@@ -276,6 +275,7 @@ def addfeed(request):
 
                 ns.name = feed_title
                 ns.feed_url = feed
+                ns.due_poll = timezone.now()
 
                 ns.save()
 
@@ -337,7 +337,7 @@ def importopml(request):
             else:
                 # Feed does not already exist it must also be a new sub
                 ns = Source()
-                ns.due_poll = datetime.datetime.utcnow().replace(tzinfo=pytz.utc)
+                ns.due_poll = timezone.now()
                 ns.site_url = s.getAttribute("htmlUrl")
                 ns.feed_url = url  # probably best to see that there isn't a match here :)
                 ns.name = s.getAttribute("title")
@@ -506,7 +506,7 @@ def revivefeed(request, fid):
 
         f = get_object_or_404(Source, id=int(fid))
         f.live = True
-        f.due_poll = (datetime.datetime.utcnow().replace(tzinfo=utc) - datetime.timedelta(days=100))
+        f.due_poll = (timezone.now() - datetime.timedelta(days=100))
         f.etag = None
         f.last_modified = None
         # f.last_success = None

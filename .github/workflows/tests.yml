@@ -1,0 +1,50 @@
+name: Unit Tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Create CI settings
+        run: |
+          mkdir -p feedthing
+          cat > feedthing/settings_server.py <<'EOF'
+          import os
+
+          SITE_ROOT = os.path.dirname(os.path.realpath(__file__))
+          ALLOWED_HOSTS = ["localhost", "127.0.0.1", "testserver"]
+          FEEDS_SERVER = "https://example.com/"
+          FEEDS_CLOUDFLARE_WORKER = None
+          ADMIN_EMAIL_ADDRESS = "ci@example.com"
+          DEBUG = False
+          SECURE_SSL_REDIRECT = False
+          STATIC_ROOT = os.path.join(SITE_ROOT, "..", "static")
+          DATABASES = {
+              "default": {
+                  "ENGINE": "django.db.backends.sqlite3",
+                  "NAME": os.path.join(SITE_ROOT, "..", "db.sqlite3"),
+              }
+          }
+          SECRET_KEY = "ci-not-secret"
+          EOF
+
+      - name: Run unit tests
+        run: pytest --reuse-db

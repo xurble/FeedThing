@@ -173,7 +173,7 @@ pyyaml==6.0.3
     # via bandit
 regex==2026.2.28
     # via nltk
-requests==2.32.5
+requests==2.33.0
     # via
     #   -r requirements.in
     #   django-anymail

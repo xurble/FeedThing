@@ -1,7 +1,63 @@
+import nh3
 from django import template
+from django.utils.html import escape
 from django.utils.safestring import mark_safe
 
 register = template.Library()
+
+BODY_ALLOWED_TAGS = {
+    "a", "abbr", "acronym", "address", "article", "aside",
+    "audio", "b", "big", "blockquote", "br", "caption", "center",
+    "cite", "code", "col", "colgroup", "dd", "del", "details",
+    "dfn", "div", "dl", "dt", "em", "figcaption", "figure",
+    "footer", "h1", "h2", "h3", "h4", "h5", "h6", "header", "hr",
+    "i", "iframe", "img", "ins", "kbd", "li", "mark", "nav",
+    "ol", "p", "picture", "pre", "q", "s", "samp", "section",
+    "small", "source", "span", "strong", "sub", "summary", "sup",
+    "table", "tbody", "td", "tfoot", "th", "thead", "time", "tr",
+    "tt", "u", "ul", "var", "video",
+}
+
+BODY_ALLOWED_ATTRIBUTES = {
+    "*": {"class", "id", "title", "lang", "dir"},
+    "a": {"href", "hreflang"},
+    "img": {"src", "alt", "loading"},
+    "iframe": {"src", "sandbox", "allowfullscreen", "frameborder"},
+    "video": {"src", "controls", "preload", "poster"},
+    "audio": {"src", "controls", "preload"},
+    "source": {"src", "type"},
+    "blockquote": {"cite"},
+    "q": {"cite"},
+    "ol": {"start", "type"},
+    "td": {"colspan", "rowspan"},
+    "th": {"colspan", "rowspan", "scope"},
+    "col": {"span"},
+    "colgroup": {"span"},
+    "del": {"cite", "datetime"},
+    "ins": {"cite", "datetime"},
+    "time": {"datetime"},
+}
+
+TITLE_ALLOWED_TAGS = {"b", "i", "em", "strong", "code", "span", "sub", "sup"}
+
+TITLE_ALLOWED_ATTRIBUTES: dict[str, set[str]] = {}
+
+
+def _sanitize_body(html):
+    return nh3.clean(
+        html,
+        tags=BODY_ALLOWED_TAGS,
+        attributes=BODY_ALLOWED_ATTRIBUTES,
+        url_schemes={"http", "https", "mailto"},
+    )
+
+
+def _sanitize_title(html):
+    return nh3.clean(
+        html,
+        tags=TITLE_ALLOWED_TAGS,
+        attributes=TITLE_ALLOWED_ATTRIBUTES,
+    )
 
 
 @register.filter(name="hoursmins")
@@ -19,23 +75,16 @@ def hoursmins(value):
 
 @register.filter(name="river")
 def river(value):
-    ret = ""
-    parts = value.split("<")
-    for part in parts:
-        if ">" in part:
-            # Guardian sub-head in feed fixer :)
-            if part == "/p>" and not ret.strip()[-1:] in ".,\"'!?:;…)]}&*>":
-                ret = ret.strip() + ". "
-            ret += "".join(part.split(">")[1:])
-        else:
-            ret += part
-        ret += " "
+    text = nh3.clean(value, tags=set())
 
-    if len(ret) > 500:
-        ret = ret[:500]
-        ret = ret[: ret.rfind(" ")] + "&hellip;"
+    if len(text) > 500:
+        text = text[:500]
+        space = text.rfind(" ")
+        if space > 0:
+            text = text[:space]
+        text += "\u2026"
 
-    return mark_safe(ret)
+    return text
 
 
 @register.filter(name="subscription_name")
@@ -45,16 +94,22 @@ def subscription_name(post, subscription_map):
 
 @register.filter(name="fix_body")
 def fix_body(body):
+    body = _sanitize_body(body)
+
     body = body.replace(
         "<iframe",
-        "<iframe allowfullscreen frameborder='0' sandbox='allow-same-origin allow-scripts' ",
+        "<iframe allowfullscreen frameborder='0' sandbox='allow-scripts' ",
     )
     if "<iframe" in body:
-        # not today youtube!
         body = body.replace("autoplay=1", "")
     body = body.replace("<img", "<img onerror='imgError(this);' ")
 
     return mark_safe(body)
+
+
+@register.filter(name="safe_title")
+def safe_title(value):
+    return mark_safe(_sanitize_title(value))
 
 
 @register.filter(name="starstyle")

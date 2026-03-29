@@ -1,6 +1,7 @@
 # Create your views here.
 
 import datetime
+import html
 import ipaddress
 import logging
 import json
@@ -297,9 +298,9 @@ def addfeed(request):
                                 '<li><form method="post" onsubmit="return false;"> <input type="hidden" name="feed" id="feed-%d" value="%s"><a href="#" onclick="addFeed(%d)" class="btn btn-xs btn-default">Subscribe</a> - %s</form></li>'
                                 % (
                                     feedcount,
-                                    urljoin(feed, lnk["href"]),
+                                    html.escape(urljoin(feed, lnk["href"]), quote=True),
                                     feedcount,
-                                    name,
+                                    html.escape(name),
                                 )
                             )
                             feed = urljoin(
@@ -346,7 +347,7 @@ def addfeed(request):
 
                         us.save()
 
-                        return HttpResponse("<div>Imported feed %s</div>" % us.name)
+                        return HttpResponse("<div>Imported feed %s</div>" % html.escape(us.name))
 
                 # need to start checking feed parser errors here
                 ns = Source()
@@ -365,12 +366,16 @@ def addfeed(request):
                 # you see really, I could parse out the items here and insert them rather than
                 # wait for them to come back round in the refresh cycle
 
-                return HttpResponse("<div>Imported feed %s</div>" % ns.name)
+                return HttpResponse("<div>Imported feed %s</div>" % html.escape(ns.name))
     except Exception as xx:
         traceback_str = "".join(traceback.format_tb(xx.__traceback__))
         return HttpResponse(
             "<div>Error %s: %s</div><div style='display:none'>%s</div>"
-            % (xx.__class__.__name__, str(xx), traceback_str)
+            % (
+                html.escape(xx.__class__.__name__),
+                html.escape(str(xx)),
+                html.escape(traceback_str),
+            )
         )
 
 

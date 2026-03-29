@@ -40,7 +40,7 @@
             {% if not source %}
               <h2 class="riversource">{{p.subscription.name }}</h2>
             {% endif %}
-            <h3 class="posttitle"><a href="{{p.link|escape}}">{{p.title|safe}}</a></h3>
+            <h3 class="posttitle"><a href="{{p.link|escape}}">{{p.title|safe_title}}</a></h3>
 
 
             <div class="date">

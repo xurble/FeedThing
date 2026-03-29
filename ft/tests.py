@@ -333,3 +333,167 @@ def test_refresh_endpoint_calls_update_feeds(update_feeds_mock, client):
     assert response.status_code == 200
     assert response["Content-Type"] == "text/plain"
     update_feeds_mock.assert_called_once()
+
+
+# --- XSS prevention tests ---
+
+
+class TestFixBodyFilter:
+    def test_strips_script_tags(self):
+        from ft.templatetags.ft_tags import fix_body
+
+        result = str(fix_body('<p>Hello</p><script>alert(1)</script>'))
+        assert "<script>" not in result
+        assert "alert(1)" not in result
+        assert "<p>Hello</p>" in result
+
+    def test_strips_event_handlers(self):
+        from ft.templatetags.ft_tags import fix_body
+
+        result = str(fix_body('<img src="x" onerror="alert(1)">'))
+        assert 'onerror="alert(1)"' not in result
+
+    def test_strips_javascript_hrefs(self):
+        from ft.templatetags.ft_tags import fix_body
+
+        result = str(fix_body('<a href="javascript:alert(1)">click</a>'))
+        assert "javascript:" not in result
+
+    def test_strips_form_elements(self):
+        from ft.templatetags.ft_tags import fix_body
+
+        result = str(fix_body(
+            '<form action="https://evil.com"><input type="text" name="pw">'
+            '<button>Submit</button></form>'
+        ))
+        assert "<form" not in result
+        assert "<input" not in result
+        assert "<button" not in result
+
+    def test_preserves_safe_html(self):
+        from ft.templatetags.ft_tags import fix_body
+
+        html = '<p>Hello <b>world</b></p><img src="photo.jpg" alt="pic">'
+        result = str(fix_body(html))
+        assert "<p>" in result
+        assert "<b>world</b>" in result
+        assert 'src="photo.jpg"' in result
+
+    def test_iframe_sandbox_does_not_include_allow_same_origin(self):
+        from ft.templatetags.ft_tags import fix_body
+
+        result = str(fix_body('<iframe src="https://example.com"></iframe>'))
+        assert "allow-scripts" in result
+        assert "allow-same-origin" not in result
+
+    def test_strips_style_tags(self):
+        from ft.templatetags.ft_tags import fix_body
+
+        result = str(fix_body('<style>body{display:none}</style><p>hi</p>'))
+        assert "<style>" not in result
+        assert "<p>hi</p>" in result
+
+
+class TestRiverFilter:
+    def test_strips_all_tags_and_returns_plain_text(self):
+        from ft.templatetags.ft_tags import river
+
+        result = river('<p>Hello <b>world</b></p>')
+        assert "<p>" not in result
+        assert "<b>" not in result
+        assert "Hello" in result
+        assert "world" in result
+
+    def test_strips_script_content(self):
+        from ft.templatetags.ft_tags import river
+
+        result = river('<script>alert(1)</script><p>Safe text</p>')
+        assert "<script>" not in result
+        assert "alert(1)" not in result
+        assert "Safe text" in result
+
+    def test_truncates_to_500_chars(self):
+        from ft.templatetags.ft_tags import river
+
+        long_body = "<p>" + "word " * 200 + "</p>"
+        result = river(long_body)
+        assert len(result) <= 501  # 500 + ellipsis char
+
+    def test_result_is_auto_escaped(self):
+        from django.template import Template, Context
+
+        t = Template("{% load ft_tags %}{{ body|river }}")
+        result = t.render(Context({"body": '<b>&lt;script&gt;</b>'}))
+        assert "<script>" not in result
+
+
+class TestSafeTitleFilter:
+    def test_strips_script_tags(self):
+        from ft.templatetags.ft_tags import safe_title
+
+        result = str(safe_title('Hello <script>alert(1)</script>'))
+        assert "<script>" not in result
+        assert "alert(1)" not in result
+        assert "Hello" in result
+
+    def test_allows_basic_inline_formatting(self):
+        from ft.templatetags.ft_tags import safe_title
+
+        result = str(safe_title('Hello <b>world</b> <em>!</em>'))
+        assert "<b>world</b>" in result
+        assert "<em>!</em>" in result
+
+    def test_strips_block_and_dangerous_elements(self):
+        from ft.templatetags.ft_tags import safe_title
+
+        result = str(safe_title('<div>Hi</div><form><input></form>'))
+        assert "<div>" not in result
+        assert "<form>" not in result
+        assert "<input>" not in result
+        assert "Hi" in result
+
+    def test_strips_event_handlers_from_allowed_tags(self):
+        from ft.templatetags.ft_tags import safe_title
+
+        result = str(safe_title('<b onmouseover="alert(1)">text</b>'))
+        assert "onmouseover" not in result
+        assert "<b>text</b>" in result
+
+
+@patch("ft.views.requests.get")
+def test_addfeed_autodiscovery_escapes_malicious_link_title(requests_get_mock, client, user):
+    client.force_login(user)
+
+    xss_html = '''<html><head>
+    <link rel="alternate" type="application/rss+xml"
+          title='"><script>alert(1)</script>'
+          href="/feed.xml">
+    </head><body></body></html>'''
+
+    requests_get_mock.return_value = Mock(
+        headers={"Content-Type": "text/html"},
+        text=xss_html,
+    )
+
+    response = client.post(
+        "/addfeed/",
+        {"feed": "https://example.com", "group": "0"},
+    )
+    body = response.content.decode()
+    assert "<script>alert(1)</script>" not in body
+    assert "&lt;script&gt;" in body or "alert(1)" not in body
+
+
+@patch("ft.views.requests.get")
+def test_addfeed_error_handler_escapes_html_in_url(requests_get_mock, client, user):
+    client.force_login(user)
+
+    requests_get_mock.side_effect = Exception('<script>alert(1)</script>')
+
+    response = client.post(
+        "/addfeed/",
+        {"feed": "https://example.com/feed.xml", "group": "0"},
+    )
+    body = response.content.decode()
+    assert "<script>alert(1)</script>" not in body
+    assert "&lt;script&gt;" in body

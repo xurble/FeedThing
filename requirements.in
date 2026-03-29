@@ -2,10 +2,11 @@ Django
 requests
 # mysqlclient
 beautifulsoup4
-django-feed-reader
+django-feed-reader==2.0.1b5
 pwned-passwords-django
 django-allauth
 django-anymail
+nh3
 pytz
 
 python-lsp-server

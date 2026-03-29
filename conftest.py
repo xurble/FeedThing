@@ -1,7 +1,6 @@
 import pytest
 from django.contrib.auth import get_user_model
 from django.utils import timezone
-
 from feeds.models import Post, Source, Subscription
 
 
@@ -51,7 +50,9 @@ def make_source():
 
 @pytest.fixture
 def make_subscription(user, make_source):
-    def _make_subscription(user_override=None, source=None, name="My Sub", parent=None, is_river=False):
+    def _make_subscription(
+        user_override=None, source=None, name="My Sub", parent=None, is_river=False
+    ):
         owner = user_override or user
         src = source or make_source()
         return Subscription.objects.create(

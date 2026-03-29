@@ -1,9 +1,9 @@
+from django.contrib.auth.models import (
+    AbstractBaseUser,
+    BaseUserManager,
+    PermissionsMixin,
+)
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser
-from django.contrib.auth.models import PermissionsMixin
-
-from django.contrib.auth.models import BaseUserManager
-
 from feeds.models import Post, Subscription
 
 

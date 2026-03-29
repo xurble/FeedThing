@@ -2,23 +2,22 @@
 
 ## High Priority Issues
 
-### 1. SSL Certificate Verification Disabled
-**Issue**: In `ft/views.py` line 205, SSL verification is disabled with `verify=False`.
-```python
-ret = requests.get(feed, headers=headers, verify=False, timeout=15)
-```
+### ~~1. SSL Certificate Verification Disabled~~ *(addressed)*
 
-**Risk**: This makes the application vulnerable to man-in-the-middle attacks when fetching feeds.
+~~**Issue**: SSL verification was disabled with `verify=False` on the feed `requests.get` call.~~
 
-**Fix**: Enable SSL verification and handle SSL errors gracefully:
+~~**Risk**: Man-in-the-middle attacks when fetching feeds.~~
+
+**Current behaviour**: `addfeed` calls `requests.get(feed, headers=headers, timeout=15)` with the library default `verify=True` (see `ft/views.py`).
+
+**Optional improvement** (explicit handling for broken certs):
+
 ```python
 try:
     ret = requests.get(feed, headers=headers, verify=True, timeout=15)
 except requests.exceptions.SSLError:
-    # Log the SSL error and handle appropriately
     logging.warning(f"SSL verification failed for feed: {feed}")
-    # Either skip the feed or try with a custom CA bundle
-    ret = requests.get(feed, headers=headers, verify=True, timeout=15)
+    # skip, retry with custom CA bundle, etc.
 ```
 
 ### 2. Unprotected Public Endpoint
@@ -195,7 +194,7 @@ DATABASES = {
 
 ## Implementation Priority
 
-1. **Immediate**: Fix SSL verification and secure the refresh endpoint
+1. **Immediate**: ~~Fix SSL verification and~~ secure the refresh endpoint
 2. **This week**: Add security headers and fix error message disclosure
 3. **This month**: Implement rate limiting and secure XML parsing
 4. **Ongoing**: Regular dependency updates and security monitoring

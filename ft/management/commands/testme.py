@@ -1,10 +1,8 @@
-from django.core.management.base import BaseCommand, CommandError
-
-from feeds.utils import read_feed
-from feeds.models import Source
+from django.core.management.base import BaseCommand
 from feeds.models import Subscription as NewSubscription
-from ft.models import Subscription as OldSubscription
+
 from ft.models import SavedPost
+from ft.models import Subscription as OldSubscription
 
 
 class Command(BaseCommand):

@@ -1,5 +1,4 @@
 from allauth.account.adapter import DefaultAccountAdapter
-from django.core.exceptions import PermissionDenied
 
 
 class NoNewUsersAccountAdapter(DefaultAccountAdapter):

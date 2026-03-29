@@ -4,10 +4,9 @@ import pytest
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
-
 from feeds.models import Source, Subscription
-from ft.models import SavedPost
 
+from ft.models import SavedPost
 
 pytestmark = pytest.mark.django_db
 
@@ -92,7 +91,9 @@ def test_user_settings_get_and_post(client, user):
     assert user.default_to_river is True
 
 
-def test_user_river_page_with_query(client, user, make_source, make_subscription, make_post):
+def test_user_river_page_with_query(
+    client, user, make_source, make_subscription, make_post
+):
     client.force_login(user)
     source = make_source()
     make_subscription(source=source)
@@ -120,7 +121,9 @@ def test_feedgarden_and_downloadfeeds_permissions(client, user, superuser, make_
 
 @patch("ft.views.requests.get")
 @patch("ft.views.feedparser.parse")
-def test_addfeed_get_and_post_imports_new_feed(parse_mock, requests_get_mock, client, user):
+def test_addfeed_get_and_post_imports_new_feed(
+    parse_mock, requests_get_mock, client, user
+):
     client.force_login(user)
     response = client.get("/addfeed/", {"feed": "https://example.com"})
     assert response.status_code == 200
@@ -169,7 +172,9 @@ def test_addfeed_rejects_localhost_urls_before_network(requests_get_mock, client
 
 
 @patch("ft.views.requests.get")
-def test_addfeed_rejects_private_ip_urls_before_network(requests_get_mock, client, user):
+def test_addfeed_rejects_private_ip_urls_before_network(
+    requests_get_mock, client, user
+):
     client.force_login(user)
 
     response = client.post(
@@ -199,7 +204,9 @@ def test_importopml_creates_subscriptions(client, user):
     assert Subscription.objects.filter(user=user).count() == 1
 
 
-def test_readfeed_for_owner_and_forbidden_for_other_user(client, user, other_user, make_source, make_subscription, make_post):
+def test_readfeed_for_owner_and_forbidden_for_other_user(
+    client, user, other_user, make_source, make_subscription, make_post
+):
     source = make_source()
     sub = make_subscription(user_override=user, source=source)
     make_post(source=source)
@@ -213,7 +220,9 @@ def test_readfeed_for_owner_and_forbidden_for_other_user(client, user, other_use
     assert response.status_code == 403
 
 
-def test_savepost_and_forgetpost(client, user, make_source, make_subscription, make_post):
+def test_savepost_and_forgetpost(
+    client, user, make_source, make_subscription, make_post
+):
     source = make_source()
     sub = make_subscription(source=source)
     post = make_post(source=source)
@@ -267,7 +276,9 @@ def test_manage_subscription_endpoints(client, user, make_source, make_subscript
     assert sub.parent is None
 
 
-def test_addto_endpoint_existing_and_new_group(client, user, make_source, make_subscription):
+def test_addto_endpoint_existing_and_new_group(
+    client, user, make_source, make_subscription
+):
     client.force_login(user)
     source_a = make_source(feed_url="https://example.com/a.xml", name="A")
     source_b = make_source(feed_url="https://example.com/b.xml", name="B")
@@ -342,7 +353,7 @@ class TestFixBodyFilter:
     def test_strips_script_tags(self):
         from ft.templatetags.ft_tags import fix_body
 
-        result = str(fix_body('<p>Hello</p><script>alert(1)</script>'))
+        result = str(fix_body("<p>Hello</p><script>alert(1)</script>"))
         assert "<script>" not in result
         assert "alert(1)" not in result
         assert "<p>Hello</p>" in result
@@ -362,10 +373,12 @@ class TestFixBodyFilter:
     def test_strips_form_elements(self):
         from ft.templatetags.ft_tags import fix_body
 
-        result = str(fix_body(
-            '<form action="https://evil.com"><input type="text" name="pw">'
-            '<button>Submit</button></form>'
-        ))
+        result = str(
+            fix_body(
+                '<form action="https://evil.com"><input type="text" name="pw">'
+                "<button>Submit</button></form>"
+            )
+        )
         assert "<form" not in result
         assert "<input" not in result
         assert "<button" not in result
@@ -389,7 +402,7 @@ class TestFixBodyFilter:
     def test_strips_style_tags(self):
         from ft.templatetags.ft_tags import fix_body
 
-        result = str(fix_body('<style>body{display:none}</style><p>hi</p>'))
+        result = str(fix_body("<style>body{display:none}</style><p>hi</p>"))
         assert "<style>" not in result
         assert "<p>hi</p>" in result
 
@@ -398,7 +411,7 @@ class TestRiverFilter:
     def test_strips_all_tags_and_returns_plain_text(self):
         from ft.templatetags.ft_tags import river
 
-        result = river('<p>Hello <b>world</b></p>')
+        result = river("<p>Hello <b>world</b></p>")
         assert "<p>" not in result
         assert "<b>" not in result
         assert "Hello" in result
@@ -407,7 +420,7 @@ class TestRiverFilter:
     def test_strips_script_content(self):
         from ft.templatetags.ft_tags import river
 
-        result = river('<script>alert(1)</script><p>Safe text</p>')
+        result = river("<script>alert(1)</script><p>Safe text</p>")
         assert "<script>" not in result
         assert "alert(1)" not in result
         assert "Safe text" in result
@@ -420,10 +433,10 @@ class TestRiverFilter:
         assert len(result) <= 501  # 500 + ellipsis char
 
     def test_result_is_auto_escaped(self):
-        from django.template import Template, Context
+        from django.template import Context, Template
 
         t = Template("{% load ft_tags %}{{ body|river }}")
-        result = t.render(Context({"body": '<b>&lt;script&gt;</b>'}))
+        result = t.render(Context({"body": "<b>&lt;script&gt;</b>"}))
         assert "<script>" not in result
 
 
@@ -431,7 +444,7 @@ class TestSafeTitleFilter:
     def test_strips_script_tags(self):
         from ft.templatetags.ft_tags import safe_title
 
-        result = str(safe_title('Hello <script>alert(1)</script>'))
+        result = str(safe_title("Hello <script>alert(1)</script>"))
         assert "<script>" not in result
         assert "alert(1)" not in result
         assert "Hello" in result
@@ -439,14 +452,14 @@ class TestSafeTitleFilter:
     def test_allows_basic_inline_formatting(self):
         from ft.templatetags.ft_tags import safe_title
 
-        result = str(safe_title('Hello <b>world</b> <em>!</em>'))
+        result = str(safe_title("Hello <b>world</b> <em>!</em>"))
         assert "<b>world</b>" in result
         assert "<em>!</em>" in result
 
     def test_strips_block_and_dangerous_elements(self):
         from ft.templatetags.ft_tags import safe_title
 
-        result = str(safe_title('<div>Hi</div><form><input></form>'))
+        result = str(safe_title("<div>Hi</div><form><input></form>"))
         assert "<div>" not in result
         assert "<form>" not in result
         assert "<input>" not in result
@@ -461,14 +474,16 @@ class TestSafeTitleFilter:
 
 
 @patch("ft.views.requests.get")
-def test_addfeed_autodiscovery_escapes_malicious_link_title(requests_get_mock, client, user):
+def test_addfeed_autodiscovery_escapes_malicious_link_title(
+    requests_get_mock, client, user
+):
     client.force_login(user)
 
-    xss_html = '''<html><head>
+    xss_html = """<html><head>
     <link rel="alternate" type="application/rss+xml"
           title='"><script>alert(1)</script>'
           href="/feed.xml">
-    </head><body></body></html>'''
+    </head><body></body></html>"""
 
     requests_get_mock.return_value = Mock(
         headers={"Content-Type": "text/html"},
@@ -488,7 +503,7 @@ def test_addfeed_autodiscovery_escapes_malicious_link_title(requests_get_mock, c
 def test_addfeed_error_handler_escapes_html_in_url(requests_get_mock, client, user):
     client.force_login(user)
 
-    requests_get_mock.side_effect = Exception('<script>alert(1)</script>')
+    requests_get_mock.side_effect = Exception("<script>alert(1)</script>")
 
     response = client.post(
         "/addfeed/",

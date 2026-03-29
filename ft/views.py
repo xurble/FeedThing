@@ -3,39 +3,37 @@
 import datetime
 import html
 import ipaddress
-import logging
 import json
+import logging
 import socket
 import traceback
 from urllib.parse import urljoin, urlparse
+from xml.dom import minidom
 
-
-from django.shortcuts import render, get_object_or_404
-from django.template.loader import render_to_string
-from django.http import HttpResponseRedirect, HttpResponse, JsonResponse, Http404
-from django.db.models import Q
-from django.contrib.auth.decorators import login_required
-from django.contrib import messages
-from django.core.exceptions import PermissionDenied
-from django.core.paginator import Paginator, EmptyPage, InvalidPage
+import feedparser
+import requests
+from bs4 import BeautifulSoup
 from django.conf import settings
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
+from django.core.paginator import EmptyPage, InvalidPage, Paginator
+from django.db.models import Q
+from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
+from django.shortcuts import get_object_or_404, render
+from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
-from xml.dom import minidom
-from bs4 import BeautifulSoup
-import requests
-import feedparser
-
+from feeds.models import Post, Source, Subscription
 from feeds.utils import (
-    update_feeds,
-    test_feed,
-    get_unread_subscription_list_for_user,
     get_subscription_list_for_user,
+    get_unread_subscription_list_for_user,
+    test_feed,
+    update_feeds,
 )
-from feeds.models import Source, Post, Subscription
 
-from .models import SavedPost
 from .forms import SettingsForm
+from .models import SavedPost
 
 
 def _is_blocked_ip(ip_text):
@@ -75,7 +73,9 @@ def _validate_feed_url(feed_url):
         raise ValueError("Private and local feed URLs are not allowed.")
 
     try:
-        addr_info = socket.getaddrinfo(hostname, parsed.port or 80, type=socket.SOCK_STREAM)
+        addr_info = socket.getaddrinfo(
+            hostname, parsed.port or 80, type=socket.SOCK_STREAM
+        )
     except socket.gaierror:
         raise ValueError("Feed hostname could not be resolved.")
 
@@ -347,7 +347,9 @@ def addfeed(request):
 
                         us.save()
 
-                        return HttpResponse("<div>Imported feed %s</div>" % html.escape(us.name))
+                        return HttpResponse(
+                            "<div>Imported feed %s</div>" % html.escape(us.name)
+                        )
 
                 # need to start checking feed parser errors here
                 ns = Source()
@@ -366,7 +368,9 @@ def addfeed(request):
                 # you see really, I could parse out the items here and insert them rather than
                 # wait for them to come back round in the refresh cycle
 
-                return HttpResponse("<div>Imported feed %s</div>" % html.escape(ns.name))
+                return HttpResponse(
+                    "<div>Imported feed %s</div>" % html.escape(ns.name)
+                )
     except Exception as xx:
         traceback_str = "".join(traceback.format_tb(xx.__traceback__))
         return HttpResponse(

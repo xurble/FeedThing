@@ -149,7 +149,7 @@ pydantic-core==2.41.5
     # via pydantic
 pyflakes==3.4.0
     # via -r requirements.in
-pygments==2.19.2
+pygments==2.20.0
     # via
     #   pytest
     #   rich

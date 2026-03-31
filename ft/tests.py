@@ -3,9 +3,11 @@ from unittest.mock import Mock, patch
 import pytest
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.test import RequestFactory
 from django.urls import reverse
 from feeds.models import Source, Subscription
 
+from ft.adapters import NoNewUsersAccountAdapter
 from ft.models import SavedPost
 
 pytestmark = pytest.mark.django_db
@@ -512,3 +514,19 @@ def test_addfeed_error_handler_escapes_html_in_url(requests_get_mock, client, us
     body = response.content.decode()
     assert "<script>alert(1)</script>" not in body
     assert "&lt;script&gt;" in body
+
+
+def test_account_adapter_get_client_ip_fallback_for_invalid_remote_addr():
+    factory = RequestFactory()
+    adapter = NoNewUsersAccountAdapter()
+    request = factory.get("/")
+    request.META["REMOTE_ADDR"] = "not-a-valid-ip"
+    assert adapter.get_client_ip(request) == "0.0.0.0"
+
+
+def test_account_adapter_get_client_ip_fallback_when_remote_addr_missing():
+    factory = RequestFactory()
+    adapter = NoNewUsersAccountAdapter()
+    request = factory.get("/")
+    del request.META["REMOTE_ADDR"]
+    assert adapter.get_client_ip(request) == "0.0.0.0"

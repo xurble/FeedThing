@@ -155,7 +155,7 @@ pygments==2.20.0
     #   rich
 pyrfc3339==2.1.0
     # via django-feed-reader
-pytest==9.0.2
+pytest==9.0.3
     # via
     #   -r requirements.in
     #   pytest-django

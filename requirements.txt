@@ -14,7 +14,7 @@ asgiref==3.11.1
     # via
     #   django
     #   django-allauth
-authlib==1.6.9
+authlib==1.6.11
     # via safety
 bandit==1.9.4
     # via -r requirements.in

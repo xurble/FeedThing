@@ -81,7 +81,7 @@ httpx==0.28.1
     # via
     #   pwned-passwords-django
     #   safety
-idna==3.11
+idna==3.15
     # via
     #   anyio
     #   django-anymail

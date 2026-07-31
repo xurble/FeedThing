@@ -43,6 +43,8 @@ colorlog==6.10.1
     # via -r requirements.in
 cryptography==46.0.7
     # via authlib
+defusedxml==0.7.1
+    # via nltk
 django==6.0.4
     # via
     #   -r requirements.in
@@ -109,7 +111,7 @@ mypy-extensions==1.1.0
     # via black
 nh3==0.3.4
     # via -r requirements.in
-nltk==3.9.4
+nltk==3.10.0
     # via safety
 packaging==26.0
     # via

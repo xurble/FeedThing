@@ -286,7 +286,7 @@ function handleOut(evt,ui) {
 
 function refreshFeedList() {
 
-    $.get("/subscription/list/",function(data){
+    $.get("{% url 'subscriptionlist' %}",function(data){
 
         $("#feeds").html(data);
         dragDrop();
@@ -300,5 +300,4 @@ function refreshFeedList() {
 
 
 {% endblock %}
-
 

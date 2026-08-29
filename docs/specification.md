@@ -170,6 +170,11 @@ missing a post while consuming high-volume feeds as a stream.
 
 - Anonymous requests to reader functionality redirect to authentication.
 - Access to another user's readable subscription is forbidden.
+- Access to another user's subscription-management endpoints is forbidden, and
+  unsupported methods return HTTP 405.
+- Queue inspection, source testing, source revival, and web-triggered polling
+  are restricted to superusers. Mutating operations require POST and CSRF
+  validation.
 - A malformed or unsafe manual feed URL produces an escaped error response and
   is not fetched.
 - Initial feed fetches use a 15-second timeout and normal TLS verification.
@@ -226,16 +231,6 @@ missing a post while consuming high-volume feeds as a stream.
 The following observed behaviors conflict with the approved product intent and
 must not be treated as requirements:
 
-- The public `/refresh/` endpoint allows unauthenticated callers to start polling
-  work. Scheduled refresh is intended to be an operator function.
-- `/feedgarden/`, source revival, and source testing currently accept any
-  authenticated user even though they are administrator functions.
-- Several ownership and HTTP-method failure paths return server errors instead of
-  explicit 403 or 405 responses.
-- Manage Feeds attempts to refresh its list through the removed
-  `/subscription/list/` endpoint.
-- Save and forget operations are not idempotent even though saved-post uniqueness
-  is enforced by the database.
 - The public landing page says sign-ups are open while the active account adapter
   disables registration.
 - The OPML export interface says "your feeds" although it exports all global

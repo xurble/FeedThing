@@ -24,6 +24,7 @@ from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.http import require_GET, require_http_methods, require_POST
 from feeds.models import Post, Source, Subscription
 from feeds.utils import (
     get_subscription_list_for_user,
@@ -34,6 +35,18 @@ from feeds.utils import (
 
 from .forms import SettingsForm
 from .models import SavedPost
+
+
+def _get_owned_subscription_or_403(request, subscription_id):
+    subscription = get_object_or_404(Subscription, id=int(subscription_id))
+    if subscription.user != request.user:
+        raise PermissionDenied
+    return subscription
+
+
+def _require_superuser(request):
+    if not request.user.is_superuser:
+        raise PermissionDenied
 
 
 def _is_blocked_ip(ip_text):
@@ -189,6 +202,7 @@ def user_river(request):
 
 
 @login_required
+@require_GET
 def managefeeds(request):
     vals = {}
     subscriptions = get_subscription_list_for_user(request.user)
@@ -199,14 +213,11 @@ def managefeeds(request):
     return render(request, "manage.html", vals)
 
 
-# @login_required
-# def subscriptionlist(request):
-#     vals = {}
-#     subscriptions = list(Subscription.objects.filter(Q(user=request.user) & Q(parent=None)).order_by("source__name"))
-#
-#     vals["subscriptions"] = subscriptions
-#
-#     return render(request, "sublist.html", vals)
+@login_required
+@require_GET
+def subscriptionlist(request):
+    subscriptions = get_subscription_list_for_user(request.user)
+    return render(request, "sublist.html", {"subscriptions": subscriptions})
 
 
 @login_required
@@ -225,7 +236,10 @@ def allfeeds(request):
 
 
 @login_required
+@require_GET
 def feedgarden(request):
+    _require_superuser(request)
+
     vals = {}
     vals["feeds"] = Source.objects.all().order_by("due_poll")
     return render(request, "feedgarden.html", vals)
@@ -384,9 +398,9 @@ def addfeed(request):
 
 
 @login_required
+@require_GET
 def downloadfeeds(request):
-    if not request.user.is_superuser:
-        raise PermissionDenied()
+    _require_superuser(request)
 
     opml = render_to_string("opml.xml", {"feeds": Source.objects.all()})
 
@@ -451,92 +465,87 @@ def importopml(request):
 
 
 @login_required
+@require_POST
 def subscriptionrename(request, sid):
-    sub = get_object_or_404(Subscription, id=int(sid))
+    sub = _get_owned_subscription_or_403(request, sid)
+    sub.name = request.POST["name"]
+    sub.save()
 
-    if sub.user == request.user:
-        if request.method == "POST":
-            sub.name = request.POST["name"]
-            sub.save()
-
-        return JsonResponse({"ok": True})
+    return JsonResponse({"ok": True})
 
 
 @login_required
+@require_http_methods(["GET", "POST"])
 def subscriptiondetails(request, sid):
-    sub = get_object_or_404(Subscription, id=int(sid))
+    sub = _get_owned_subscription_or_403(request, sid)
 
-    if sub.user == request.user:
-        vals = {}
-        vals["subscription"] = sub
+    vals = {}
+    vals["subscription"] = sub
 
-        if request.method == "POST":
-            sub.name = request.POST["subname"]
-            sub.is_river = "is_river" in request.POST
-            sub.save()
+    if request.method == "POST":
+        sub.name = request.POST["subname"]
+        sub.is_river = "is_river" in request.POST
+        sub.save()
 
-        if sub.source is None:
-            vals["sources"] = Subscription.objects.filter(parent=sub)
+    if sub.source is None:
+        vals["sources"] = Subscription.objects.filter(user=request.user, parent=sub)
 
-        else:
-            vals["groups"] = Subscription.objects.filter(
-                Q(user=request.user) & Q(source=None)
-            )
+    else:
+        vals["groups"] = Subscription.objects.filter(
+            Q(user=request.user) & Q(source=None)
+        )
 
-        return render(request, "subscription.html", vals)
-
-    # else 403 ?
+    return render(request, "subscription.html", vals)
 
 
 @login_required
+@require_POST
 def promote(request, sid):
     # Take a subscription out of its group
 
-    sub = get_object_or_404(Subscription, id=int(sid))
-    if sub.user == request.user:
-        parent = sub.parent
+    sub = _get_owned_subscription_or_403(request, sid)
+    parent = sub.parent
 
-        sub.parent = None
-        sub.save()
+    sub.parent = None
+    sub.save()
 
-        if parent.subscriptions.count() == 0:
-            parent.delete()
-            return HttpResponse("Kill")
-        else:
-            return HttpResponse("OK")
+    if parent is not None and parent.subscriptions.count() == 0:
+        parent.delete()
+        return HttpResponse("Kill")
+
+    return HttpResponse("OK")
 
 
 @login_required
+@require_POST
 def addto(request, sid, tid):
-    toadd = get_object_or_404(Subscription, id=int(sid))
+    toadd = _get_owned_subscription_or_403(request, sid)
 
     if tid == 0:
         target = Subscription(user=request.user, name="New Folder")
     else:
-        target = get_object_or_404(Subscription, id=int(tid))
+        target = _get_owned_subscription_or_403(request, tid)
 
-    if (
-        toadd.user == request.user
-        and target.user == request.user
-        and toadd.source is not None
-    ):
-        if tid == 0:
-            target.save()
+    if toadd.source is None:
+        return HttpResponse("Only feeds can be added to groups.", status=400)
 
-        if target.source is None:
-            toadd.parent = target
-            toadd.save()
+    if tid == 0:
+        target.save()
 
-            return HttpResponse(target.id)
-        else:
-            nn = Subscription(user=request.user, name="New Folder")
-            nn.save()
-            toadd.parent = nn
-            toadd.save()
-            target.parent = nn
-            target.save()
+    if target.source is None:
+        toadd.parent = target
+        toadd.save()
 
-            return HttpResponse(nn.id)
+        return HttpResponse(target.id)
+
+    nn = Subscription(user=request.user, name="New Folder")
+    nn.save()
+    toadd.parent = nn
+    toadd.save()
+    target.parent = nn
+    target.save()
+
+    return HttpResponse(nn.id)
 
 
 @login_required
@@ -591,23 +600,28 @@ def readfeed(request, fid):
 
 
 @login_required
+@require_POST
 def revivefeed(request, fid):
-    if request.method == "POST":
-        f = get_object_or_404(Source, id=int(fid))
-        f.live = True
-        f.due_poll = timezone.now() - datetime.timedelta(days=100)
-        f.etag = None
-        f.last_modified = None
-        # f.last_success = None
-        # f.last_change = None
-        # f.max_index = 0
-        f.save()
-        # Post.objects.filter(source=f).delete()
-        return HttpResponse("OK")
+    _require_superuser(request)
+
+    f = get_object_or_404(Source, id=int(fid))
+    f.live = True
+    f.due_poll = timezone.now() - datetime.timedelta(days=100)
+    f.etag = None
+    f.last_modified = None
+    # f.last_success = None
+    # f.last_change = None
+    # f.max_index = 0
+    f.save()
+    # Post.objects.filter(source=f).delete()
+    return HttpResponse("OK")
 
 
 @login_required
+@require_GET
 def testfeed(request, fid):
+    _require_superuser(request)
+
     f = get_object_or_404(Source, id=int(fid))
 
     r = HttpResponse()
@@ -620,50 +634,48 @@ def testfeed(request, fid):
 
 
 @login_required
+@require_POST
 def unsubscribefeed(request, sid):
-    if request.method == "POST":
-        sub = get_object_or_404(Subscription, id=int(sid))
+    sub = _get_owned_subscription_or_403(request, sid)
 
-        if sub.user == request.user:
-            if sub.source:
-                source = sub.source
-                parent = sub.parent
-                sub.delete()
+    if not sub.source:
+        return HttpResponse("Can't unsubscribe from groups", status=400)
 
-                if parent is not None:
-                    if parent.subscriptions.count() == 0:
-                        parent.delete()
+    source = sub.source
+    parent = sub.parent
+    sub.delete()
 
-                if (
-                    source.subscriber_count == 0
-                ):  # this is the last subscription for this source
-                    source.delete()
+    if parent is not None and parent.subscriptions.count() == 0:
+        parent.delete()
 
-                return HttpResponse("OK")
-            else:
-                return HttpResponse("Can't unsubscribe from groups")
-        else:
-            return HttpResponse("Nope")
-
-
-@login_required
-def savepost(request, pid):
-    post = get_object_or_404(Post, id=int(pid))
-
-    sub = Subscription.objects.filter(source=post.source).filter(user=request.user)[0]
-
-    sp = SavedPost(post=post, user=request.user, subscription=sub)
-    sp.save()
+    if source.subscriber_count == 0:  # this is the last subscription for this source
+        source.delete()
 
     return HttpResponse("OK")
 
 
 @login_required
+@require_POST
+def savepost(request, pid):
+    post = get_object_or_404(Post, id=int(pid))
+
+    sub = get_object_or_404(Subscription, source=post.source, user=request.user)
+
+    SavedPost.objects.get_or_create(
+        post=post,
+        user=request.user,
+        defaults={"subscription": sub},
+    )
+
+    return HttpResponse("OK")
+
+
+@login_required
+@require_POST
 def forgetpost(request, pid):
     post = get_object_or_404(Post, id=int(pid))
 
-    sp = SavedPost.objects.filter(post=post).filter(user=request.user)[0]
-    sp.delete()
+    SavedPost.objects.filter(post=post, user=request.user).delete()
 
     return HttpResponse("OK")
 
@@ -700,7 +712,11 @@ def savedposts(request):
     return render(request, "savedposts.html", vals)
 
 
+@login_required
+@require_POST
 def read_request_listener(request):
+    _require_superuser(request)
+
     response = HttpResponse()
 
     update_feeds(3, response)

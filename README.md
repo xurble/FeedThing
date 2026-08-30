@@ -65,7 +65,7 @@ after meeting browser preload requirements. Run `python manage.py check --deploy
 with the production settings before every deployment; review each warning in the
 context of the front-end server and proxy configuration.
 
-Once it is running, in order to keep it ticking over and reading feeds, something needs to keep hitting `/refresh/` or, better still, calling the management command `manage.py refreshfeeds`
+Once it is running, keep it reading feeds by scheduling the management command `manage.py refreshfeeds`. Superusers can also trigger an authenticated, CSRF-protected refresh from the Feed Garden.
 
 I have that set up as a cron job every five minutes.  This was a cheesy way to work around the severe lameness of my last hosting, but its working well enough that I still do it that way.  Celery beat would work too.
 

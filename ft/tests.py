@@ -3,12 +3,14 @@ from unittest.mock import Mock, patch
 import pytest
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.template import Context, Template
 from django.test import RequestFactory
 from django.urls import reverse
 from feeds.models import Source, Subscription
 
 from ft.adapters import NoNewUsersAccountAdapter
 from ft.models import SavedPost
+from ft.templatetags.ft_tags import fix_body, river, safe_title
 
 pytestmark = pytest.mark.django_db
 
@@ -51,6 +53,8 @@ def test_login_required_routes_redirect_when_anonymous(client):
         reverse("settings"),
         reverse("savedposts"),
         reverse("manage"),
+        reverse("subscriptionlist"),
+        reverse("refresh"),
         "/addfeed/",
         "/importopml/",
         "/feedgarden/",
@@ -110,21 +114,28 @@ def test_feedgarden_and_downloadfeeds_permissions(client, user, superuser, make_
     client.force_login(user)
     make_source()
     response = client.get("/feedgarden/")
-    assert response.status_code == 200
+    assert response.status_code == 403
 
     response = client.get("/downloadfeeds/")
     assert response.status_code == 403
 
     client.force_login(superuser)
+    response = client.get("/feedgarden/")
+    assert response.status_code == 200
+
     response = client.get("/downloadfeeds/")
     assert response.status_code == 200
     assert response["Content-Type"] == "application/xml+opml"
 
 
+@patch(
+    "ft.views.socket.getaddrinfo",
+    return_value=[(None, None, None, None, ("93.184.216.34", 443))],
+)
 @patch("ft.views.requests.get")
 @patch("ft.views.feedparser.parse")
 def test_addfeed_get_and_post_imports_new_feed(
-    parse_mock, requests_get_mock, client, user
+    parse_mock, requests_get_mock, getaddrinfo_mock, client, user
 ):
     client.force_login(user)
     response = client.get("/addfeed/", {"feed": "https://example.com"})
@@ -155,6 +166,7 @@ def test_addfeed_get_and_post_imports_new_feed(
     assert kwargs["headers"]["User-Agent"] == (
         f"{settings.FEEDS_USER_AGENT} (+{settings.FEEDS_SERVER}; Initial Feed Crawler)"
     )
+    getaddrinfo_mock.assert_called_once()
 
 
 @patch("ft.views.requests.get")
@@ -230,14 +242,19 @@ def test_savepost_and_forgetpost(
     post = make_post(source=source)
 
     client.force_login(user)
-    response = client.get(reverse("savepost", args=[post.id]))
-    assert response.status_code == 200
-    assert response.content.decode() == "OK"
-    assert SavedPost.objects.filter(user=user, post=post, subscription=sub).exists()
+    for _ in range(2):
+        response = client.post(reverse("savepost", args=[post.id]))
+        assert response.status_code == 200
+        assert response.content.decode() == "OK"
 
-    response = client.get(reverse("forgetpost", args=[post.id]))
-    assert response.status_code == 200
-    assert response.content.decode() == "OK"
+    assert SavedPost.objects.filter(user=user, post=post, subscription=sub).exists()
+    assert SavedPost.objects.filter(user=user, post=post).count() == 1
+
+    for _ in range(2):
+        response = client.post(reverse("forgetpost", args=[post.id]))
+        assert response.status_code == 200
+        assert response.content.decode() == "OK"
+
     assert not SavedPost.objects.filter(user=user, post=post).exists()
 
 
@@ -272,7 +289,7 @@ def test_manage_subscription_endpoints(client, user, make_source, make_subscript
     assert sub.name == "Detailed Name"
     assert sub.is_river is True
 
-    response = client.get(f"/subscription/{sub.id}/promote/")
+    response = client.post(f"/subscription/{sub.id}/promote/")
     assert response.status_code == 200
     sub.refresh_from_db()
     assert sub.parent is None
@@ -287,12 +304,12 @@ def test_addto_endpoint_existing_and_new_group(
     sub_a = make_subscription(source=source_a, name="Sub A")
     sub_b = make_subscription(source=source_b, name="Sub B")
 
-    response = client.get(f"/subscription/{sub_a.id}/addto/0/")
+    response = client.post(f"/subscription/{sub_a.id}/addto/0/")
     assert response.status_code == 200
     sub_a.refresh_from_db()
     assert sub_a.parent is not None
 
-    response = client.get(f"/subscription/{sub_b.id}/addto/{sub_a.id}/")
+    response = client.post(f"/subscription/{sub_b.id}/addto/{sub_a.id}/")
     assert response.status_code == 200
     sub_a.refresh_from_db()
     sub_b.refresh_from_db()
@@ -311,14 +328,85 @@ def test_unsubscribe_subscription(client, user, make_source, make_subscription):
     assert not Subscription.objects.filter(id=sub.id).exists()
 
 
-def test_revivefeed_post(client, user, make_source):
+def test_subscription_list_returns_only_current_users_subscriptions(
+    client, user, other_user, make_source, make_subscription
+):
+    own_source = make_source(feed_url="https://example.com/own.xml", name="Own")
+    other_source = make_source(feed_url="https://example.com/other.xml", name="Other")
+    make_subscription(source=own_source, name="Own subscription")
+    make_subscription(
+        user_override=other_user,
+        source=other_source,
+        name="Other subscription",
+    )
+
     client.force_login(user)
+    response = client.get(reverse("subscriptionlist"))
+
+    assert response.status_code == 200
+    body = response.content.decode()
+    assert "Own subscription" in body
+    assert "Other subscription" not in body
+
+
+def test_subscription_endpoints_forbid_other_users_resources(
+    client, user, other_user, make_source, make_subscription
+):
+    own_source = make_source(feed_url="https://example.com/own.xml")
+    other_source = make_source(feed_url="https://example.com/other.xml")
+    own_sub = make_subscription(user_override=user, source=own_source)
+    other_sub = make_subscription(user_override=other_user, source=other_source)
+
+    client.force_login(user)
+
+    responses = [
+        client.get(f"/subscription/{other_sub.id}/details/"),
+        client.post(f"/subscription/{other_sub.id}/rename/", {"name": "Nope"}),
+        client.post(f"/subscription/{other_sub.id}/promote/"),
+        client.post(f"/subscription/{other_sub.id}/addto/0/"),
+        client.post(f"/subscription/{own_sub.id}/addto/{other_sub.id}/"),
+        client.post(f"/subscription/{other_sub.id}/unsubscribe/"),
+    ]
+
+    assert all(response.status_code == 403 for response in responses)
+
+
+def test_mutating_endpoints_reject_get(
+    client, user, superuser, make_source, make_subscription, make_post
+):
+    source = make_source()
+    sub = make_subscription(source=source)
+    post = make_post(source=source)
+
+    client.force_login(user)
+    user_urls = [
+        f"/subscription/{sub.id}/rename/",
+        f"/subscription/{sub.id}/promote/",
+        f"/subscription/{sub.id}/addto/0/",
+        f"/subscription/{sub.id}/unsubscribe/",
+        reverse("savepost", args=[post.id]),
+        reverse("forgetpost", args=[post.id]),
+    ]
+    assert all(client.get(url).status_code == 405 for url in user_urls)
+    assert client.put(f"/subscription/{sub.id}/details/").status_code == 405
+
+    client.force_login(superuser)
+    assert client.get(f"/feed/{source.id}/revive/").status_code == 405
+    assert client.get(reverse("refresh")).status_code == 405
+
+
+def test_revivefeed_is_superuser_only(client, user, superuser, make_source):
     source = make_source()
     source.live = False
     source.etag = "abc"
     source.last_modified = "yesterday"
     source.save()
 
+    client.force_login(user)
+    response = client.post(f"/feed/{source.id}/revive/")
+    assert response.status_code == 403
+
+    client.force_login(superuser)
     response = client.post(f"/feed/{source.id}/revive/")
     assert response.status_code == 200
     assert response.content.decode() == "OK"
@@ -330,10 +418,17 @@ def test_revivefeed_post(client, user, make_source):
 
 
 @patch("ft.views.test_feed")
-def test_testfeed_endpoint(test_feed_mock, client, user, make_source):
+def test_testfeed_endpoint_is_superuser_only(
+    test_feed_mock, client, user, superuser, make_source
+):
     client.force_login(user)
     source = make_source()
 
+    response = client.get(f"/feed/{source.id}/test/?cache=yes")
+    assert response.status_code == 403
+    test_feed_mock.assert_not_called()
+
+    client.force_login(superuser)
     response = client.get(f"/feed/{source.id}/test/?cache=yes")
     assert response.status_code == 200
     assert response["Content-Type"] == "text/plain"
@@ -341,8 +436,18 @@ def test_testfeed_endpoint(test_feed_mock, client, user, make_source):
 
 
 @patch("ft.views.update_feeds")
-def test_refresh_endpoint_calls_update_feeds(update_feeds_mock, client):
-    response = client.get(reverse("refresh"))
+def test_refresh_endpoint_is_superuser_only(update_feeds_mock, client, user, superuser):
+    response = client.post(reverse("refresh"))
+    assert response.status_code == 302
+    update_feeds_mock.assert_not_called()
+
+    client.force_login(user)
+    response = client.post(reverse("refresh"))
+    assert response.status_code == 403
+    update_feeds_mock.assert_not_called()
+
+    client.force_login(superuser)
+    response = client.post(reverse("refresh"))
     assert response.status_code == 200
     assert response["Content-Type"] == "text/plain"
     update_feeds_mock.assert_called_once()
@@ -353,28 +458,20 @@ def test_refresh_endpoint_calls_update_feeds(update_feeds_mock, client):
 
 class TestFixBodyFilter:
     def test_strips_script_tags(self):
-        from ft.templatetags.ft_tags import fix_body
-
         result = str(fix_body("<p>Hello</p><script>alert(1)</script>"))
         assert "<script>" not in result
         assert "alert(1)" not in result
         assert "<p>Hello</p>" in result
 
     def test_strips_event_handlers(self):
-        from ft.templatetags.ft_tags import fix_body
-
         result = str(fix_body('<img src="x" onerror="alert(1)">'))
         assert 'onerror="alert(1)"' not in result
 
     def test_strips_javascript_hrefs(self):
-        from ft.templatetags.ft_tags import fix_body
-
         result = str(fix_body('<a href="javascript:alert(1)">click</a>'))
         assert "javascript:" not in result
 
     def test_strips_form_elements(self):
-        from ft.templatetags.ft_tags import fix_body
-
         result = str(
             fix_body(
                 '<form action="https://evil.com"><input type="text" name="pw">'
@@ -386,8 +483,6 @@ class TestFixBodyFilter:
         assert "<button" not in result
 
     def test_preserves_safe_html(self):
-        from ft.templatetags.ft_tags import fix_body
-
         html = '<p>Hello <b>world</b></p><img src="photo.jpg" alt="pic">'
         result = str(fix_body(html))
         assert "<p>" in result
@@ -395,15 +490,11 @@ class TestFixBodyFilter:
         assert 'src="photo.jpg"' in result
 
     def test_iframe_sandbox_does_not_include_allow_same_origin(self):
-        from ft.templatetags.ft_tags import fix_body
-
         result = str(fix_body('<iframe src="https://example.com"></iframe>'))
         assert "allow-scripts" in result
         assert "allow-same-origin" not in result
 
     def test_strips_style_tags(self):
-        from ft.templatetags.ft_tags import fix_body
-
         result = str(fix_body("<style>body{display:none}</style><p>hi</p>"))
         assert "<style>" not in result
         assert "<p>hi</p>" in result
@@ -411,8 +502,6 @@ class TestFixBodyFilter:
 
 class TestRiverFilter:
     def test_strips_all_tags_and_returns_plain_text(self):
-        from ft.templatetags.ft_tags import river
-
         result = river("<p>Hello <b>world</b></p>")
         assert "<p>" not in result
         assert "<b>" not in result
@@ -420,23 +509,17 @@ class TestRiverFilter:
         assert "world" in result
 
     def test_strips_script_content(self):
-        from ft.templatetags.ft_tags import river
-
         result = river("<script>alert(1)</script><p>Safe text</p>")
         assert "<script>" not in result
         assert "alert(1)" not in result
         assert "Safe text" in result
 
     def test_truncates_to_500_chars(self):
-        from ft.templatetags.ft_tags import river
-
         long_body = "<p>" + "word " * 200 + "</p>"
         result = river(long_body)
         assert len(result) <= 501  # 500 + ellipsis char
 
     def test_result_is_auto_escaped(self):
-        from django.template import Context, Template
-
         t = Template("{% load ft_tags %}{{ body|river }}")
         result = t.render(Context({"body": "<b>&lt;script&gt;</b>"}))
         assert "<script>" not in result
@@ -444,23 +527,17 @@ class TestRiverFilter:
 
 class TestSafeTitleFilter:
     def test_strips_script_tags(self):
-        from ft.templatetags.ft_tags import safe_title
-
         result = str(safe_title("Hello <script>alert(1)</script>"))
         assert "<script>" not in result
         assert "alert(1)" not in result
         assert "Hello" in result
 
     def test_allows_basic_inline_formatting(self):
-        from ft.templatetags.ft_tags import safe_title
-
         result = str(safe_title("Hello <b>world</b> <em>!</em>"))
         assert "<b>world</b>" in result
         assert "<em>!</em>" in result
 
     def test_strips_block_and_dangerous_elements(self):
-        from ft.templatetags.ft_tags import safe_title
-
         result = str(safe_title("<div>Hi</div><form><input></form>"))
         assert "<div>" not in result
         assert "<form>" not in result
@@ -468,16 +545,18 @@ class TestSafeTitleFilter:
         assert "Hi" in result
 
     def test_strips_event_handlers_from_allowed_tags(self):
-        from ft.templatetags.ft_tags import safe_title
-
         result = str(safe_title('<b onmouseover="alert(1)">text</b>'))
         assert "onmouseover" not in result
         assert "<b>text</b>" in result
 
 
+@patch(
+    "ft.views.socket.getaddrinfo",
+    return_value=[(None, None, None, None, ("93.184.216.34", 443))],
+)
 @patch("ft.views.requests.get")
 def test_addfeed_autodiscovery_escapes_malicious_link_title(
-    requests_get_mock, client, user
+    requests_get_mock, getaddrinfo_mock, client, user
 ):
     client.force_login(user)
 
@@ -499,10 +578,17 @@ def test_addfeed_autodiscovery_escapes_malicious_link_title(
     body = response.content.decode()
     assert "<script>alert(1)</script>" not in body
     assert "&lt;script&gt;" in body or "alert(1)" not in body
+    getaddrinfo_mock.assert_called_once()
 
 
+@patch(
+    "ft.views.socket.getaddrinfo",
+    return_value=[(None, None, None, None, ("93.184.216.34", 443))],
+)
 @patch("ft.views.requests.get")
-def test_addfeed_error_handler_escapes_html_in_url(requests_get_mock, client, user):
+def test_addfeed_error_handler_escapes_html_in_url(
+    requests_get_mock, getaddrinfo_mock, client, user
+):
     client.force_login(user)
 
     requests_get_mock.side_effect = Exception("<script>alert(1)</script>")
@@ -514,6 +600,7 @@ def test_addfeed_error_handler_escapes_html_in_url(requests_get_mock, client, us
     body = response.content.decode()
     assert "<script>alert(1)</script>" not in body
     assert "&lt;script&gt;" in body
+    getaddrinfo_mock.assert_called_once()
 
 
 def test_account_adapter_get_client_ip_fallback_for_invalid_remote_addr():

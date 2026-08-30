@@ -10,30 +10,29 @@
   `addfeed` calls `_validate_feed_url()` before `requests.get` (`ft/views.py`): http/https only, blocks localhost and private/locally resolved IPs. Outbound fetch uses default TLS verification (`verify=True`).  
   _Previously: unvalidated user URLs and disabled TLS verification._
 
-- [ ] **Feed maintenance endpoints mutate or expose global feed state without admin checks**  
-  `feedthing/urls.py` exposes `/feedgarden/`, `/feed/<id>/revive/`, and `/feed/<id>/test/`.  
-  `feedgarden`, `revivefeed`, and `testfeed` in `ft/views.py` only require login but operate on global `Source` rows.  
-  _Impact: any logged-in user can inspect diagnostics, reset `due_poll`, and affect shared feed state._
+- [x] **Feed maintenance endpoints mutate or expose global feed state without admin checks**  
+  `feedgarden`, `revivefeed`, and `testfeed` now require a superuser. Feed revival also requires POST.  
+  _Previously: any logged-in user could inspect diagnostics, reset `due_poll`, and affect shared feed state._
 
 ## P1 — Security / availability
 
-- [ ] **Anyone on the internet can trigger a full refresh cycle**  
-  `/refresh/` is public; `read_request_listener` calls `update_feeds` with no auth or throttling.  
-  _Impact: DoS via repeated expensive polling._
+- [x] **Anyone on the internet can trigger a full refresh cycle**  
+  `/refresh/` now requires a superuser and a CSRF-protected POST. Scheduled polling uses the management command.  
+  _Previously: anonymous callers could repeatedly trigger expensive polling._
 
-- [ ] **Several ownership and method failures fall through to 500s instead of 403/405**  
-  Views such as `subscriptiondetails`, `promote`, `addto`, and `revivefeed` can return `None` when the caller is unauthorized or the method is wrong.  
-  _Impact: noisy 500s and possible inference from error behaviour._
+- [x] **Several ownership and method failures fall through to 500s instead of 403/405**  
+  Subscription-management views now return 403 for cross-user access and 405 for unsupported methods.  
+  _Previously: several failure paths returned `None` and became noisy 500 responses._
 
 ## P2 — Product behaviour / functional regressions
 
-- [ ] **Manage Feeds refresh path calls a missing endpoint**  
-  `ft/templates/manage.html` still requests `/subscription/list/`; the matching view and route remain commented out.  
-  _Impact: left-hand list can drift until full page reload._
+- [x] **Manage Feeds refresh path calls a missing endpoint**  
+  `/subscription/list/` is restored as an authenticated, user-scoped HTML fragment endpoint.  
+  _Previously: the left-hand list could drift until a full page reload._
 
-- [ ] **Save/forget actions are not idempotent**  
-  `SavedPost` uniqueness and `savepost` / `forgetpost` in `ft/views.py` still assume a single save row (`[0]` on forget; duplicate insert on double save).  
-  _Impact: repeated clicks can 500._
+- [x] **Save/forget actions are not idempotent**  
+  `savepost` uses `get_or_create` and `forgetpost` deletes a filtered queryset, so repeated calls succeed.  
+  _Previously: repeated clicks could violate uniqueness or index an empty queryset and return 500._
 
 - [x] **Test suite and local test run**  
   `ft/tests.py` exercises app behaviour with pytest (`pytest.ini`, `conftest.py`). Use SQLite / configured DB for `pytest` or `manage.py test` (see project settings).  
@@ -43,5 +42,5 @@
 
 | Status | Count |
 |--------|------:|
-| Open   | 5     |
-| Done   | 3     |
+| Open   | 0     |
+| Done   | 8     |

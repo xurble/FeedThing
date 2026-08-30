@@ -6,7 +6,6 @@ import ipaddress
 import json
 import logging
 import socket
-import traceback
 from urllib.parse import urljoin, urlparse
 from xml.dom import minidom
 
@@ -35,6 +34,9 @@ from feeds.utils import (
 
 from .forms import SettingsForm
 from .models import SavedPost
+
+
+logger = logging.getLogger(__name__)
 
 
 def _get_owned_subscription_or_403(request, subscription_id):
@@ -256,7 +258,13 @@ def addfeed(request):
 
         else:
             feed = request.POST.get("feed", "").strip()
-            _validate_feed_url(feed)
+            try:
+                _validate_feed_url(feed)
+            except ValueError:
+                logger.warning("Rejected invalid add-feed URL", exc_info=True)
+                return HttpResponse(
+                    "<div>The feed URL is invalid or not allowed.</div>", status=400
+                )
 
             # identify ourselves and also stop our requests getting picked up by google's cache
             headers = {
@@ -385,15 +393,10 @@ def addfeed(request):
                 return HttpResponse(
                     "<div>Imported feed %s</div>" % html.escape(ns.name)
                 )
-    except Exception as xx:
-        traceback_str = "".join(traceback.format_tb(xx.__traceback__))
+    except Exception:
+        logger.exception("Unexpected error while adding feed")
         return HttpResponse(
-            "<div>Error %s: %s</div><div style='display:none'>%s</div>"
-            % (
-                html.escape(xx.__class__.__name__),
-                html.escape(str(xx)),
-                html.escape(traceback_str),
-            )
+            "<div>Unable to add feed. Please try again later.</div>", status=500
         )
 
 

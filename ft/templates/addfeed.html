@@ -49,6 +49,13 @@
 
 <script>
 
+function showAddFeedResult(data)
+{
+	$("#addfeedlist").fadeOut(function(){
+		$("#addfeedlist").html(data).fadeIn();
+	});
+}
+
 function addFeed(fid)
 {
 	var theFeed = $("#feed-" + fid).val();
@@ -62,14 +69,20 @@ function addFeed(fid)
 
 	var gid =$('input[name="group"]:checked').val();
 
-
-	$.post("/addfeed/", { feed:theFeed,group: gid }, function(data){
-
-		$("#addfeedlist").fadeOut(function(){
-			$("#addfeedlist").html(data).fadeIn();
+	$.post("/addfeed/", { feed:theFeed,group: gid })
+		.done(function(data){
+			showAddFeedResult(data);
+		})
+		.fail(function(xhr){
+			if (xhr.status === 400)
+			{
+				showAddFeedResult("<div>The feed URL is invalid or not allowed.</div>");
+			}
+			else
+			{
+				showAddFeedResult("<div>Unable to add feed. Please try again later.</div>");
+			}
 		});
-
-	},'html');
 
 }
 

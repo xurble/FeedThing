@@ -1,3 +1,4 @@
+import logging
 from unittest.mock import Mock, patch
 
 import pytest
@@ -169,19 +170,41 @@ def test_addfeed_get_and_post_imports_new_feed(
     getaddrinfo_mock.assert_called_once()
 
 
-@patch("ft.views.requests.get")
-def test_addfeed_rejects_localhost_urls_before_network(requests_get_mock, client, user):
+def test_addfeed_page_handles_errors_without_rendering_response_details(client, user):
     client.force_login(user)
 
-    response = client.post(
-        "/addfeed/",
-        {"feed": "http://localhost/feed.xml", "group": "0"},
-    )
+    response = client.get("/addfeed/")
 
     assert response.status_code == 200
     body = response.content.decode()
-    assert "ValueError" in body
-    assert "Localhost feed URLs are not allowed." in body
+    assert ".fail(function(xhr)" in body
+    assert "xhr.status === 400" in body
+    assert "The feed URL is invalid or not allowed." in body
+    assert "Unable to add feed. Please try again later." in body
+    assert "xhr.responseText" not in body
+
+
+@patch("ft.views.requests.get")
+def test_addfeed_rejects_localhost_urls_before_network(
+    requests_get_mock, client, user, caplog
+):
+    client.force_login(user)
+
+    with caplog.at_level(logging.WARNING, logger="ft.views"):
+        response = client.post(
+            "/addfeed/",
+            {"feed": "http://localhost/feed.xml", "group": "0"},
+        )
+
+    assert response.status_code == 400
+    body = response.content.decode()
+    assert body == "<div>The feed URL is invalid or not allowed.</div>"
+    assert "ValueError" not in body
+    assert "Localhost feed URLs are not allowed." not in body
+    assert "Traceback" not in body
+    assert "Rejected invalid add-feed URL" in caplog.text
+    assert "Localhost feed URLs are not allowed." in caplog.text
+    assert "Traceback (most recent call last)" in caplog.text
     requests_get_mock.assert_not_called()
 
 
@@ -196,10 +219,12 @@ def test_addfeed_rejects_private_ip_urls_before_network(
         {"feed": "http://127.0.0.1/feed.xml", "group": "0"},
     )
 
-    assert response.status_code == 200
+    assert response.status_code == 400
     body = response.content.decode()
-    assert "ValueError" in body
-    assert "Private and local feed URLs are not allowed." in body
+    assert body == "<div>The feed URL is invalid or not allowed.</div>"
+    assert "ValueError" not in body
+    assert "Private and local feed URLs are not allowed." not in body
+    assert "Traceback" not in body
     requests_get_mock.assert_not_called()
 
 
@@ -586,20 +611,31 @@ def test_addfeed_autodiscovery_escapes_malicious_link_title(
     return_value=[(None, None, None, None, ("93.184.216.34", 443))],
 )
 @patch("ft.views.requests.get")
-def test_addfeed_error_handler_escapes_html_in_url(
-    requests_get_mock, getaddrinfo_mock, client, user
+def test_addfeed_unexpected_error_logs_traceback_and_returns_generic_500(
+    requests_get_mock, getaddrinfo_mock, client, user, caplog
 ):
     client.force_login(user)
 
-    requests_get_mock.side_effect = Exception("<script>alert(1)</script>")
-
-    response = client.post(
-        "/addfeed/",
-        {"feed": "https://example.com/feed.xml", "group": "0"},
+    requests_get_mock.side_effect = RuntimeError(
+        "sensitive internal failure at /srv/feedthing/secrets.py"
     )
+
+    with caplog.at_level(logging.ERROR, logger="ft.views"):
+        response = client.post(
+            "/addfeed/",
+            {"feed": "https://example.com/feed.xml", "group": "0"},
+        )
+
+    assert response.status_code == 500
     body = response.content.decode()
-    assert "<script>alert(1)</script>" not in body
-    assert "&lt;script&gt;" in body
+    assert body == "<div>Unable to add feed. Please try again later.</div>"
+    assert "RuntimeError" not in body
+    assert "sensitive internal failure" not in body
+    assert "/srv/feedthing/secrets.py" not in body
+    assert "Traceback" not in body
+    assert "Unexpected error while adding feed" in caplog.text
+    assert "sensitive internal failure at /srv/feedthing/secrets.py" in caplog.text
+    assert "Traceback (most recent call last)" in caplog.text
     getaddrinfo_mock.assert_called_once()
 
 

@@ -92,6 +92,7 @@ SECRET_KEY = settings_server.SECRET_KEY
 
 
 MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -158,6 +159,23 @@ INSTALLED_APPS = [
 
 
 SECURE_SSL_REDIRECT = settings_server.SECURE_SSL_REDIRECT
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+
+if DEBUG:
+    SECURE_HSTS_SECONDS = 0
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+    SECURE_HSTS_PRELOAD = False
+else:
+    SECURE_HSTS_SECONDS = getattr(settings_server, "SECURE_HSTS_SECONDS", 0)
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = getattr(
+        settings_server, "SECURE_HSTS_INCLUDE_SUBDOMAINS", False
+    )
+    SECURE_HSTS_PRELOAD = getattr(settings_server, "SECURE_HSTS_PRELOAD", False)
+
+# Only configure this when a trusted proxy strips any client-supplied header and
+# sets its own value for the original request scheme.
+SECURE_PROXY_SSL_HEADER = getattr(settings_server, "SECURE_PROXY_SSL_HEADER", None)
 
 DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 

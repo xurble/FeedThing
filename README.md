@@ -30,6 +30,41 @@ The django `settings.py` file  is not quite complete.  It imports some of its se
 
 Host it as you would any other django app.  I had it running for years under fastcgi and it was fine.  I currently run it behind gunicorn & nginx which is better.
 
+### Production HTTPS
+
+Production installations (`DEBUG = False`) mark session and CSRF cookies as
+secure, so the site must be served over HTTPS. Keep `SECURE_SSL_REDIRECT = True`
+unless the front-end server already redirects every HTTP request before it can
+reach Django.
+
+If TLS terminates at a reverse proxy, configure the proxy to remove any
+client-supplied `X-Forwarded-Proto` header and replace it with the scheme used by
+the original client. Only then enable the following in `settings_server.py`:
+
+```python
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+```
+
+Do not set `SECURE_PROXY_SSL_HEADER` when Django receives HTTPS directly or the
+proxy cannot guarantee that header. A mistaken trust configuration can make an
+HTTP request appear secure and can also cause redirect loops.
+
+HSTS is disabled for existing installations until `SECURE_HSTS_SECONDS` is
+explicitly configured. Start with a short duration after confirming that the
+entire site is HTTPS-only:
+
+```python
+SECURE_HSTS_SECONDS = 3600
+SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+SECURE_HSTS_PRELOAD = False
+```
+
+After a successful rollout, increase the duration (commonly to `31536000`). Only
+enable subdomains when every subdomain is HTTPS-only, and only enable preload
+after meeting browser preload requirements. Run `python manage.py check --deploy`
+with the production settings before every deployment; review each warning in the
+context of the front-end server and proxy configuration.
+
 Once it is running, in order to keep it ticking over and reading feeds, something needs to keep hitting `/refresh/` or, better still, calling the management command `manage.py refreshfeeds`
 
 I have that set up as a cron job every five minutes.  This was a cheesy way to work around the severe lameness of my last hosting, but its working well enough that I still do it that way.  Celery beat would work too.
@@ -37,4 +72,3 @@ I have that set up as a cron job every five minutes.  This was a cheesy way to w
 Make yourself the first login using `manage.py createsuperuser`
 
 And that's it.
-

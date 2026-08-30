@@ -14,6 +14,17 @@ DEBUG = False  # or true if you are running locally
 
 SECURE_SSL_REDIRECT = not DEBUG
 
+# Enable HSTS gradually after confirming that the entire site is HTTPS-only.
+# Start with one hour, then increase to 31536000 after a successful rollout.
+SECURE_HSTS_SECONDS = 3600 if not DEBUG else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+SECURE_HSTS_PRELOAD = False
+
+# Leave this unset when Gunicorn receives HTTPS directly. When TLS terminates at
+# a reverse proxy, enable it only if the proxy strips any incoming
+# X-Forwarded-Proto header and sets its own trusted value.
+# SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 # this is where collectstatic will gather its files
 STATIC_ROOT = os.path.join(SITE_ROOT, "..", "static")
 

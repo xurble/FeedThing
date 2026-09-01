@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load ft_tags %}
 
 
 {% block content %}
@@ -9,11 +10,14 @@
     	{{ count }} feeds added.
     	
     	<table>
-    		{% for s in imported %}
-    			
-    			<tr><td><a href="{{s.site_url|escape}}">{{s.name|escape}}</a></td><td><a href="{{s.feed_url|escape}}">{{s.feed_url|escape}}</a></td></tr>
-    			
-    		{% endfor %}
+		{% for s in imported %}
+			{% with site_url=s.site_url|safe_navigation_url feed_url=s.feed_url|safe_navigation_url %}
+			<tr>
+				<td>{% if site_url %}<a href="{{ site_url }}">{% endif %}{{s.name|escape}}{% if site_url %}</a>{% endif %}</td>
+				<td>{% if feed_url %}<a href="{{ feed_url }}">{% endif %}{{s.feed_url|escape}}{% if feed_url %}</a>{% endif %}</td>
+			</tr>
+			{% endwith %}
+		{% endfor %}
     	</table>
 	</div>
 	

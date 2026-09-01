@@ -34,7 +34,7 @@ from feeds.utils import (
 
 from .forms import SettingsForm
 from .models import SavedPost
-
+from .url_safety import normalize_navigation_url
 
 logger = logging.getLogger(__name__)
 
@@ -423,8 +423,8 @@ def importopml(request):
 
     sources = dom.getElementsByTagName("outline")
     for s in sources:
-        url = s.getAttribute("xmlUrl")
-        if url.strip() != "":
+        url = normalize_navigation_url(s.getAttribute("xmlUrl"))
+        if url:
             ns = Source.objects.filter(feed_url=url)
             if ns.count() > 0:
                 # feed already exists - so there may already be a user subscription for it
@@ -447,7 +447,7 @@ def importopml(request):
                 # Feed does not already exist it must also be a new sub
                 ns = Source()
                 ns.due_poll = timezone.now()
-                ns.site_url = s.getAttribute("htmlUrl")
+                ns.site_url = normalize_navigation_url(s.getAttribute("htmlUrl"))
                 ns.feed_url = (
                     url  # probably best to see that there isn't a match here :)
                 )

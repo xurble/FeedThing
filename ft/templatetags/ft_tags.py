@@ -2,6 +2,8 @@ import nh3
 from django import template
 from django.utils.safestring import mark_safe
 
+from ft.url_safety import normalize_navigation_url
+
 register = template.Library()
 
 BODY_ALLOWED_TAGS = {
@@ -171,6 +173,11 @@ def fix_body(body):
 @register.filter(name="safe_title")
 def safe_title(value):
     return mark_safe(_sanitize_title(value))
+
+
+@register.filter(name="safe_navigation_url")
+def safe_navigation_url(value):
+    return normalize_navigation_url(value)
 
 
 @register.filter(name="starstyle")

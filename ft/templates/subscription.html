@@ -34,11 +34,15 @@
           </tr>
           <tr>
               <th>Link:</th>
-              <td><a href="{{subscription.source.best_link}}">{{subscription.source.best_link}}</a></td>
+              {% with site_url=subscription.source.best_link|safe_navigation_url %}
+              <td>{% if site_url %}<a href="{{ site_url }}">{% endif %}{{subscription.source.best_link}}{% if site_url %}</a>{% endif %}</td>
+              {% endwith %}
           </tr>
           <tr>
               <th>Feed:</th>
-              <td><a href="{{subscription.source.feed_url}}">{{subscription.source.feed_url}}</a></td>
+              {% with feed_url=subscription.source.feed_url|safe_navigation_url %}
+              <td>{% if feed_url %}<a href="{{ feed_url }}">{% endif %}{{subscription.source.feed_url}}{% if feed_url %}</a>{% endif %}</td>
+              {% endwith %}
           </tr>
           <tr>
               <th>Interval:</th>

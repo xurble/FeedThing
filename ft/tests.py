@@ -1,17 +1,20 @@
 import logging
+from io import StringIO
 from unittest.mock import Mock, patch
 
 import pytest
+from bs4 import BeautifulSoup
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.template import Context, Template
 from django.test import RequestFactory
 from django.urls import reverse
 from feeds.models import Source, Subscription
+from feeds.utils_internal import parse_feed
 
 from ft.adapters import NoNewUsersAccountAdapter
 from ft.models import SavedPost
-from ft.templatetags.ft_tags import fix_body, river, safe_title
+from ft.templatetags.ft_tags import fix_body, river, safe_navigation_url, safe_title
 
 pytestmark = pytest.mark.django_db
 
@@ -479,6 +482,179 @@ def test_refresh_endpoint_is_superuser_only(update_feeds_mock, client, user, sup
 
 
 # --- XSS prevention tests ---
+
+
+def _response_hrefs(response):
+    document = BeautifulSoup(response.content, "html.parser")
+    return [link.get("href") for link in document.find_all("a")]
+
+
+@pytest.mark.parametrize(
+    "unsafe_url",
+    [
+        "javascript:alert(document.domain)",
+        "data:text/html,<script>alert(1)</script>",
+        "JaVaScRiPt:alert(1)",
+    ],
+)
+def test_safe_navigation_url_rejects_unsafe_schemes(unsafe_url):
+    assert safe_navigation_url(unsafe_url) == ""
+
+
+@pytest.mark.parametrize(
+    ("url", "expected"),
+    [
+        (" HTTP://example.com/post ", "http://example.com/post"),
+        (
+            "HTTPS://example.com/post?q=1#section",
+            "https://example.com/post?q=1#section",
+        ),
+    ],
+)
+def test_safe_navigation_url_normalizes_http_urls(url, expected):
+    assert safe_navigation_url(url) == expected
+
+
+def test_xml_feed_unsafe_post_link_renders_as_inert_title(
+    client, user, make_source, make_subscription
+):
+    source = make_source()
+    subscription = make_subscription(source=source)
+    xml_feed = b"""<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Unsafe XML Feed</title>
+    <link>https://example.com/</link>
+    <description>Test feed</description>
+    <item>
+      <title>Unsafe XML post</title>
+      <link>JaVaScRiPt:alert(document.domain)</link>
+      <guid>unsafe-xml-post</guid>
+      <pubDate>Mon, 31 Aug 2026 12:00:00 GMT</pubDate>
+      <description>Body</description>
+    </item>
+  </channel>
+</rss>"""
+
+    assert parse_feed(source, xml_feed, "application/rss+xml", StringIO()) == (
+        True,
+        True,
+    )
+
+    client.force_login(user)
+    response = client.get(f"/read/{subscription.id}/")
+
+    assert response.status_code == 200
+    assert "JaVaScRiPt:alert(document.domain)" not in _response_hrefs(response)
+    document = BeautifulSoup(response.content, "html.parser")
+    title = document.find("h3", class_="posttitle")
+    assert title.get_text(strip=True) == "Unsafe XML post"
+    assert title.find("a") is None
+
+
+def test_json_feed_unsafe_post_link_renders_as_inert_title(
+    client, user, make_source, make_subscription
+):
+    source = make_source(feed_url="https://example.com/feed.json")
+    make_subscription(source=source)
+    json_feed = b"""{
+      "version": "https://jsonfeed.org/version/1.1",
+      "title": "Unsafe JSON Feed",
+      "home_page_url": "https://example.com/",
+      "items": [{
+        "id": "unsafe-json-post",
+        "url": "data:text/html,<script>alert(1)</script>",
+        "title": "Unsafe JSON post",
+        "content_text": "Body",
+        "date_published": "2026-08-31T12:00:00Z"
+      }]
+    }"""
+
+    assert parse_feed(source, json_feed, "application/feed+json", StringIO()) == (
+        True,
+        True,
+    )
+
+    client.force_login(user)
+    response = client.get(reverse("userriver"))
+
+    assert response.status_code == 200
+    assert "data:text/html,<script>alert(1)</script>" not in _response_hrefs(response)
+    document = BeautifulSoup(response.content, "html.parser")
+    title = document.find("h3", class_="posttitle")
+    assert title.get_text(strip=True) == "Unsafe JSON post"
+    assert title.find("a") is None
+
+
+def test_saved_post_unsafe_link_renders_as_inert_title(
+    client, user, make_source, make_subscription, make_post
+):
+    source = make_source()
+    subscription = make_subscription(source=source)
+    post = make_post(source=source, title="Unsafe saved post")
+    post.link = "javascript:alert(document.domain)"
+    post.save(update_fields=["link"])
+    SavedPost.objects.create(user=user, post=post, subscription=subscription)
+
+    client.force_login(user)
+    response = client.get(reverse("savedposts"))
+
+    assert response.status_code == 200
+    assert "javascript:alert(document.domain)" not in _response_hrefs(response)
+    document = BeautifulSoup(response.content, "html.parser")
+    title = document.find("h3", class_="posttitle")
+    assert title.get_text(strip=True) == "Unsafe saved post"
+    assert title.find("a") is None
+
+
+def test_importopml_normalizes_safe_urls_and_skips_unsafe_schemes(client, user):
+    client.force_login(user)
+    opml = b"""<?xml version="1.0" encoding="UTF-8"?>
+<opml version="2.0">
+  <body>
+    <outline title="Safe" xmlUrl=" HTTPS://example.com/feed.xml " htmlUrl="data:text/html,unsafe"/>
+    <outline title="JavaScript" xmlUrl="javascript:alert(1)" htmlUrl="https://example.com/"/>
+    <outline title="Mixed case" xmlUrl="JaVaScRiPt:alert(1)" htmlUrl="https://example.com/"/>
+  </body>
+</opml>"""
+    upload = SimpleUploadedFile("feeds.opml", opml, content_type="text/xml")
+
+    response = client.post("/importopml/", {"opml": upload})
+
+    assert response.status_code == 200
+    source = Source.objects.get()
+    assert source.feed_url == "https://example.com/feed.xml"
+    assert source.site_url == ""
+    assert Subscription.objects.filter(user=user, source=source).exists()
+    assert _response_hrefs(response).count("https://example.com/feed.xml") == 1
+    assert all(
+        not href.lower().startswith(("javascript:", "data:"))
+        for href in _response_hrefs(response)
+        if href
+    )
+
+
+def test_source_detail_pages_render_unsafe_urls_as_inert_text(
+    client, user, superuser, make_source, make_subscription
+):
+    source = make_source(feed_url="data:text/plain,unsafe")
+    source.site_url = "JaVaScRiPt:alert(1)"
+    source.save(update_fields=["site_url"])
+    subscription = make_subscription(source=source)
+
+    client.force_login(user)
+    details_response = client.get(f"/subscription/{subscription.id}/details/")
+    assert details_response.status_code == 200
+    assert "data:text/plain,unsafe" in details_response.content.decode()
+    assert "JaVaScRiPt:alert(1)" in details_response.content.decode()
+    assert "data:text/plain,unsafe" not in _response_hrefs(details_response)
+    assert "JaVaScRiPt:alert(1)" not in _response_hrefs(details_response)
+
+    client.force_login(superuser)
+    garden_response = client.get(reverse("feedgarden"))
+    assert garden_response.status_code == 200
+    assert "data:text/plain,unsafe" not in _response_hrefs(garden_response)
+    assert "JaVaScRiPt:alert(1)" not in _response_hrefs(garden_response)
 
 
 class TestFixBodyFilter:

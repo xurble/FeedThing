@@ -25,11 +25,12 @@
                     <th> </th>
                 </tr>
                 {% for f in feeds %}
+                    {% with feed_url=f.feed_url|safe_navigation_url site_url=f.best_link|safe_navigation_url %}
                     <tr style="{{f.garden_style}}">
                         <td style="text-align:center">{{f.subscriber_count}}</td>
                         <td>
-                            <a href="{{f.feed_url|escape}}"><img src="/static/images/feed.png" alt="Feed"></a>
-                            <a href="{{f.best_link|escape}}">{{f.display_name}}</a>
+                            {% if feed_url %}<a href="{{ feed_url }}"><img src="/static/images/feed.png" alt="Feed"></a>{% endif %}
+                            {% if site_url %}<a href="{{ site_url }}">{% endif %}{{f.display_name}}{% if site_url %}</a>{% endif %}
                             [<a href="/feed/{{f.id}}/test/">Test</a>]
                             [<a href="/feed/{{f.id}}/test/?cache=yes">Cache?</a>]
                             {% if f.is_cloudflare %}(😬){% endif %}
@@ -41,6 +42,7 @@
                         <td>{% if f.last_change %}{{f.last_change|timesince}} ago{% else %}Never{% endif %}</td>
                         <td id="r{{f.id}}"><a href="javascript:refresh({{f.id}})">Refresh</a></td>
                     </tr>
+                    {% endwith %}
                 {% endfor %}
 
             </table>

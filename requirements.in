@@ -1,4 +1,4 @@
-Django
+Django<6.1
 requests
 # mysqlclient
 beautifulsoup4

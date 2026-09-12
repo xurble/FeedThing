@@ -234,3 +234,42 @@ def test_addfeed_private_redirect_rejected(client, user, public_dns):
     assert result.status_code == 400
     assert Source.objects.count() == 0
     assert fetch.call_count == 1
+
+
+def paginated_feed(next_url):
+    return f'''<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel><title>Feed</title><link>https://example.com/</link>
+    <atom:link rel="next" href="{next_url}"/>
+    <item><title>Entry</title><guid>https://example.com/entry</guid>
+    <link>https://example.com/entry</link><description>Body</description>
+    <pubDate>Sat, 12 Sep 2026 09:00:00 GMT</pubDate></item>
+    </channel></rss>'''.encode()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("via_redirect", [False, True])
+def test_background_pagination_uses_safe_transport(make_source, via_redirect):
+    source = make_source()
+    private_url = "http://127.0.0.1/private"
+    next_url = "https://example.com/page2" if via_redirect else private_url
+    seen = []
+
+    def resolve(host, port, **kwargs):
+        return address("127.0.0.1" if host == "127.0.0.1" else PUBLIC, port)
+
+    def fetch(session, method, url, **kwargs):
+        seen.append(url)
+        if url == source.feed_url:
+            return response(url, body=paginated_feed(next_url))
+        if via_redirect and url == next_url:
+            return response(url, 302, private_url)
+        pytest.fail("Pagination attempted a private request")
+
+    with (
+        patch("ft.feed_http.socket.getaddrinfo", side_effect=resolve),
+        patch("requests.Session.request", autospec=True, side_effect=fetch),
+    ):
+        with pytest.raises(feed_http.UnsafeFeedURL):
+            feed_utils.read_feed(source, output=StringIO())
+    assert source.posts.count() == 1
+    assert seen == [source.feed_url] + ([next_url] if via_redirect else [])

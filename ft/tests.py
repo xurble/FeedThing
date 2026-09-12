@@ -133,10 +133,10 @@ def test_feedgarden_and_downloadfeeds_permissions(client, user, superuser, make_
 
 
 @patch(
-    "ft.views.socket.getaddrinfo",
+    "ft.feed_http.socket.getaddrinfo",
     return_value=[(None, None, None, None, ("93.184.216.34", 443))],
 )
-@patch("ft.views.requests.get")
+@patch("ft.views.get_feed")
 @patch("ft.views.feedparser.parse")
 def test_addfeed_get_and_post_imports_new_feed(
     parse_mock, requests_get_mock, getaddrinfo_mock, client, user
@@ -187,7 +187,7 @@ def test_addfeed_page_handles_errors_without_rendering_response_details(client, 
     assert "xhr.responseText" not in body
 
 
-@patch("ft.views.requests.get")
+@patch("ft.views.get_feed")
 def test_addfeed_rejects_localhost_urls_before_network(
     requests_get_mock, client, user, caplog
 ):
@@ -211,7 +211,7 @@ def test_addfeed_rejects_localhost_urls_before_network(
     requests_get_mock.assert_not_called()
 
 
-@patch("ft.views.requests.get")
+@patch("ft.views.get_feed")
 def test_addfeed_rejects_private_ip_urls_before_network(
     requests_get_mock, client, user
 ):
@@ -231,7 +231,11 @@ def test_addfeed_rejects_private_ip_urls_before_network(
     requests_get_mock.assert_not_called()
 
 
-def test_importopml_creates_subscriptions(client, user):
+@patch(
+    "ft.feed_http.socket.getaddrinfo",
+    return_value=[(None, None, None, None, ("93.184.216.34", 443))],
+)
+def test_importopml_creates_subscriptions(getaddrinfo_mock, client, user):
     client.force_login(user)
     opml = b"""<?xml version="1.0" encoding="UTF-8"?>
 <opml version="2.0">
@@ -445,7 +449,7 @@ def test_revivefeed_is_superuser_only(client, user, superuser, make_source):
     assert source.last_modified is None
 
 
-@patch("ft.views.test_feed")
+@patch("ft.views.get_feed", return_value=Mock(status_code=200, ok=True))
 def test_testfeed_endpoint_is_superuser_only(
     test_feed_mock, client, user, superuser, make_source
 ):
@@ -607,7 +611,13 @@ def test_saved_post_unsafe_link_renders_as_inert_title(
     assert title.find("a") is None
 
 
-def test_importopml_normalizes_safe_urls_and_skips_unsafe_schemes(client, user):
+@patch(
+    "ft.feed_http.socket.getaddrinfo",
+    return_value=[(None, None, None, None, ("93.184.216.34", 443))],
+)
+def test_importopml_normalizes_safe_urls_and_skips_unsafe_schemes(
+    getaddrinfo_mock, client, user
+):
     client.force_login(user)
     opml = b"""<?xml version="1.0" encoding="UTF-8"?>
 <opml version="2.0">
@@ -752,10 +762,10 @@ class TestSafeTitleFilter:
 
 
 @patch(
-    "ft.views.socket.getaddrinfo",
+    "ft.feed_http.socket.getaddrinfo",
     return_value=[(None, None, None, None, ("93.184.216.34", 443))],
 )
-@patch("ft.views.requests.get")
+@patch("ft.views.get_feed")
 def test_addfeed_autodiscovery_escapes_malicious_link_title(
     requests_get_mock, getaddrinfo_mock, client, user
 ):
@@ -783,10 +793,10 @@ def test_addfeed_autodiscovery_escapes_malicious_link_title(
 
 
 @patch(
-    "ft.views.socket.getaddrinfo",
+    "ft.feed_http.socket.getaddrinfo",
     return_value=[(None, None, None, None, ("93.184.216.34", 443))],
 )
-@patch("ft.views.requests.get")
+@patch("ft.views.get_feed")
 def test_addfeed_unexpected_error_logs_traceback_and_returns_generic_500(
     requests_get_mock, getaddrinfo_mock, client, user, caplog
 ):

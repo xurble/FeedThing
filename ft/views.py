@@ -2,11 +2,9 @@
 
 import datetime
 import html
-import ipaddress
 import json
 import logging
-import socket
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urljoin
 from xml.dom import minidom
 
 import feedparser
@@ -28,10 +26,11 @@ from feeds.models import Post, Source, Subscription
 from feeds.utils import (
     get_subscription_list_for_user,
     get_unread_subscription_list_for_user,
-    test_feed,
     update_feeds,
 )
 
+from .feed_http import UnsafeFeedURL, validate_feed_url
+from .feed_http import get as get_feed
 from .forms import SettingsForm
 from .models import SavedPost
 from .url_safety import normalize_navigation_url
@@ -49,55 +48,6 @@ def _get_owned_subscription_or_403(request, subscription_id):
 def _require_superuser(request):
     if not request.user.is_superuser:
         raise PermissionDenied
-
-
-def _is_blocked_ip(ip_text):
-    ip = ipaddress.ip_address(ip_text)
-    return (
-        ip.is_private
-        or ip.is_loopback
-        or ip.is_link_local
-        or ip.is_multicast
-        or ip.is_reserved
-        or ip.is_unspecified
-    )
-
-
-def _is_ip_literal(value):
-    try:
-        ipaddress.ip_address(value)
-        return True
-    except ValueError:
-        return False
-
-
-def _validate_feed_url(feed_url):
-    parsed = urlparse(feed_url.strip())
-    if parsed.scheme not in ("http", "https"):
-        raise ValueError("Feed URL must use http or https.")
-
-    if not parsed.hostname:
-        raise ValueError("Feed URL must include a hostname.")
-
-    hostname = parsed.hostname.lower()
-    if hostname in ("localhost", "localhost.localdomain"):
-        raise ValueError("Localhost feed URLs are not allowed.")
-
-    # Block direct private IPs.
-    if _is_ip_literal(hostname) and _is_blocked_ip(hostname):
-        raise ValueError("Private and local feed URLs are not allowed.")
-
-    try:
-        addr_info = socket.getaddrinfo(
-            hostname, parsed.port or 80, type=socket.SOCK_STREAM
-        )
-    except socket.gaierror:
-        raise ValueError("Feed hostname could not be resolved.")
-
-    for info in addr_info:
-        resolved_ip = info[4][0]
-        if _is_blocked_ip(resolved_ip):
-            raise ValueError("Feed URL resolves to a private or local address.")
 
 
 def index(request):
@@ -259,7 +209,7 @@ def addfeed(request):
         else:
             feed = request.POST.get("feed", "").strip()
             try:
-                _validate_feed_url(feed)
+                validate_feed_url(feed)
             except ValueError:
                 logger.warning("Rejected invalid add-feed URL", exc_info=True)
                 return HttpResponse(
@@ -275,7 +225,7 @@ def addfeed(request):
                 "Pragma": "no-cache",
             }
 
-            ret = requests.get(feed, headers=headers, timeout=15)
+            ret = get_feed(feed, headers=headers, timeout=15)
             # can I be bothered to check return codes here?  I think not on balance
 
             isFeed = False
@@ -393,6 +343,10 @@ def addfeed(request):
                 return HttpResponse(
                     "<div>Imported feed %s</div>" % html.escape(ns.name)
                 )
+    except UnsafeFeedURL:
+        return HttpResponse(
+            "<div>The feed URL is invalid or not allowed.</div>", status=400
+        )
     except Exception:
         logger.exception("Unexpected error while adding feed")
         return HttpResponse(
@@ -425,6 +379,10 @@ def importopml(request):
     for s in sources:
         url = normalize_navigation_url(s.getAttribute("xmlUrl"))
         if url:
+            try:
+                validate_feed_url(url)
+            except ValueError:
+                continue
             ns = Source.objects.filter(feed_url=url)
             if ns.count() > 0:
                 # feed already exists - so there may already be a user subscription for it
@@ -568,11 +526,11 @@ def readfeed(request, fid):
         raise PermissionDenied
 
     if sub.is_river:
-        (posts, paginator) = sub.get_paginated_posts(page=page, posts_per_page=40)
+        posts, paginator = sub.get_paginated_posts(page=page, posts_per_page=40)
     else:
         posts = sub.get_unread_posts(oldest_first=True)
         if len(posts) == 0:
-            (posts, paginator) = sub.get_paginated_posts(page=page, posts_per_page=10)
+            posts, paginator = sub.get_paginated_posts(page=page, posts_per_page=10)
         else:
             sub.mark_read()
 
@@ -627,13 +585,26 @@ def testfeed(request, fid):
 
     f = get_object_or_404(Source, id=int(fid))
 
-    r = HttpResponse()
-
-    test_feed(f, cache=request.GET.get("cache", "no") == "yes", output=r)
-
-    r["Content-type"] = "text/plain"
-
-    return r
+    headers = {"User-Agent": settings.FEEDS_USER_AGENT}
+    if request.GET.get("cache", "no") == "yes":
+        if f.etag:
+            headers["If-None-Match"] = str(f.etag)
+        if f.last_modified:
+            headers["If-Modified-Since"] = str(f.last_modified)
+    else:
+        headers.update({"Cache-Control": "no-cache,max-age=0", "Pragma": "no-cache"})
+    try:
+        result = get_feed(f.feed_url, headers=headers, timeout=20)
+    except (requests.RequestException, ValueError):
+        return HttpResponse(
+            "Feed fetch failed or URL is not allowed.",
+            status=400,
+            content_type="text/plain",
+        )
+    return HttpResponse(
+        f"HTTP status: {result.status_code}\nTest result: {result.ok}",
+        content_type="text/plain",
+    )
 
 
 @login_required

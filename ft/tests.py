@@ -147,6 +147,7 @@ def test_addfeed_get_and_post_imports_new_feed(
 
     requests_get_mock.return_value = Mock(
         headers={"Content-Type": "application/rss+xml"},
+        content=b"<rss></rss>",
         text="<rss></rss>",
     )
     parse_mock.return_value = Mock(
@@ -170,6 +171,32 @@ def test_addfeed_get_and_post_imports_new_feed(
     assert kwargs["headers"]["User-Agent"] == (
         f"{settings.FEEDS_USER_AGENT} (+{settings.FEEDS_SERVER}; Initial Feed Crawler)"
     )
+    getaddrinfo_mock.assert_called_once()
+
+
+@patch(
+    "ft.feed_http.socket.getaddrinfo",
+    return_value=[(None, None, None, None, ("93.184.216.34", 443))],
+)
+@patch("feedparser.http.get")
+@patch("ft.views.get_feed")
+def test_addfeed_does_not_treat_xml_response_body_as_a_url(
+    get_feed_mock, parser_get_mock, getaddrinfo_mock, client, user
+):
+    client.force_login(user)
+    get_feed_mock.return_value = Mock(
+        headers={"Content-Type": "application/xml"},
+        content=b"http://127.0.0.1/feed.xml",
+        text="http://127.0.0.1/feed.xml",
+    )
+
+    response = client.post(
+        "/addfeed/",
+        {"feed": "https://example.com/feed.xml", "group": "0"},
+    )
+
+    assert response.status_code == 200
+    parser_get_mock.assert_not_called()
     getaddrinfo_mock.assert_called_once()
 
 

@@ -4,6 +4,7 @@ import datetime
 import html
 import json
 import logging
+from io import BytesIO
 from urllib.parse import urljoin
 from xml.dom import minidom
 
@@ -239,7 +240,7 @@ def addfeed(request):
             body = ret.text.strip()
             if "xml" in content_type or body[0:1] == "<":
                 ff = feedparser.parse(
-                    body
+                    BytesIO(ret.content)
                 )  # are we a feed?  # imported by django-feed-reader
                 isFeed = len(ff.entries) > 0
                 if isFeed:

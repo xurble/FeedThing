@@ -23,6 +23,8 @@
 </div>
 
 
+{{ preload|json_script:"subscription-preload" }}
+
 <script>
 
 
@@ -163,10 +165,11 @@ $(document).ready(function(){
 
 	History.pushState(null,null,"#");
 
-    {% if preload != "0" %}
+    var preload = JSON.parse(document.getElementById("subscription-preload").textContent);
+    if (preload !== 0) {
         $("#feedlist").addClass("hidden-xs");
-        details({{preload}});
-    {% endif %}
+        details(preload);
+    }
 
 });
 

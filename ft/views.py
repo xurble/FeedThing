@@ -39,6 +39,16 @@ from .url_safety import normalize_navigation_url
 logger = logging.getLogger(__name__)
 
 
+def _preload_integer(request, parameter, default):
+    """Accept bounded decimal integers for browser preload data."""
+    raw = request.GET.get(parameter, str(default))
+    # Bound conversion work and stay within the project's signed AutoField range.
+    if not raw or len(raw) > 10 or not raw.isascii() or not raw.isdecimal():
+        return default
+    value = int(raw)
+    return value if default <= value <= 2147483647 else default
+
+
 def _get_owned_subscription_or_403(request, subscription_id):
     subscription = get_object_or_404(Subscription, id=int(subscription_id))
     if subscription.user != request.user:
@@ -103,8 +113,8 @@ def feeds(request):
     vals["sources"] = sources
     vals["all"] = False
 
-    vals["preload"] = request.GET.get("feed", "0")
-    vals["page"] = request.GET.get("page", "1")
+    vals["preload"] = _preload_integer(request, "feed", 0)
+    vals["page"] = _preload_integer(request, "page", 1)
 
     return render(request, "feeds.html", vals)
 
@@ -161,7 +171,7 @@ def managefeeds(request):
     subscriptions = get_subscription_list_for_user(request.user)
 
     vals["subscriptions"] = subscriptions
-    vals["preload"] = request.GET.get("s", "0")
+    vals["preload"] = _preload_integer(request, "s", 0)
 
     return render(request, "manage.html", vals)
 
@@ -182,8 +192,8 @@ def allfeeds(request):
     vals["sources"] = sources
     vals["all"] = True
 
-    vals["preload"] = request.GET.get("feed", "0")
-    vals["page"] = request.GET.get("page", "1")
+    vals["preload"] = _preload_integer(request, "feed", 0)
+    vals["page"] = _preload_integer(request, "page", 1)
 
     return render(request, "feeds.html", vals)
 

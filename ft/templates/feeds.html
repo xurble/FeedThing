@@ -37,6 +37,9 @@
 </div>
         {% csrf_token %}
 
+{{ preload|json_script:"subscription-preload" }}
+{{ page|json_script:"page-preload" }}
+
 <script>
 
 //console.log('yo!');
@@ -165,10 +168,12 @@ $(document).ready(function(){
 
 	History.pushState(null,null,"#");
 
-    {% if preload != "0" %}
+    var preload = JSON.parse(document.getElementById("subscription-preload").textContent);
+    if (preload !== 0) {
         $("#feedlist").addClass("hidden-xs");
-        read({{preload}}, {{page}});
-    {% endif %}
+        var page = JSON.parse(document.getElementById("page-preload").textContent);
+        read(preload, page);
+    }
 
 });
 

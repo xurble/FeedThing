@@ -6,10 +6,12 @@ import pytest
 from bs4 import BeautifulSoup
 from django.conf import settings
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.db import connection
 from django.template import Context, Template
 from django.test import RequestFactory
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
-from feeds.models import Source, Subscription
+from feeds.models import Enclosure, Source, Subscription
 from feeds.utils_internal import parse_feed
 
 from ft.adapters import NoNewUsersAccountAdapter
@@ -112,6 +114,61 @@ def test_user_river_page_with_query(
 
     response = client.get(reverse("userriver"), {"q": "needle"})
     assert response.status_code == 200
+
+
+def test_user_river_star_queries_do_not_grow_with_post_count(
+    client, user, make_source, make_subscription, make_post
+):
+    client.force_login(user)
+    source = make_source()
+    subscription = make_subscription(source=source)
+    saved_post = make_post(source=source, title="Saved", index=1)
+    SavedPost.objects.create(
+        user=user,
+        post=saved_post,
+        subscription=subscription,
+    )
+
+    with CaptureQueriesContext(connection) as single_post_queries:
+        response = client.get(reverse("userriver"))
+
+    assert response.status_code == 200
+    assert b'class="fas fa-star"' in response.content
+
+    for index in range(2, 12):
+        make_post(source=source, title=f"Post {index}", index=index)
+
+    with CaptureQueriesContext(connection) as many_post_queries:
+        response = client.get(reverse("userriver"))
+
+    assert response.status_code == 200
+    assert response.content.count(b'class="far fa-star"') == 10
+    assert len(many_post_queries) == len(single_post_queries)
+
+
+def test_feed_prefetches_saved_state_and_enclosures(
+    client, user, make_source, make_subscription, make_post
+):
+    client.force_login(user)
+    source = make_source()
+    subscription = make_subscription(source=source)
+
+    for index in range(1, 4):
+        post = make_post(source=source, title=f"Post {index}", index=index)
+        Enclosure.objects.create(
+            post=post,
+            href=f"https://example.com/{index}.mp3",
+            type="audio/mpeg",
+        )
+
+    with CaptureQueriesContext(connection) as queries:
+        response = client.get(f"/read/{subscription.id}/")
+
+    assert response.status_code == 200
+    saved_queries = [query for query in queries if "ft_savedpost" in query["sql"]]
+    enclosure_queries = [query for query in queries if "feeds_enclosure" in query["sql"]]
+    assert len(saved_queries) == 1
+    assert len(enclosure_queries) == 1
 
 
 def test_feedgarden_and_downloadfeeds_permissions(client, user, superuser, make_source):

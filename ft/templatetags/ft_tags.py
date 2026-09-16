@@ -182,7 +182,11 @@ def safe_navigation_url(value):
 
 @register.filter(name="starstyle")
 def starstyle(post, user):
-    if post.savedpost_set.filter(user=user).count() > 0:
-        return "fas"
+    if hasattr(post, "saved_for_user"):
+        is_saved = bool(post.saved_for_user)
     else:
-        return "far"
+        is_saved = post.savedpost_set.filter(user=user).exists()
+
+    if is_saved:
+        return "fas"
+    return "far"

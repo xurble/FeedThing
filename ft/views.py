@@ -17,7 +17,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import EmptyPage, InvalidPage, Paginator
-from django.db.models import Q
+from django.db.models import Prefetch, Q, prefetch_related_objects
 from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.template.loader import render_to_string
@@ -37,6 +37,22 @@ from .models import SavedPost
 from .url_safety import normalize_navigation_url
 
 logger = logging.getLogger(__name__)
+
+
+def _prepare_posts_for_render(posts, user, include_enclosures=False):
+    post_list = list(posts)
+    related_lookups = [
+        Prefetch(
+            "savedpost_set",
+            queryset=SavedPost.objects.filter(user=user).only("post_id"),
+            to_attr="saved_for_user",
+        )
+    ]
+    if include_enclosures:
+        related_lookups.append("enclosures")
+
+    prefetch_related_objects(post_list, *related_lookups)
+    return post_list
 
 
 def _get_owned_subscription_or_403(request, subscription_id):
@@ -188,12 +204,12 @@ def user_river(request):
     except (EmptyPage, InvalidPage):
         posts = paginator.page(1)
 
+    subscription_by_source_id = {sub.source_id: sub for sub in sub_list}
+    _prepare_posts_for_render(posts, request.user)
+
     # assign subscriptions
     for p in posts:
-        for s in sub_list:
-            if p.source == s.source:
-                p.subscription = s
-                break
+        p.subscription = subscription_by_source_id[p.source_id]
 
     vals["posts"] = posts
     vals["paginator"] = paginator
@@ -575,6 +591,12 @@ def readfeed(request, fid):
             (posts, paginator) = sub.get_paginated_posts(page=page, posts_per_page=10)
         else:
             sub.mark_read()
+
+    _prepare_posts_for_render(
+        posts,
+        request.user,
+        include_enclosures=not sub.is_river,
+    )
 
     vals["source"] = sub.source
     vals["subscription"] = sub

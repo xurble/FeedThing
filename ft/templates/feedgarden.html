@@ -9,10 +9,6 @@
             <p>However, feel free to feed your inner pendant and cultivate the feed list by hand.</p>
             <p><a href="/downloadfeeds/">Download All Your Feeds</a></p>
 
-            <form action="{% url 'refresh' %}" method="post">
-                {% csrf_token %}
-                <button class="btn btn-default" type="submit">Manual Refresh</button>
-            </form>
             <table id="gardentable">
                 <tr>
                     <th>Subs</th>

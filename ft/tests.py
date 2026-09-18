@@ -60,7 +60,6 @@ def test_login_required_routes_redirect_when_anonymous(client):
         reverse("savedposts"),
         reverse("manage"),
         reverse("subscriptionlist"),
-        reverse("refresh"),
         "/addfeed/",
         "/importopml/",
         "/feedgarden/",
@@ -166,7 +165,9 @@ def test_feed_prefetches_saved_state_and_enclosures(
 
     assert response.status_code == 200
     saved_queries = [query for query in queries if "ft_savedpost" in query["sql"]]
-    enclosure_queries = [query for query in queries if "feeds_enclosure" in query["sql"]]
+    enclosure_queries = [
+        query for query in queries if "feeds_enclosure" in query["sql"]
+    ]
     assert len(saved_queries) == 1
     assert len(enclosure_queries) == 1
 
@@ -508,7 +509,6 @@ def test_mutating_endpoints_reject_get(
 
     client.force_login(superuser)
     assert client.get(f"/feed/{source.id}/revive/").status_code == 405
-    assert client.get(reverse("refresh")).status_code == 405
 
 
 def test_revivefeed_is_superuser_only(client, user, superuser, make_source):
@@ -549,24 +549,6 @@ def test_testfeed_endpoint_is_superuser_only(
     assert response.status_code == 200
     assert response["Content-Type"] == "text/plain"
     assert test_feed_mock.called
-
-
-@patch("ft.views.update_feeds")
-def test_refresh_endpoint_is_superuser_only(update_feeds_mock, client, user, superuser):
-    response = client.post(reverse("refresh"))
-    assert response.status_code == 302
-    update_feeds_mock.assert_not_called()
-
-    client.force_login(user)
-    response = client.post(reverse("refresh"))
-    assert response.status_code == 403
-    update_feeds_mock.assert_not_called()
-
-    client.force_login(superuser)
-    response = client.post(reverse("refresh"))
-    assert response.status_code == 200
-    assert response["Content-Type"] == "text/plain"
-    update_feeds_mock.assert_called_once()
 
 
 # --- XSS prevention tests ---

@@ -11,7 +11,6 @@ urlpatterns = [
     path(".well-known/<uri>", views.well_known_uris, name="well_known"),
     path("accounts/", include("allauth.urls")),
     path("", views.index, name="home"),
-    path("refresh/", views.read_request_listener, name="refresh"),
     path("help/", views.help, name="help"),
     path("feeds/", views.feeds, name="feeds"),
     path("allfeeds/", views.allfeeds, name="allfeeds"),

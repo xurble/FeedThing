@@ -27,7 +27,6 @@ from feeds.models import Post, Source, Subscription
 from feeds.utils import (
     get_subscription_list_for_user,
     get_unread_subscription_list_for_user,
-    update_feeds,
 )
 
 from .feed_http import UnsafeFeedURL, validate_feed_url
@@ -717,17 +716,3 @@ def savedposts(request):
     vals["q"] = q
 
     return render(request, "savedposts.html", vals)
-
-
-@login_required
-@require_POST
-def read_request_listener(request):
-    _require_superuser(request)
-
-    response = HttpResponse()
-
-    update_feeds(3, response)
-
-    response["Content-Type"] = "text/plain"
-
-    return response

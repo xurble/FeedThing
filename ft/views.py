@@ -16,6 +16,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import EmptyPage, InvalidPage, Paginator
+from django.db import transaction
 from django.db.models import Prefetch, Q, prefetch_related_objects
 from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
@@ -505,6 +506,7 @@ def promote(request, sid):
 
 @login_required
 @require_POST
+@transaction.atomic
 def addto(request, sid, tid):
     toadd = _get_owned_subscription_or_403(request, sid)
 
@@ -516,23 +518,27 @@ def addto(request, sid, tid):
     if toadd.source is None:
         return HttpResponse("Only feeds can be added to groups.", status=400)
 
-    if tid == 0:
+    former_parents = {toadd.parent_id}
+    if target.source is not None:
+        former_parents.add(target.parent_id)
+        folder = Subscription.objects.create(user=request.user, name="New Folder")
+        target.parent = folder
         target.save()
+    else:
+        folder = target
+        if tid == 0:
+            folder.save()
 
-    if target.source is None:
-        toadd.parent = target
-        toadd.save()
-
-        return HttpResponse(target.id)
-
-    nn = Subscription(user=request.user, name="New Folder")
-    nn.save()
-    toadd.parent = nn
+    toadd.parent = folder
     toadd.save()
-    target.parent = nn
-    target.save()
 
-    return HttpResponse(nn.id)
+    for parent in Subscription.objects.filter(
+        pk__in=former_parents, user=request.user, source=None
+    ):
+        if not parent.subscriptions.exists():
+            parent.delete()
+
+    return HttpResponse(folder.id)
 
 
 @login_required

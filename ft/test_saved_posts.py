@@ -1,5 +1,6 @@
 import sqlite3
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import nullcontext
 from threading import Barrier, Event
 
 import pytest
@@ -148,9 +149,12 @@ def test_saved_post_write_contention_is_retryable(
 
 @pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize("view", [savepost, forgetpost], ids=["save", "forget"])
+@pytest.mark.parametrize("block_writes", [False, True], ids=["overlap", "both-blocked"])
 def test_simultaneous_saved_post_requests(
-    user, make_subscription, make_post, monkeypatch, view
+    user, make_subscription, make_post, monkeypatch, view, block_writes
 ):
+    if block_writes and connection.vendor != "sqlite":
+        pytest.skip("Uses SQLite read locks to block both writers")
     sub = make_subscription()
     post = make_post(source=sub.source)
     if view is forgetpost:
@@ -166,6 +170,9 @@ def test_simultaneous_saved_post_requests(
 
     def mutate():
         try:
+            if connection.vendor == "sqlite":
+                with connection.cursor() as cursor:
+                    cursor.execute("PRAGMA busy_timeout = 100")
             request = RequestFactory().post("/")
             request.user = user
             return view(request, post.pk).status_code
@@ -174,12 +181,21 @@ def test_simultaneous_saved_post_requests(
 
     with monkeypatch.context() as patch:
         patch.setattr(QuerySet, method_name, overlap)
-        with ThreadPoolExecutor(max_workers=2) as executor:
-            requests = [executor.submit(mutate) for _ in range(2)]
-            statuses = [request.result(timeout=10) for request in requests]
-    assert 200 in statuses
+        with transaction.atomic() if block_writes else nullcontext():
+            if block_writes:
+                # Hold a read lock until both writers have returned. Neither
+                # write may commit, including with a file-backed database.
+                SavedPost.objects.count()
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                requests = [executor.submit(mutate) for _ in range(2)]
+                statuses = [request.result(timeout=10) for request in requests]
     assert set(statuses) <= {200, 503}
-    assert SavedPost.objects.filter(user=user, post=post).count() == (view is savepost)
+    if block_writes:
+        assert statuses == [503, 503]
+    # Both requests may encounter contention. Only a successful response implies
+    # the target state; two failed attempts must preserve the original state.
+    expected_count = (view is savepost) if 200 in statuses else (view is forgetpost)
+    assert SavedPost.objects.filter(user=user, post=post).count() == expected_count
     # A client may safely retry either operation, including one that got a 503.
     assert mutate() == 200
     assert SavedPost.objects.filter(user=user, post=post).count() == (view is savepost)

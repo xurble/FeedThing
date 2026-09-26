@@ -4,6 +4,8 @@ import datetime
 import html
 import json
 import logging
+import sqlite3
+from functools import wraps
 from io import BytesIO
 from urllib.parse import urljoin
 from xml.dom import minidom
@@ -16,7 +18,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import EmptyPage, InvalidPage, Paginator
-from django.db import transaction
+from django.db import OperationalError, connection, transaction
 from django.db.models import Prefetch, Q, prefetch_related_objects
 from django.http import Http404, HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
@@ -666,8 +668,41 @@ def unsubscribefeed(request, sid):
     return HttpResponse("OK")
 
 
+def _saved_post_contention_response(view):
+    @wraps(view)
+    def wrapped(request, *args, **kwargs):
+        try:
+            return view(request, *args, **kwargs)
+        except OperationalError as error:
+            # Django preserves the driver exception. Match codes, not translated
+            # error messages, and don't hide unrelated database failures.
+            sqlite_code = getattr(error.__cause__, "sqlite_errorcode", 0)
+            is_sqlite_lock = connection.vendor == "sqlite" and sqlite_code & 0xFF in (
+                sqlite3.SQLITE_BUSY,
+                sqlite3.SQLITE_LOCKED,
+            )
+            is_mysql_lock = (
+                connection.vendor == "mysql"
+                and error.args
+                and error.args[0] in (1205, 1213)  # Lock timeout or deadlock.
+            )
+            if not (is_sqlite_lock or is_mysql_lock):
+                raise
+            # get_or_create/delete have already unwound their atomic blocks.
+            # Never acknowledge a mutation that could not complete.
+            return HttpResponse(
+                "Saved posts are busy. Please retry.",
+                status=503,
+                content_type="text/plain",
+                headers={"Retry-After": "1"},
+            )
+
+    return wrapped
+
+
 @login_required
 @require_POST
+@_saved_post_contention_response
 def savepost(request, pid):
     post = get_object_or_404(Post, id=int(pid))
 
@@ -684,6 +719,7 @@ def savepost(request, pid):
 
 @login_required
 @require_POST
+@_saved_post_contention_response
 def forgetpost(request, pid):
     post = get_object_or_404(Post, id=int(pid))
 

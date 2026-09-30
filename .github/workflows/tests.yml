@@ -18,6 +18,11 @@ jobs:
           python-version: "3.13"
           cache: "pip"
 
+      - name: Setup Node for rendered JavaScript regression tests
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip

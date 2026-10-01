@@ -68,10 +68,14 @@ def _preload_integer(request, parameter, default):
 
 
 def _get_owned_subscription_or_403(request, subscription_id):
-    subscription = get_object_or_404(Subscription, id=int(subscription_id))
-    if subscription.user != request.user:
-        raise PermissionDenied
-    return subscription
+    subscription_id = int(subscription_id)
+    try:
+        return Subscription.objects.get(id=subscription_id, user=request.user)
+    except Subscription.DoesNotExist:
+        # Preserve the established 403/404 policy without loading a foreign object.
+        if Subscription.objects.filter(id=subscription_id).exists():
+            raise PermissionDenied
+        raise Http404("No Subscription matches the given query.")
 
 
 def _require_superuser(request):

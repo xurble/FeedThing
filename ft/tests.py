@@ -832,6 +832,41 @@ class TestSafeTitleFilter:
     return_value=[(None, None, None, None, ("93.184.216.34", 443))],
 )
 @patch("ft.views.get_feed")
+def test_addfeed_autodiscovery_resolves_links_from_original_page(
+    get_feed_mock, getaddrinfo_mock, client, user
+):
+    client.force_login(user)
+    page = "https://example.com/blog/index.html"
+    discovery_html = """<html><head>
+    <link rel="alternate" type="application/atom+xml" href="feeds/atom.xml">
+    <link rel="alternate" type="application/rss+xml" href="feeds/rss.xml">
+    <link rel="alternate" type="application/rss+xml" href="https://other.example/feed.xml">
+    <link rel="alternate" type="application/rss+xml" href="//cdn.example/feed.xml">
+    </head></html>"""
+    get_feed_mock.return_value = Mock(
+        headers={"Content-Type": "text/html"},
+        text=discovery_html,
+        content=discovery_html.encode(),
+    )
+
+    response = client.post("/addfeed/", {"feed": page, "group": "0"})
+
+    assert response.status_code == 200
+    soup = BeautifulSoup(response.content, "html.parser")
+    assert [field["value"] for field in soup.select('input[name="feed"]')] == [
+        "https://example.com/blog/feeds/atom.xml",
+        "https://example.com/blog/feeds/rss.xml",
+        "https://other.example/feed.xml",
+        "https://cdn.example/feed.xml",
+    ]
+    getaddrinfo_mock.assert_called_once()
+
+
+@patch(
+    "ft.feed_http.socket.getaddrinfo",
+    return_value=[(None, None, None, None, ("93.184.216.34", 443))],
+)
+@patch("ft.views.get_feed")
 def test_addfeed_autodiscovery_escapes_malicious_link_title(
     requests_get_mock, getaddrinfo_mock, client, user
 ):

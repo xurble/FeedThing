@@ -308,10 +308,6 @@ def addfeed(request):
                                     html.escape(name),
                                 )
                             )
-                            feed = urljoin(
-                                feed, lnk["href"]
-                            )  # store this in case there is only one feed and we wind up importing it
-                            # TODO: need to accout for relative URLs here
                 if feedcount == 0:
                     return HttpResponse("No feeds found")
                 else:

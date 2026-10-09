@@ -351,6 +351,56 @@ def test_readfeed_for_owner_and_forbidden_for_other_user(
     assert response.status_code == 403
 
 
+def test_readfeed_source_headings_for_tracked_folder_and_other_paths(
+    client, user, make_source, make_subscription, make_post
+):
+    first_source = make_source(feed_url="https://example.com/first.xml")
+    second_source = make_source(feed_url="https://example.com/second.xml")
+    folder = Subscription.objects.create(user=user, name="Tracked Folder")
+    make_subscription(source=first_source, name="First Feed", parent=folder)
+    make_subscription(source=second_source, name="Second Feed", parent=folder)
+    make_post(source=first_source, title="First Post")
+    make_post(source=second_source, title="Second Post")
+    Source.objects.filter(pk__in=[first_source.pk, second_source.pk]).update(
+        max_index=1
+    )
+
+    client.force_login(user)
+    unread_response = client.get(f"/read/{folder.pk}/")
+    assert unread_response.status_code == 200
+    unread_page = BeautifulSoup(unread_response.content, "html.parser")
+    assert [
+        heading.get_text(strip=True) for heading in unread_page.select("h2.riversource")
+    ] == [
+        "First Feed",
+        "Second Feed",
+    ]
+
+    historical_response = client.get(f"/read/{folder.pk}/")
+    assert historical_response.status_code == 200
+    historical_page = BeautifulSoup(historical_response.content, "html.parser")
+    assert sorted(
+        heading.get_text(strip=True)
+        for heading in historical_page.select("h2.riversource")
+    ) == ["First Feed", "Second Feed"]
+
+    folder.is_river = True
+    folder.save(update_fields=["is_river"])
+    river_response = client.get(f"/read/{folder.pk}/")
+    assert river_response.status_code == 200
+    river_page = BeautifulSoup(river_response.content, "html.parser")
+    assert sorted(
+        heading.get_text(strip=True) for heading in river_page.select("h2.riversource")
+    ) == ["First Feed", "Second Feed"]
+
+    single_subscription = Subscription.objects.get(user=user, source=first_source)
+    single_response = client.get(f"/read/{single_subscription.pk}/")
+    assert single_response.status_code == 200
+    single_page = BeautifulSoup(single_response.content, "html.parser")
+    assert single_page.select_one("h2.ftheader").get_text(strip=True) == "First Feed"
+    assert single_page.select("h2.riversource") == []
+
+
 def test_savepost_and_forgetpost(
     client, user, make_source, make_subscription, make_post
 ):

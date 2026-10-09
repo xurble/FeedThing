@@ -566,6 +566,8 @@ def readfeed(request, fid):
         if len(posts) == 0:
             posts, paginator = sub.get_paginated_posts(page=page, posts_per_page=10)
         else:
+            for post in posts:
+                post.subscription = post.from_subscription
             sub.mark_read()
 
     _prepare_posts_for_render(

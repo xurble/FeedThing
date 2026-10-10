@@ -11,6 +11,12 @@
 <div class="container">
     <div class="row">
         <div class="col-sm-8">
+            <form action="{% url 'userriver' %}" method="get" role="search">
+                <label for="river-search">Search your river</label>
+                <input id="river-search" type="search" name="q" value="{{ q }}">
+                <button type="submit">Search</button>
+                {% if q %}<a href="{% url 'userriver' %}">Clear search</a>{% endif %}
+            </form>
             {% include "river.html" %}
         </div>
     </div>
@@ -25,8 +31,9 @@ var last_read = null;
 var last_page = null
 
 function read(fid, page) {
-
-    document.location.href='?page=' + page;
+    var url = new URL(window.location.href);
+    url.searchParams.set('page', page);
+    document.location.href = url.toString();
 
     return false;
 }
@@ -87,5 +94,4 @@ function savePost(pid) {
 
 
 {% endblock %}
-
 

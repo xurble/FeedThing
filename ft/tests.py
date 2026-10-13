@@ -1,6 +1,8 @@
 import logging
+import subprocess
 from io import StringIO
 from unittest.mock import Mock, patch
+from urllib.parse import parse_qs, urlsplit
 
 import pytest
 from bs4 import BeautifulSoup
@@ -113,6 +115,82 @@ def test_user_river_page_with_query(
 
     response = client.get(reverse("userriver"), {"q": "needle"})
     assert response.status_code == 200
+    assert [
+        title.get_text(strip=True)
+        for title in BeautifulSoup(response.content, "html.parser").select(
+            "h3.posttitle"
+        )
+    ] == ["Needle title"]
+
+
+def test_user_river_search_pagination_and_clear(
+    client, user, make_source, make_subscription, make_post
+):
+    client.force_login(user)
+    source = make_source()
+    make_subscription(source=source)
+    query = "needle & hay"
+    for index in range(1, 102):
+        make_post(source=source, title=f"Needle & hay {index:03}", index=index)
+    make_post(source=source, title="Unrelated post", index=102)
+
+    response = client.get(reverse("userriver"), {"q": query})
+    assert response.status_code == 200
+    page = BeautifulSoup(response.content, "html.parser")
+    search_form = page.select_one("form[role=search]")
+    assert search_form["method"] == "get"
+    assert search_form["action"] == reverse("userriver")
+    search_input = search_form.select_one('input[type="search"][name="q"]')
+    assert search_input["value"] == query
+    assert len(page.select("h3.posttitle")) == 100
+    assert all(
+        query in title.get_text(strip=True).lower()
+        for title in page.select("h3.posttitle")
+    )
+    pagination_links = [link.get("href") for link in page.select("a[href]")]
+    assert "javascript:read(0,2)" in pagination_links
+
+    script = page.find(
+        "script", string=lambda value: value and "function read(" in value
+    )
+    node_code = """
+const fs = require('fs');
+const vm = require('vm');
+const window = {location: {href: process.argv[1]}};
+const document = {location: window.location};
+const context = {window, document, URL, $: () => ({ready: () => {}})};
+vm.runInNewContext(fs.readFileSync(0, 'utf8') + '\\nread(0, 2);', context);
+process.stdout.write(document.location.href);
+"""
+    result = subprocess.run(
+        [
+            "node",
+            "-e",
+            node_code,
+            f"https://example.com{response.wsgi_request.get_full_path()}",
+        ],
+        input=script.string,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    next_url = result.stdout
+    parsed_url = urlsplit(next_url)
+    assert parse_qs(parsed_url.query) == {"q": [query], "page": ["2"]}
+
+    second_response = client.get(f"{parsed_url.path}?{parsed_url.query}")
+    assert second_response.status_code == 200
+    second_page = BeautifulSoup(second_response.content, "html.parser")
+    second_page_titles = second_page.select("h3.posttitle")
+    assert [title.get_text(strip=True) for title in second_page_titles] == [
+        "Needle & hay 001"
+    ]
+    clear_link = second_page.find("a", string="Clear search")
+    assert clear_link["href"] == reverse("userriver")
+    cleared_response = client.get(clear_link["href"])
+    assert cleared_response.status_code == 200
+    assert "Unrelated post" in cleared_response.content.decode()
 
 
 def test_user_river_star_queries_do_not_grow_with_post_count(

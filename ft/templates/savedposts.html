@@ -7,9 +7,9 @@
         <div class="col-sm-8 ftcontent posts">
             <h2>Saved Posts</h2>
 
-{% if posts.has_other_pages %}
     <form method="GET">
 
+{% if posts.has_other_pages %}
     <ul class="pagination pagination-sm pull-right" style="margin:0">
         {% if posts.has_previous %}
           <li><a href="?q={{q}}&page={{ posts.previous_page_number }}">&laquo;</a></li>
@@ -47,11 +47,10 @@
           <li class="disabled"><span>&raquo;</span></li>
         {% endif %}
     </ul>
+{% endif %}
 
         <input type="search" name="q" value="{{q}}" placeholder="Search">
     </form>
-
-{% endif %}
 
             {% for p in posts %}
               {% with post_url=p.post.link|safe_navigation_url %}

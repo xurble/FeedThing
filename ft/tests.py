@@ -514,6 +514,27 @@ def test_savedposts_view(client, user, make_source, make_subscription, make_post
     assert response.status_code == 200
 
 
+@pytest.mark.parametrize("post_count", [0, 3, 10, 11])
+def test_savedposts_search_is_available_for_all_result_counts(
+    client, user, make_source, make_subscription, make_post, post_count
+):
+    source = make_source()
+    subscription = make_subscription(source=source)
+    for index in range(post_count):
+        post = make_post(source=source, title=f"Saved needle {index}")
+        SavedPost.objects.create(user=user, post=post, subscription=subscription)
+
+    client.force_login(user)
+    response = client.get(reverse("savedposts"), {"q": "needle"})
+
+    assert response.status_code == 200
+    document = BeautifulSoup(response.content, "html.parser")
+    search_inputs = document.select('form[method="GET"] input[name="q"]')
+    assert len(search_inputs) == 1
+    assert search_inputs[0]["value"] == "needle"
+    assert len(document.select("ul.pagination")) == (2 if post_count > 10 else 0)
+
+
 def test_manage_subscription_endpoints(client, user, make_source, make_subscription):
     client.force_login(user)
     source = make_source()

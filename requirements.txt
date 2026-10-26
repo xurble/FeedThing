@@ -22,7 +22,7 @@ beautifulsoup4==4.15.0
     # via
     #   -r requirements.in
     #   django-feed-reader
-black==26.5.1
+black==26.10.1
     # via python-lsp-server
 certifi==2026.7.22
     # via

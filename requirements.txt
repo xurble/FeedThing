@@ -118,7 +118,7 @@ mypy-extensions==1.1.0
     # via black
 nh3==0.3.7
     # via -r requirements.in
-nltk==3.10.3
+nltk==3.10.4
     # via safety
 packaging==26.3
     # via

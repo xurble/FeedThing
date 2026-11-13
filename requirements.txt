@@ -209,7 +209,7 @@ sgmllib3k==1.0.0
     # via django-feed-reader
 shellingham==1.5.4
     # via typer
-soupsieve==2.9.2
+soupsieve==4.0
     # via beautifulsoup4
 sqlparse==0.6.0
     # via
